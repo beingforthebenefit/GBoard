@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    networks:
+      - gboard
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_SOBRIETY_DATE=${SOBRIETY_DATE}
+        - VITE_BACKEND_URL=http://localhost:${BACKEND_PORT:-3001}
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - gboard
+
+networks:
+  gboard:
+    driver: bridge
