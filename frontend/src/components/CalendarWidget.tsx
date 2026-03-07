@@ -1,3 +1,7 @@
+import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar'
+import { format, parse, startOfWeek, getDay } from 'date-fns'
+import { enUS } from 'date-fns/locale'
+import 'react-big-calendar/lib/css/react-big-calendar.css'
 import { CalendarEvent } from '../types/index.js'
 import { GlassPanel } from './GlassPanel.js'
 
@@ -6,40 +10,33 @@ interface CalendarWidgetProps {
   loading: boolean
 }
 
-const CALENDAR_COLORS = [
-  'bg-blue-400',
-  'bg-green-400',
-  'bg-purple-400',
-  'bg-pink-400',
-  'bg-orange-400',
-  'bg-teal-400',
+const EVENT_COLORS = [
+  '#60a5fa', // blue-400
+  '#34d399', // emerald-400
+  '#a78bfa', // violet-400
+  '#f472b6', // pink-400
+  '#fb923c', // orange-400
+  '#2dd4bf', // teal-400
 ]
 
-function getDayColumns(): { date: Date; label: string; key: string }[] {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
+  getDay,
+  locales: { 'en-US': enUS },
+})
 
-  return Array.from({ length: 5 }, (_, i) => {
-    const date = new Date(today.getTime() + i * 86400000)
-    const label =
-      i === 0
-        ? 'Today'
-        : date.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })
-    return { date, label, key: date.toISOString().slice(0, 10) }
-  })
-}
-
-function formatEventTime(isoStr: string): string {
-  return new Date(isoStr).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
+interface RbcEvent {
+  id: string
+  title: string
+  start: Date
+  end: Date
+  allDay: boolean
+  calendarIndex: number
 }
 
 export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
-  const columns = getDayColumns()
-
   if (loading) {
     return (
       <GlassPanel className="p-4 animate-pulse">
@@ -48,58 +45,69 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
     )
   }
 
+  const rbcEvents: RbcEvent[] = events.map((e) => ({
+    id: e.id,
+    title: e.title,
+    start: new Date(e.start),
+    end: new Date(e.end),
+    allDay: e.allDay,
+    calendarIndex: e.calendarIndex ?? 0,
+  }))
+
+  const view: View = 'week'
+  const minTime = new Date()
+  minTime.setHours(9, 0, 0, 0)
+  const maxTime = new Date()
+  maxTime.setHours(22, 0, 0, 0)
+
   return (
-    <GlassPanel className="p-4">
-      <div className="grid grid-cols-5 gap-2 h-full">
-        {columns.map(({ date, label, key }) => {
-          const dayEvents = events.filter((e) => {
-            const eventDate = new Date(e.start)
-            return eventDate.toISOString().slice(0, 10) === key
-          })
-
-          const allDay = dayEvents.filter((e) => e.allDay)
-          const timed = dayEvents.filter((e) => !e.allDay)
-
-          return (
-            <div key={key} className="flex flex-col min-h-0">
-              {/* Day header */}
-              <div className="text-center mb-2">
-                <div
-                  className={`text-xs font-semibold tracking-wide ${date.toDateString() === new Date().toDateString() ? 'text-yellow-300' : 'text-white/60'}`}
-                >
-                  {label}
-                </div>
-              </div>
-
-              {/* All-day events */}
-              {allDay.map((event) => (
-                <div
-                  key={event.id}
-                  className={`${CALENDAR_COLORS[event.calendarIndex ?? 0]} text-white text-xs rounded px-1 py-0.5 mb-1 truncate`}
-                >
-                  {event.title}
-                </div>
-              ))}
-
-              {/* Timed events */}
-              <div className="flex flex-col gap-1 overflow-y-auto">
-                {timed.map((event) => (
-                  <div
-                    key={event.id}
-                    className={`${CALENDAR_COLORS[event.calendarIndex ?? 0]}/20 border-l-2 ${CALENDAR_COLORS[event.calendarIndex ?? 0].replace('bg-', 'border-')} text-white text-xs rounded-r px-1 py-1`}
-                  >
-                    <div className="text-white/60 text-[10px]">{formatEventTime(event.start)}</div>
-                    <div className="truncate">{event.title}</div>
-                  </div>
-                ))}
-                {dayEvents.length === 0 && (
-                  <div className="text-white/20 text-xs text-center mt-2">—</div>
-                )}
-              </div>
-            </div>
-          )
+    <GlassPanel className="p-2 h-full">
+      <style>{`
+        .rbc-calendar { background: transparent; color: white; font-size: 11px; height: 100%; }
+        .rbc-header { border-color: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.7); padding: 4px 0; font-size: 11px; }
+        .rbc-time-view, .rbc-time-header, .rbc-time-content { border-color: rgba(255,255,255,0.15) !important; }
+        .rbc-time-slot { border-color: rgba(255,255,255,0.05) !important; }
+        .rbc-timeslot-group { border-color: rgba(255,255,255,0.1) !important; min-height: 36px; }
+        .rbc-time-gutter .rbc-timeslot-group { border: none; }
+        .rbc-label { color: rgba(255,255,255,0.5); font-size: 10px; padding-right: 4px; }
+        .rbc-day-slot .rbc-time-slot { border-color: rgba(255,255,255,0.05) !important; }
+        .rbc-current-time-indicator { background: #fbbf24; }
+        .rbc-today { background: rgba(255,255,255,0.05) !important; }
+        .rbc-off-range-bg { background: transparent; }
+        .rbc-event { border-radius: 3px; border: none !important; font-size: 10px; padding: 1px 3px; }
+        .rbc-event-label { font-size: 9px; }
+        .rbc-allday-cell { max-height: 48px; overflow-y: auto; }
+        .rbc-show-more { color: rgba(255,255,255,0.6); font-size: 10px; }
+        .rbc-toolbar { display: none; }
+        .rbc-time-header-gutter { background: transparent !important; }
+        .rbc-time-header-content { border-color: rgba(255,255,255,0.15) !important; }
+        .rbc-header + .rbc-header { border-color: rgba(255,255,255,0.15) !important; }
+        .rbc-day-slot .rbc-events-container { margin-right: 0; }
+      `}</style>
+      <Calendar
+        localizer={localizer}
+        events={rbcEvents}
+        defaultView={view}
+        view={view}
+        onView={() => {}}
+        date={new Date()}
+        onNavigate={() => {}}
+        min={minTime}
+        max={maxTime}
+        eventPropGetter={(event) => ({
+          style: {
+            backgroundColor: EVENT_COLORS[(event as RbcEvent).calendarIndex % EVENT_COLORS.length],
+            color: 'white',
+          },
         })}
-      </div>
+        formats={{
+          dayFormat: (date) =>
+            date.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' }),
+          timeGutterFormat: (date) =>
+            date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }),
+        }}
+        style={{ height: '100%' }}
+      />
     </GlassPanel>
   )
 }

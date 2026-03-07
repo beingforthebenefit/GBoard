@@ -27,8 +27,10 @@ export async function fetchPhotos(): Promise<string[]> {
   const albumUrl = process.env.ICLOUD_ALBUM_URL
   if (!albumUrl) throw new Error('Missing ICLOUD_ALBUM_URL env var')
 
-  // Extract token from URL like https://www.icloud.com/photos/share/{token}
-  const match = albumUrl.match(/\/photos\/(?:share\/)?([A-Za-z0-9_-]+)$/)
+  // Extract token from URLs like:
+  //   https://www.icloud.com/sharedalbum/#B2cJ0DiRHGKfEzI
+  //   https://www.icloud.com/photos/share/abc123
+  const match = albumUrl.match(/[/#]([A-Za-z0-9_-]{10,})$/)
   if (!match) throw new Error(`Cannot parse iCloud album token from URL: ${albumUrl}`)
   const token = match[1]
 

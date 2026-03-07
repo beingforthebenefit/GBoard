@@ -6,7 +6,7 @@ import plexRouter from './routes/plex.js'
 import photosRouter from './routes/photos.js'
 
 const app = express()
-const PORT = parseInt(process.env.BACKEND_PORT ?? '3001', 10)
+const PORT = 3001 // internal container port — BACKEND_PORT in .env only controls the host-side mapping
 const STARTED_AT = Date.now()
 
 app.use(express.json())
