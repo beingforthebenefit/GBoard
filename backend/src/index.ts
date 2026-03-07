@@ -7,6 +7,7 @@ import photosRouter from './routes/photos.js'
 
 const app = express()
 const PORT = parseInt(process.env.BACKEND_PORT ?? '3001', 10)
+const STARTED_AT = Date.now()
 
 app.use(express.json())
 
@@ -19,6 +20,12 @@ app.use((_req, res, next) => {
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// Version endpoint — returns server startup time.
+// When the frontend detects this value has changed, it reloads the page.
+app.get('/api/version', (_req, res) => {
+  res.json({ startedAt: STARTED_AT })
 })
 
 app.use('/api/weather', weatherRouter)

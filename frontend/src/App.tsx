@@ -8,10 +8,12 @@ import { useWeather } from './hooks/useWeather.js'
 import { useCalendar } from './hooks/useCalendar.js'
 import { usePlex } from './hooks/usePlex.js'
 import { usePhotos } from './hooks/usePhotos.js'
+import { useVersion } from './hooks/useVersion.js'
 
 const SOBRIETY_DATE = import.meta.env.VITE_SOBRIETY_DATE as string
 
 export function App() {
+  useVersion()
   const { data: weatherData, loading: weatherLoading } = useWeather()
   const { events, loading: calendarLoading } = useCalendar()
   const { session, loading: plexLoading } = usePlex()
