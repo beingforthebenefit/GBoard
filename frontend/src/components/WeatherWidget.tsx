@@ -8,11 +8,7 @@ interface WeatherWidgetProps {
 
 function WeatherIcon({ icon, alt = '' }: { icon: string; alt?: string }) {
   return (
-    <img
-      src={`https://openweathermap.org/img/wn/${icon}@2x.png`}
-      alt={alt}
-      className="w-12 h-12"
-    />
+    <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt={alt} className="w-12 h-12" />
   )
 }
 

@@ -29,7 +29,9 @@ export function PlexWidget({ session, loading }: PlexWidgetProps) {
 
   if (!session) return null
 
-  const thumbUrl = session.thumbPath ? `/api/plex/thumb?path=${encodeURIComponent(session.thumbPath)}` : null
+  const thumbUrl = session.thumbPath
+    ? `/api/plex/thumb?path=${encodeURIComponent(session.thumbPath)}`
+    : null
 
   return (
     <GlassPanel className="p-4 text-white">
