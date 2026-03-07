@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { buildForecast } from '../src/services/weatherService.js'
 
-const makeSlot = (dt_txt: string, temp_max: number, temp_min: number, icon = '01d', description = 'clear sky') => ({
+const makeSlot = (
+  dt_txt: string,
+  temp_max: number,
+  temp_min: number,
+  icon = '01d',
+  description = 'clear sky'
+) => ({
   dt: 0,
   dt_txt,
   main: { temp_max, temp_min },
