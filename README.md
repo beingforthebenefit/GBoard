@@ -7,6 +7,7 @@ A self-hosted dashboard — a Dakboard replacement. Runs in Docker, accessible v
 - **Weather** — Current conditions, 3-day forecast, sunrise/sunset (OpenWeatherMap)
 - **Sun Arc** — Two visual representations side-by-side (wide track and orbital earth)
 - **Clock & Date** — Live 12-hour digital clock with seconds
+- **Astrology Snapshot** — Sun sign of the day, sign date range, moon phase, weekday ruler insights, and matching constellation view in a center widget
 - **Sober Counter** — Years / months / days / hours since your sobriety date
 - **Plex Now Playing** — Shows all active streams as cards; progress animates smoothly between backend polls, with an idle placeholder when no one is streaming
 - **Calendar** — 7-day rolling view from iCloud shared CalDAV/ICS calendars

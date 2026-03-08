@@ -2,6 +2,7 @@ import { PhotoBackground } from './components/PhotoBackground.js'
 import { WeatherWidget } from './components/WeatherWidget.js'
 import { SunArcWidget } from './components/SunArcWidget.js'
 import { ClockWidget } from './components/ClockWidget.js'
+import { AstroWidget } from './components/AstroWidget.js'
 import { SoberCounter } from './components/SoberCounter.js'
 import { PlexWidget } from './components/PlexWidget.js'
 import { CalendarWidget } from './components/CalendarWidget.js'
@@ -40,6 +41,9 @@ export function App() {
           </div>
           <div className="flex-1 min-w-0 pt-1 widget-enter" style={{ animationDelay: '60ms' }}>
             <ClockWidget />
+            <div className="max-w-3xl mx-auto mt-2 px-2">
+              <AstroWidget />
+            </div>
           </div>
           <div
             className="w-72 flex-shrink-0 flex flex-col gap-2 widget-enter"
