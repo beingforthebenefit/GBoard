@@ -5,11 +5,11 @@ A self-hosted dashboard — a Dakboard replacement. Runs in Docker, accessible v
 ## Features
 
 - **Weather** — Current conditions, 3-day forecast, sunrise/sunset (OpenWeatherMap)
-- **Clock & Date** — Live digital clock
+- **Clock & Date** — Live 12-hour digital clock with seconds
 - **Sober Counter** — Years / months / days / hours since your sobriety date
 - **Plex Now Playing** — Shows what's currently playing; hides when idle
-- **Calendar** — 5-day rolling view from iCloud shared CalDAV/ICS calendars
-- **Photo Background** — Rotating photos from an iCloud shared album with crossfade
+- **Calendar** — 7-day rolling view from iCloud shared CalDAV/ICS calendars
+- **Photo Background** — Rotating photos from an iCloud shared album with dual-layer backdrop (sharp foreground + blurred darkened fill)
 
 ## Quick Start
 
@@ -59,6 +59,15 @@ cd backend && npm install && npm run dev
 # Frontend (runs on :5173, proxies /api to :3001)
 cd frontend && npm install && npm run dev
 ```
+
+## Deploying Changes
+
+```bash
+docker compose up --build -d
+```
+
+- Rebuilds and restarts backend/frontend containers with the latest code.
+- Connected dashboards auto-refresh after deploy when backend startup time changes (`/api/version` poll every 10 seconds, no-cache).
 
 ## Architecture
 

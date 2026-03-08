@@ -4,10 +4,10 @@ export function ClockWidget() {
   const now = useClock()
 
   const timeStr = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false,
+    hour12: true,
   })
 
   const dateStr = now.toLocaleDateString('en-US', {
@@ -21,7 +21,7 @@ export function ClockWidget() {
       <div className="text-7xl font-extralight tracking-widest tabular-nums drop-shadow-lg">
         {timeStr}
       </div>
-      <div className="text-2xl font-light mt-1 text-white/70 drop-shadow-md">{dateStr}</div>
+      <div className="text-3xl font-light mt-1 text-white/70 drop-shadow-md">{dateStr}</div>
     </div>
   )
 }

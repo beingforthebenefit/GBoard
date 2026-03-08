@@ -15,6 +15,33 @@ interface PhotoBackgroundProps {
   transitionMs?: number
 }
 
+function LayeredPhoto({
+  src,
+  opacity,
+  transitionMs,
+}: {
+  src: string
+  opacity: number
+  transitionMs: number
+}) {
+  return (
+    <div
+      className="absolute inset-0 overflow-hidden"
+      style={{
+        opacity,
+        transition: `opacity ${transitionMs}ms ease-in-out`,
+      }}
+    >
+      {/* Back layer: fills the viewport, blurred and darkened */}
+      <img src={src} className="absolute inset-0 w-full h-full object-cover scale-110 blur-3xl" alt="" />
+      <div className="absolute inset-0 bg-black/60" />
+
+      {/* Front layer: sharp image fit to screen width */}
+      <img src={src} className="absolute inset-0 w-full h-full object-contain" alt="" />
+    </div>
+  )
+}
+
 export function PhotoBackground({
   photos,
   intervalMs = 5 * 60 * 1000,
@@ -45,32 +72,22 @@ export function PhotoBackground({
     return <div className="fixed inset-0 -z-10 bg-gray-900" />
   }
 
-  const imgBase = 'absolute inset-0 w-full h-full object-cover'
-
   return (
-    <div className="fixed inset-0 -z-10">
-      {/* Current photo — fades out during transition */}
-      <img
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
+      {/* Current photo group */}
+      <LayeredPhoto
         src={shuffled[currentIndex]}
-        className={imgBase}
-        style={{
-          opacity: isTransitioning ? 0 : 1,
-          transition: `opacity ${transitionMs}ms ease-in-out`,
-        }}
-        alt=""
+        opacity={isTransitioning ? 0 : 1}
+        transitionMs={transitionMs}
       />
-      {/* Next photo — fades in during transition */}
-      <img
+      {/* Next photo group */}
+      <LayeredPhoto
         src={shuffled[nextIndex % shuffled.length]}
-        className={imgBase}
-        style={{
-          opacity: isTransitioning ? 1 : 0,
-          transition: `opacity ${transitionMs}ms ease-in-out`,
-        }}
-        alt=""
+        opacity={isTransitioning ? 1 : 0}
+        transitionMs={transitionMs}
       />
-      {/* Subtle dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/25" />
+      {/* Global readability overlay */}
+      <div className="absolute inset-0 bg-black/20" />
     </div>
   )
 }

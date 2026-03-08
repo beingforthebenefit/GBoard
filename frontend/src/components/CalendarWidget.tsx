@@ -12,7 +12,7 @@ const EVENT_COLORS = [
   '#a78bfa', // violet-400
   '#f472b6', // pink-400
   '#fb923c', // orange-400
-  '#2dd4bf', // teal-400
+  '#94a3b8', // slate-400
 ]
 
 const HOUR_START = 9

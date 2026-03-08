@@ -6,10 +6,16 @@ interface WeatherWidgetProps {
   loading: boolean
 }
 
-function WeatherIcon({ icon, alt = '' }: { icon: string; alt?: string }) {
-  return (
-    <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt={alt} className="w-12 h-12" />
-  )
+function WeatherIcon({
+  icon,
+  alt = '',
+  className = 'w-12 h-12',
+}: {
+  icon: string
+  alt?: string
+  className?: string
+}) {
+  return <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt={alt} className={className} />
 }
 
 function formatTime(unix: number): string {
@@ -44,21 +50,21 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
       {/* Current: centered icon + temp, with description beneath */}
       <div className="flex flex-col items-center gap-1">
         <div className="flex items-center justify-center gap-2">
-          <WeatherIcon icon={current.icon} alt={current.description} />
-          <div className="text-5xl font-light leading-none">{current.temp}°</div>
+          <WeatherIcon icon={current.icon} alt={current.description} className="w-16 h-16" />
+          <div className="text-6xl font-light leading-none">{current.temp}°</div>
         </div>
-        <div className="text-white/70 capitalize text-sm text-center">{current.description}</div>
+        <div className="text-white/70 capitalize text-base text-center">{current.description}</div>
       </div>
 
       {/* Details row */}
-      <div className="text-sm text-white/60 flex flex-wrap gap-x-3">
+      <div className="text-base text-white/60 flex flex-wrap justify-center gap-x-3 text-center">
         <span>Feels {current.feelsLike}°</span>
         <span>{current.humidity}%</span>
         <span>{current.windSpeed} mph</span>
       </div>
 
       {/* Sunrise / Sunset */}
-      <div className="flex gap-3 text-sm text-white/60">
+      <div className="flex justify-center gap-3 text-base text-white/60 text-center">
         <span>🌅 {formatTime(current.sunrise)}</span>
         <span>🌇 {formatTime(current.sunset)}</span>
       </div>
@@ -71,9 +77,9 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
           })
           return (
             <div key={day.date} className="text-center">
-              <div className="text-white/50 text-xs">{label}</div>
-              <WeatherIcon icon={day.icon} alt={day.description} />
-              <div className="text-xs">
+              <div className="text-white/50 text-sm">{label}</div>
+              <WeatherIcon icon={day.icon} alt={day.description} className="w-10 h-10 mx-auto" />
+              <div className="text-sm">
                 <span className="font-medium">{day.high}°</span>
                 <span className="text-white/40"> {day.low}°</span>
               </div>

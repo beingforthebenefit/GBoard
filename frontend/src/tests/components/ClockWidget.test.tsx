@@ -15,10 +15,10 @@ afterEach(() => {
 })
 
 describe('ClockWidget', () => {
-  it('renders a time string in HH:MM:SS format', () => {
+  it('renders a 12-hour time string with AM/PM', () => {
     render(<ClockWidget />)
-    // The exact time depends on local timezone; just verify the format
-    const timeEl = screen.getByText(/\d{2}:\d{2}:\d{2}/)
+    // The exact value depends on local timezone; verify 12-hour format.
+    const timeEl = screen.getByText(/\b\d{1,2}:\d{2}:\d{2}\s?(AM|PM)\b/i)
     expect(timeEl).toBeDefined()
   })
 

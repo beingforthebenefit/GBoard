@@ -11,11 +11,13 @@ describe('PhotoBackground', () => {
   it('renders a single photo without crashing', () => {
     const { container } = render(<PhotoBackground photos={['https://example.com/photo1.jpg']} />)
     const imgs = container.querySelectorAll('img')
-    expect(imgs.length).toBeGreaterThanOrEqual(1)
-    expect(imgs[0].src).toBe('https://example.com/photo1.jpg')
+    expect(imgs.length).toBe(4)
+    for (const img of imgs) {
+      expect(img.src).toBe('https://example.com/photo1.jpg')
+    }
   })
 
-  it('renders two img elements for crossfade when given multiple photos', () => {
+  it('renders two layered photo groups for crossfade when given multiple photos', () => {
     const photos = [
       'https://example.com/photo1.jpg',
       'https://example.com/photo2.jpg',
@@ -23,12 +25,13 @@ describe('PhotoBackground', () => {
     ]
     const { container } = render(<PhotoBackground photos={photos} />)
     const imgs = container.querySelectorAll('img')
-    expect(imgs.length).toBe(2)
+    expect(imgs.length).toBe(4)
   })
 
-  it('renders the dark overlay for text readability', () => {
+  it('renders the dark overlays for readability and backdrop', () => {
     const { container } = render(<PhotoBackground photos={['https://example.com/photo1.jpg']} />)
-    expect(container.querySelector('.bg-black\\/25')).toBeTruthy()
+    expect(container.querySelector('.bg-black\\/20')).toBeTruthy()
+    expect(container.querySelector('.bg-black\\/60')).toBeTruthy()
   })
 
   it('uses all provided photos (shuffle does not lose any)', () => {
