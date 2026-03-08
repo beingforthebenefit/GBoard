@@ -5,28 +5,26 @@ let sessionSid: string | null = null
 let authInFlight: Promise<string> | null = null
 let rateLimitedUntil = 0
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 async function authenticate(): Promise<string> {
   // Deduplicate concurrent auth calls
   if (authInFlight) return authInFlight
+
+  // If rate-limited, fail fast — don't attempt auth at all
+  if (Date.now() < rateLimitedUntil) {
+    throw new Error('Pi-hole auth rate limited, backing off')
+  }
+
   authInFlight = (async () => {
     try {
-      // Respect rate-limit backoff
-      const waitMs = rateLimitedUntil - Date.now()
-      if (waitMs > 0) await sleep(waitMs)
-
       const res = await fetch(`${PIHOLE_URL()}/api/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: PIHOLE_PASSWORD() }),
       })
       if (res.status === 429) {
-        // Back off for 30 seconds on rate limit
-        rateLimitedUntil = Date.now() + 30_000
-        throw new Error('Pi-hole auth rate limited, will retry after backoff')
+        // Back off for 60 seconds on rate limit
+        rateLimitedUntil = Date.now() + 60_000
+        throw new Error('Pi-hole auth rate limited, backing off for 60s')
       }
       if (!res.ok) throw new Error(`Pi-hole auth failed: ${res.status}`)
       const data = (await res.json()) as { session: { sid: string } }
