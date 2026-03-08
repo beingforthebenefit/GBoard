@@ -63,7 +63,9 @@ describe('usePlex', () => {
   })
 
   it('does not increment progress when paused', async () => {
-    fetchMock.mockResolvedValue(okResponse(makeSession({ playerState: 'paused', viewOffset: 22000 })))
+    fetchMock.mockResolvedValue(
+      okResponse(makeSession({ playerState: 'paused', viewOffset: 22000 }))
+    )
 
     const { result } = renderHook(() => usePlex())
 

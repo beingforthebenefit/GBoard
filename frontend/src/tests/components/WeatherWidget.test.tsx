@@ -31,7 +31,9 @@ describe('WeatherWidget', () => {
 
     // Keep one additional assertion on full class selector to ensure container shape.
     expect(
-      container.querySelector('div.text-base.text-white\\/60.flex.flex-wrap.justify-center.text-center')
+      container.querySelector(
+        'div.text-base.text-white\\/60.flex.flex-wrap.justify-center.text-center'
+      )
     ).toBeTruthy()
   })
 

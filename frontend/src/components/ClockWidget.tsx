@@ -26,7 +26,9 @@ export function ClockWidget() {
     <div className="text-white text-center py-2">
       <div className="text-7xl font-extralight tracking-wide tabular-nums drop-shadow-lg whitespace-nowrap inline-flex items-start">
         <span>{timeStr}</span>
-        <span className="text-2xl leading-none align-super mt-2 ml-1 tracking-normal">{dayPeriod}</span>
+        <span className="text-2xl leading-none align-super mt-2 ml-1 tracking-normal">
+          {dayPeriod}
+        </span>
       </div>
       <div className="text-3xl font-light mt-1 text-white/70 drop-shadow-md">{dateStr}</div>
     </div>

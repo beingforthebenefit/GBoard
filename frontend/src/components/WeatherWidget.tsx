@@ -15,7 +15,9 @@ function WeatherIcon({
   alt?: string
   className?: string
 }) {
-  return <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt={alt} className={className} />
+  return (
+    <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt={alt} className={className} />
+  )
 }
 
 function formatTime(unix: number): string {
