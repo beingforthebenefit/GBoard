@@ -56,3 +56,20 @@ export interface PlexResponse {
 export interface PhotosResponse {
   photos: string[]
 }
+
+export interface PiholeClient {
+  name: string
+  ip: string
+  queries: number
+}
+
+export interface PiholeResponse {
+  totalQueries: number
+  blockedQueries: number
+  blockedPercentage: number
+  domainsOnBlocklist: number
+  status: string
+  blockedLastHour: number
+  queriesLastHour: number
+  clients: PiholeClient[]
+}

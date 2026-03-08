@@ -3,6 +3,7 @@ import { join } from 'node:path'
 
 const PIHOLE_URL = () => process.env.PIHOLE_URL || 'http://192.168.50.62'
 const PIHOLE_PASSWORD = () => process.env.PIHOLE_PASSWORD || ''
+const PIHOLE_CLIENT_ALIASES = () => process.env.PIHOLE_CLIENT_ALIASES || ''
 const SESSION_DIR = () => process.env.PIHOLE_SESSION_DIR || '/data/photos'
 const SESSION_FILE = () => join(SESSION_DIR(), 'pihole-session.json')
 
@@ -102,6 +103,7 @@ export interface PiholeStats {
   status: string
   blockedLastHour: number
   queriesLastHour: number
+  clients: PiholeClient[]
 }
 
 interface StatsResponse {
@@ -123,6 +125,22 @@ interface HistoryResponse {
   history: HistoryEntry[]
 }
 
+export interface PiholeClient {
+  name: string
+  ip: string
+  queries: number
+}
+
+interface ClientsResponseItem {
+  name: string
+  ip: string
+  count: number
+}
+
+interface ClientsResponse {
+  clients: ClientsResponseItem[]
+}
+
 let lastStats: PiholeStats | null = null
 
 export function _resetSession() {
@@ -137,12 +155,99 @@ export function loadSession() {
   sessionSid = loadSessionFromDisk()
 }
 
+function normalizeClients(raw: unknown): PiholeClient[] {
+  if (!raw || typeof raw !== 'object') return []
+
+  const asAny = raw as Record<string, unknown>
+
+  // Pi-hole v6 style: { clients: [{ name, ip, count }] }
+  if (Array.isArray(asAny.clients)) {
+    return asAny.clients
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null
+        const entry = item as Record<string, unknown>
+        const ip = typeof entry.ip === 'string' ? entry.ip : ''
+        const fallbackName = ip || 'Unknown client'
+        const name = typeof entry.name === 'string' && entry.name.trim() ? entry.name : fallbackName
+        const countRaw = entry.count
+        const queries = typeof countRaw === 'number' ? countRaw : 0
+        if (!ip && !name) return null
+        return { name, ip: ip || fallbackName, queries }
+      })
+      .filter((item): item is PiholeClient => item !== null)
+  }
+
+  // Legacy shape fallback: { top_sources: { "<ip-or-host>": count } }
+  if (
+    asAny.top_sources &&
+    typeof asAny.top_sources === 'object' &&
+    !Array.isArray(asAny.top_sources)
+  ) {
+    return Object.entries(asAny.top_sources as Record<string, unknown>)
+      .map(([key, value]) => ({
+        name: key,
+        ip: key,
+        queries: typeof value === 'number' ? value : 0,
+      }))
+      .filter((item) => item.queries > 0)
+  }
+
+  return []
+}
+
+function parseClientAliases(raw: string): Record<string, string> {
+  if (!raw.trim()) return {}
+
+  const aliases: Record<string, string> = {}
+  for (const part of raw.split(',')) {
+    const entry = part.trim()
+    if (!entry) continue
+    const eq = entry.indexOf('=')
+    if (eq <= 0) continue
+
+    const key = entry.slice(0, eq).trim().toLowerCase()
+    let value = entry.slice(eq + 1).trim()
+    if (!key || !value) continue
+    value = value.replace(/^['"]/, '').replace(/['"]$/, '').trim()
+    if (!value) continue
+
+    aliases[key] = value
+  }
+
+  return aliases
+}
+
+function applyClientAlias(client: PiholeClient, aliases: Record<string, string>): PiholeClient {
+  const byIp = aliases[client.ip.toLowerCase()]
+  if (byIp) return { ...client, name: byIp }
+
+  const byName = aliases[client.name.toLowerCase()]
+  if (byName) return { ...client, name: byName }
+
+  return client
+}
+
+function isFilteredClient(client: PiholeClient): boolean {
+  const name = client.name.toLowerCase()
+  const ip = client.ip.toLowerCase()
+
+  if (name === 'pi.hole') return true
+  if (name === 'localhost' || name.startsWith('localhost.')) return true
+  if (ip === '::') return true
+  if (ip === '127.0.0.1' || ip.startsWith('127.') || ip === '::1' || ip === '[::1]') return true
+
+  return false
+}
+
 export async function fetchPiholeStats(): Promise<PiholeStats> {
   try {
-    const [stats, blocking, history] = await Promise.all([
+    const [stats, blocking, history, clientsRaw] = await Promise.all([
       piholeGet<StatsResponse>('/api/stats/summary'),
       piholeGet<BlockingResponse>('/api/dns/blocking'),
       piholeGet<HistoryResponse>('/api/history'),
+      piholeGet<ClientsResponse | Record<string, unknown>>('/api/stats/top_clients?count=8').catch(
+        () => null
+      ),
     ])
 
     const oneHourAgo = Math.floor(Date.now() / 1000) - 3600
@@ -157,6 +262,14 @@ export async function fetchPiholeStats(): Promise<PiholeStats> {
       }
     }
 
+    const aliases = parseClientAliases(PIHOLE_CLIENT_ALIASES())
+
+    const clients = normalizeClients(clientsRaw)
+      .map((client) => applyClientAlias(client, aliases))
+      .filter((client) => !isFilteredClient(client))
+      .sort((a, b) => b.queries - a.queries)
+      .slice(0, 5)
+
     lastStats = {
       totalQueries: stats.queries.total,
       blockedQueries: stats.queries.blocked,
@@ -165,6 +278,7 @@ export async function fetchPiholeStats(): Promise<PiholeStats> {
       status: blocking.blocking,
       blockedLastHour,
       queriesLastHour,
+      clients,
     }
     return lastStats
   } catch (err) {

@@ -9,6 +9,7 @@ beforeEach(() => {
   _resetSession()
   vi.stubEnv('PIHOLE_URL', 'http://pihole.test')
   vi.stubEnv('PIHOLE_PASSWORD', 'testpass')
+  vi.stubEnv('PIHOLE_CLIENT_ALIASES', '')
 })
 
 const authResponse = {
@@ -22,6 +23,20 @@ const statsResponse = {
 
 const blockingResponse = {
   blocking: 'enabled',
+}
+
+const clientsResponse = {
+  clients: [
+    { name: 'pi.hole', ip: '192.168.1.2', count: 4000 },
+    { name: 'resolver-v6', ip: '::', count: 3100 },
+    { name: 'localhost.lan', ip: '127.0.0.1', count: 2500 },
+    { name: 'LivingRoomTV', ip: '192.168.1.40', count: 1300 },
+    { name: 'iPhone', ip: '192.168.1.22', count: 980 },
+    { name: '192.168.1.18', ip: '192.168.1.18', count: 410 },
+    { name: 'Laptop', ip: '192.168.1.12', count: 600 },
+    { name: 'Tablet', ip: '192.168.1.30', count: 550 },
+    { name: 'Guest', ip: '192.168.1.50', count: 120 },
+  ],
 }
 
 // Use recent timestamps so they pass the "last hour" filter
@@ -60,6 +75,12 @@ function mockSuccessfulFlow() {
         json: () => Promise.resolve(historyResponse),
       })
     }
+    if (url.includes('/api/stats/top_clients')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(clientsResponse),
+      })
+    }
     return Promise.resolve({ ok: false, status: 404 })
   })
 }
@@ -82,6 +103,35 @@ describe('fetchPiholeStats', () => {
     const stats = await fetchPiholeStats()
     expect(stats.queriesLastHour).toBe(300) // 100 + 80 + 120
     expect(stats.blockedLastHour).toBe(95) // 30 + 25 + 40
+  })
+
+  it('returns a compact top-clients list sorted by query count', async () => {
+    mockSuccessfulFlow()
+
+    const stats = await fetchPiholeStats()
+    expect(stats.clients.length).toBe(5)
+    expect(stats.clients[0].name).toBe('LivingRoomTV')
+    expect(stats.clients[1].name).toBe('iPhone')
+    expect(stats.clients[2].name).toBe('Laptop')
+  })
+
+  it('filters out local Pi-hole and localhost entries from client list', async () => {
+    mockSuccessfulFlow()
+
+    const stats = await fetchPiholeStats()
+    expect(stats.clients.some((c) => c.name.toLowerCase() === 'pi.hole')).toBe(false)
+    expect(stats.clients.some((c) => c.name.toLowerCase().startsWith('localhost'))).toBe(false)
+    expect(stats.clients.some((c) => c.ip.startsWith('127.'))).toBe(false)
+    expect(stats.clients.some((c) => c.ip === '::')).toBe(false)
+  })
+
+  it('applies alias mapping from PIHOLE_CLIENT_ALIASES', async () => {
+    vi.stubEnv('PIHOLE_CLIENT_ALIASES', "192.168.1.22=Gerald's iPhone,192.168.1.18=Gerald's iPad")
+    mockSuccessfulFlow()
+
+    const stats = await fetchPiholeStats()
+    expect(stats.clients.find((c) => c.ip === '192.168.1.22')?.name).toBe("Gerald's iPhone")
+    expect(stats.clients.find((c) => c.ip === '192.168.1.18')?.name).toBe("Gerald's iPad")
   })
 
   it('sends X-FTL-SID header on API requests', async () => {
@@ -172,5 +222,6 @@ describe('fetchPiholeStats', () => {
     const stats = await fetchPiholeStats()
     expect(stats.blockedLastHour).toBe(0)
     expect(stats.queriesLastHour).toBe(0)
+    expect(stats.clients).toEqual([])
   })
 })

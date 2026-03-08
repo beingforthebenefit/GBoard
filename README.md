@@ -9,6 +9,7 @@ A self-hosted dashboard — a Dakboard replacement. Runs in Docker, accessible v
 - **Clock & Date** — Live 12-hour digital clock with seconds
 - **Astrology Snapshot** — Sun sign of the day, sign date range, moon phase, weekday ruler insights, and matching constellation view in a center widget
 - **Sober Counter** — Years / months / days / hours since your sobriety date
+- **Pi-hole Widget** — DNS blocking status, key stats, and compact top-client list
 - **Plex Now Playing** — Shows all active streams as cards; progress animates smoothly between backend polls, with an idle placeholder when no one is streaming
 - **Calendar** — 7-day rolling view from iCloud shared CalDAV/ICS calendars
 - **Photo Background** — Rotating photos from an iCloud shared album with dual-layer backdrop (sharp foreground + blurred fill), with failed image loads retried every 5 seconds
@@ -37,6 +38,9 @@ Access the dashboard at `http://<your-machine-ip>:3000`
 | `PLEX_TOKEN` | Plex authentication token |
 | `ICAL_URLS` | Comma-separated iCloud CalDAV/ICS share URLs |
 | `ICLOUD_ALBUM_URL` | iCloud shared album URL |
+| `PIHOLE_URL` | Pi-hole base URL (e.g. `http://192.168.1.100`) |
+| `PIHOLE_PASSWORD` | Pi-hole web/API password |
+| `PIHOLE_CLIENT_ALIASES` | Optional comma-separated alias map for client labels (example: `192.168.1.22=Gerald's iPhone,192.168.1.23=Gerald's iPad`) |
 | `PORT` | Frontend port (default: `3000`) |
 | `BACKEND_PORT` | Backend API port (default: `3001`) |
 
@@ -82,6 +86,7 @@ Nginx  (port 3000)
   └─ Proxies /api/* ──▶ Node.js API (port 3001)
                              ├─ /api/weather  ──▶ OpenWeatherMap
                              ├─ /api/calendar ──▶ iCloud CalDAV ICS
+                             ├─ /api/pihole   ──▶ Pi-hole
                              ├─ /api/plex     ──▶ Plex (local LAN)
                              └─ /api/photos   ──▶ iCloud shared album
 ```
