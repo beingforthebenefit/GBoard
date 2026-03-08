@@ -1,12 +1,13 @@
 import { Router } from 'express'
-import { fetchPlexSession } from '../services/plexService.js'
+import { fetchPlexSessions } from '../services/plexService.js'
 
 const router = Router()
 
 router.get('/', async (_req, res, next) => {
   try {
-    const session = await fetchPlexSession()
-    res.json({ session })
+    const sessions = await fetchPlexSessions()
+    // Keep `session` for backward compatibility during rollouts.
+    res.json({ session: sessions[0] ?? null, sessions })
   } catch (err) {
     next(err)
   }

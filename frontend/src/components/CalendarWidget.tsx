@@ -111,7 +111,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
               {allDayEvents.map((e) => (
                 <div
                   key={e.id}
-                  className="text-white rounded px-1 text-xs truncate mb-0.5"
+                  className="text-white rounded-md px-1 text-xs truncate mb-0.5"
                   style={{
                     backgroundColor: EVENT_COLORS[(e.calendarIndex ?? 0) % EVENT_COLORS.length],
                   }}
@@ -133,7 +133,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
               <div
                 key={i}
                 className="absolute right-1 text-sm leading-none"
-                style={{ top: i * HOUR_PX - 6, color: 'rgba(255,255,255,0.4)' }}
+                style={{ top: i * HOUR_PX - 6, color: 'rgba(255,255,255,0.28)' }}
               >
                 {formatHour(HOUR_START + i)}
               </div>
@@ -183,7 +183,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
                   return (
                     <div
                       key={e.id}
-                      className="absolute left-0.5 right-0.5 rounded px-1.5 py-0.5 overflow-hidden z-20"
+                      className="absolute left-0.5 right-0.5 rounded-xl px-1.5 py-0.5 overflow-hidden z-20"
                       style={{
                         top: layout.top + 1,
                         height: layout.height - 2,

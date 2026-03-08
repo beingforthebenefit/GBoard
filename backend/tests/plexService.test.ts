@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mapMetadata } from '../src/services/plexService.js'
+import { mapMetadata, mapMetadataList } from '../src/services/plexService.js'
 
 const baseUser = { title: 'Gerald', thumb: 'https://plex.tv/avatar.jpg' }
 const basePlayer = { state: 'playing' }
@@ -108,5 +108,31 @@ describe('mapMetadata', () => {
       index: 1,
     })
     expect(result.subtitle).toBe('S01E01 – Pilot')
+  })
+
+  it('maps multiple active sessions in order', () => {
+    const sessions = mapMetadataList([
+      {
+        type: 'movie',
+        title: 'Movie One',
+        Player: { state: 'playing' },
+        User: { title: 'A' },
+      },
+      {
+        type: 'episode',
+        title: 'Pilot',
+        grandparentTitle: 'Lost',
+        parentIndex: 1,
+        index: 1,
+        Player: { state: 'paused' },
+        User: { title: 'B' },
+      },
+    ])
+
+    expect(sessions).toHaveLength(2)
+    expect(sessions[0].title).toBe('Movie One')
+    expect(sessions[0].userName).toBe('A')
+    expect(sessions[1].title).toBe('Lost')
+    expect(sessions[1].playerState).toBe('paused')
   })
 })

@@ -16,29 +16,29 @@ const baseSession: PlexSession = {
 }
 
 describe('PlexWidget', () => {
-  it('renders nothing when not loading and no session', () => {
-    const { container } = render(<PlexWidget session={null} loading={false} />)
-    expect(container.innerHTML).toBe('')
+  it('renders idle placeholder when not loading and no session', () => {
+    render(<PlexWidget sessions={[]} loading={false} />)
+    expect(screen.getByText('No one is streaming')).toBeDefined()
   })
 
   it('renders a loading skeleton when loading', () => {
-    const { container } = render(<PlexWidget session={null} loading={true} />)
+    const { container } = render(<PlexWidget sessions={[]} loading={true} />)
     expect(container.querySelector('.animate-pulse')).toBeTruthy()
   })
 
   it('renders the title and subtitle', () => {
-    render(<PlexWidget session={baseSession} loading={false} />)
+    render(<PlexWidget sessions={[baseSession]} loading={false} />)
     expect(screen.getByText('Breaking Bad')).toBeDefined()
     expect(screen.getByText('S02E03 – Seven Thirty-Seven')).toBeDefined()
   })
 
   it('renders the user name', () => {
-    render(<PlexWidget session={baseSession} loading={false} />)
+    render(<PlexWidget sessions={[baseSession]} loading={false} />)
     expect(screen.getByText('Gerald')).toBeDefined()
   })
 
   it('renders elapsed and total time', () => {
-    render(<PlexWidget session={baseSession} loading={false} />)
+    render(<PlexWidget sessions={[baseSession]} loading={false} />)
     expect(screen.getByText('10:00')).toBeDefined()
     expect(screen.getByText('45:00')).toBeDefined()
   })
@@ -49,22 +49,36 @@ describe('PlexWidget', () => {
       viewOffset: 3661000, // 1:01:01
       duration: 7200000, // 2:00:00
     }
-    render(<PlexWidget session={longSession} loading={false} />)
+    render(<PlexWidget sessions={[longSession]} loading={false} />)
     expect(screen.getByText('1:01:01')).toBeDefined()
     expect(screen.getByText('2:00:00')).toBeDefined()
   })
 
   it('shows pause indicator when paused', () => {
     const pausedSession: PlexSession = { ...baseSession, playerState: 'paused' }
-    render(<PlexWidget session={pausedSession} loading={false} />)
+    render(<PlexWidget sessions={[pausedSession]} loading={false} />)
     expect(screen.getByText('⏸')).toBeDefined()
   })
 
+  it('shows play indicator when playing', () => {
+    render(<PlexWidget sessions={[baseSession]} loading={false} />)
+    expect(screen.getByText('▶')).toBeDefined()
+  })
+
   it('renders progress bar with correct width', () => {
-    const { container } = render(<PlexWidget session={baseSession} loading={false} />)
+    const { container } = render(<PlexWidget sessions={[baseSession]} loading={false} />)
     const bar = container.querySelector('.bg-yellow-400')
     expect(bar).toBeTruthy()
     // 600000 / 2700000 = 22%
     expect((bar as HTMLElement).style.width).toBe('22%')
+  })
+
+  it('renders one card per active session', () => {
+    const other: PlexSession = { ...baseSession, title: 'Inception', userName: 'Alice' }
+    render(<PlexWidget sessions={[baseSession, other]} loading={false} />)
+    expect(screen.getByText('Breaking Bad')).toBeDefined()
+    expect(screen.getByText('Inception')).toBeDefined()
+    expect(screen.getByText('Gerald')).toBeDefined()
+    expect(screen.getByText('Alice')).toBeDefined()
   })
 })

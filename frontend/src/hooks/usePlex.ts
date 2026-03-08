@@ -5,7 +5,7 @@ const REFRESH_MS = 30 * 1000 // 30 seconds
 const PLAYBACK_TICK_MS = 1000 // smooth playback between polls
 
 export function usePlex() {
-  const [baseSession, setBaseSession] = useState<PlexSession | null>(null)
+  const [baseSessions, setBaseSessions] = useState<PlexSession[]>([])
   const [lastSyncAtMs, setLastSyncAtMs] = useState<number>(Date.now())
   const [nowMs, setNowMs] = useState<number>(Date.now())
   const [loading, setLoading] = useState(true)
@@ -18,9 +18,17 @@ export function usePlex() {
       try {
         const res = await fetch('/api/plex')
         if (!res.ok) throw new Error(`Plex API error: ${res.status}`)
-        const json = await res.json()
+        const json = (await res.json()) as {
+          sessions?: PlexSession[]
+          session?: PlexSession | null
+        }
         if (!cancelled) {
-          setBaseSession(json.session ?? null)
+          const sessions = Array.isArray(json.sessions)
+            ? json.sessions
+            : json.session
+              ? [json.session]
+              : []
+          setBaseSessions(sessions)
           const syncTs = Date.now()
           setLastSyncAtMs(syncTs)
           setNowMs(syncTs)
@@ -43,18 +51,16 @@ export function usePlex() {
     }
   }, [])
 
-  const session = useMemo(() => {
-    if (!baseSession) return null
-    if (baseSession.playerState !== 'playing') return baseSession
-
+  const sessions = useMemo(() => {
     const elapsedMs = Math.max(nowMs - lastSyncAtMs, 0)
-    const estimatedOffset = Math.min(baseSession.viewOffset + elapsedMs, baseSession.duration)
+    return baseSessions.map((session) => {
+      if (session.playerState !== 'playing') return session
+      return {
+        ...session,
+        viewOffset: Math.min(session.viewOffset + elapsedMs, session.duration),
+      }
+    })
+  }, [baseSessions, nowMs, lastSyncAtMs])
 
-    return {
-      ...baseSession,
-      viewOffset: estimatedOffset,
-    }
-  }, [baseSession, nowMs, lastSyncAtMs])
-
-  return { session, loading, error }
+  return { sessions, loading, error }
 }

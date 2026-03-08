@@ -48,7 +48,9 @@ export interface PlexSession {
 }
 
 export interface PlexResponse {
+  // Backward compatibility for older frontend builds during rolling deploys.
   session: PlexSession | null
+  sessions: PlexSession[]
 }
 
 export interface PhotosResponse {

@@ -20,27 +20,21 @@ function WeatherIcon({
   )
 }
 
-function formatTime(unix: number): string {
-  return new Date(unix * 1000).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-}
-
 export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
   if (loading) {
     return (
-      <GlassPanel className="p-3 text-white animate-pulse">
-        <div className="h-12 bg-white/10 rounded" />
+      <GlassPanel className="p-4 text-white animate-pulse">
+        <div className="h-24 bg-white/10 rounded" />
       </GlassPanel>
     )
   }
 
   if (!data) {
     return (
-      <GlassPanel className="p-3 text-white/50 text-sm">
-        <p>Weather unavailable</p>
+      <GlassPanel className="p-4 text-white/70 min-h-[170px] flex flex-col items-center justify-center gap-2 text-center">
+        <div className="text-3xl leading-none">☁</div>
+        <p className="text-base font-medium">Weather temporarily unavailable</p>
+        <p className="text-sm text-white/50">Retrying automatically...</p>
       </GlassPanel>
     )
   }
@@ -65,12 +59,6 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
         <span>{current.windSpeed} mph</span>
       </div>
 
-      {/* Sunrise / Sunset */}
-      <div className="flex justify-center gap-3 text-base text-white/60 text-center">
-        <span>🌅 {formatTime(current.sunrise)}</span>
-        <span>🌇 {formatTime(current.sunset)}</span>
-      </div>
-
       {/* Forecast row */}
       <div className="flex justify-between pt-1 border-t border-white/10">
         {forecast.map((day) => {
@@ -79,9 +67,9 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
           })
           return (
             <div key={day.date} className="text-center">
-              <div className="text-white/50 text-sm">{label}</div>
-              <WeatherIcon icon={day.icon} alt={day.description} className="w-10 h-10 mx-auto" />
-              <div className="text-sm">
+              <div className="text-white/70 text-xs font-medium">{label}</div>
+              <WeatherIcon icon={day.icon} alt={day.description} className="w-8 h-8 mx-auto" />
+              <div className="text-xs">
                 <span className="font-medium">{day.high}°</span>
                 <span className="text-white/40"> {day.low}°</span>
               </div>

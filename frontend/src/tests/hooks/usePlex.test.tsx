@@ -21,7 +21,7 @@ function makeSession(overrides: Partial<PlexSession> = {}): PlexSession {
 function okResponse(session: PlexSession | null): Response {
   return {
     ok: true,
-    json: async () => ({ session }),
+    json: async () => ({ sessions: session ? [session] : [], session }),
   } as Response
 }
 
@@ -54,12 +54,12 @@ describe('usePlex', () => {
 
     await flushEffects()
     expect(result.current.loading).toBe(false)
-    expect(result.current.session?.viewOffset).toBe(10000)
+    expect(result.current.sessions[0]?.viewOffset).toBe(10000)
 
     act(() => {
       vi.advanceTimersByTime(5000)
     })
-    expect(result.current.session?.viewOffset).toBe(15000)
+    expect(result.current.sessions[0]?.viewOffset).toBe(15000)
   })
 
   it('does not increment progress when paused', async () => {
@@ -71,12 +71,12 @@ describe('usePlex', () => {
 
     await flushEffects()
     expect(result.current.loading).toBe(false)
-    expect(result.current.session?.viewOffset).toBe(22000)
+    expect(result.current.sessions[0]?.viewOffset).toBe(22000)
 
     act(() => {
       vi.advanceTimersByTime(5000)
     })
-    expect(result.current.session?.viewOffset).toBe(22000)
+    expect(result.current.sessions[0]?.viewOffset).toBe(22000)
   })
 
   it('re-synchronizes on the next poll and stops incrementing when state changes to paused', async () => {
@@ -92,19 +92,19 @@ describe('usePlex', () => {
     act(() => {
       vi.advanceTimersByTime(10000)
     })
-    expect(result.current.session?.viewOffset).toBe(22000)
+    expect(result.current.sessions[0]?.viewOffset).toBe(22000)
 
     act(() => {
       vi.advanceTimersByTime(20000)
     })
     await flushEffects()
     expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(result.current.session?.playerState).toBe('paused')
-    expect(result.current.session?.viewOffset).toBe(18000)
+    expect(result.current.sessions[0]?.playerState).toBe('paused')
+    expect(result.current.sessions[0]?.viewOffset).toBe(18000)
 
     act(() => {
       vi.advanceTimersByTime(5000)
     })
-    expect(result.current.session?.viewOffset).toBe(18000)
+    expect(result.current.sessions[0]?.viewOffset).toBe(18000)
   })
 })

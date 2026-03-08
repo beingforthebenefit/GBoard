@@ -66,7 +66,7 @@ function LayeredPhoto({
         src={retrySrc}
         onError={onError}
         onLoad={onLoad}
-        className="absolute inset-0 w-full h-full object-cover object-center scale-110 blur-2xl"
+        className="absolute inset-0 w-full h-full object-cover object-center scale-110 blur-xl"
         alt=""
       />
       <div className="absolute inset-0 bg-black/25" />

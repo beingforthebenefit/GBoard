@@ -24,7 +24,7 @@ interface PlexApiResponse {
   MediaContainer?: PlexMediaContainer
 }
 
-export async function fetchPlexSession(): Promise<PlexSession | null> {
+export async function fetchPlexSessions(): Promise<PlexSession[]> {
   const plexUrl = process.env.PLEX_URL
   const plexToken = process.env.PLEX_TOKEN
 
@@ -39,20 +39,25 @@ export async function fetchPlexSession(): Promise<PlexSession | null> {
       signal: AbortSignal.timeout(5000),
     })
   } catch {
-    // Plex unreachable — return null gracefully
-    return null
+    // Plex unreachable — return empty gracefully
+    return []
   }
 
-  if (!res.ok) return null
+  if (!res.ok) return []
 
   const json = (await res.json()) as PlexApiResponse
   const container = json?.MediaContainer
   if (!container || !container.size || !container.Metadata?.length) {
-    return null
+    return []
   }
 
-  const meta = container.Metadata[0]
-  return mapMetadata(meta)
+  return mapMetadataList(container.Metadata)
+}
+
+// Backward-compatible helper if needed by older callers.
+export async function fetchPlexSession(): Promise<PlexSession | null> {
+  const sessions = await fetchPlexSessions()
+  return sessions[0] ?? null
 }
 
 export function mapMetadata(meta: PlexMetadata): PlexSession {
@@ -84,4 +89,8 @@ export function mapMetadata(meta: PlexMetadata): PlexSession {
     duration: meta.duration ?? 0,
     playerState,
   }
+}
+
+export function mapMetadataList(metadata: PlexMetadata[]): PlexSession[] {
+  return metadata.map(mapMetadata)
 }

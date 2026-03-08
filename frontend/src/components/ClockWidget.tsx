@@ -24,13 +24,15 @@ export function ClockWidget() {
 
   return (
     <div className="text-white text-center py-2">
-      <div className="text-7xl font-extralight tracking-wide tabular-nums drop-shadow-lg whitespace-nowrap inline-flex items-start">
-        <span>{timeStr}</span>
-        <span className="text-2xl leading-none align-super mt-2 ml-1 tracking-normal">
+      <div className="text-[clamp(3.6rem,5.9vw,5.5rem)] leading-none font-extralight tracking-[0.04em] tabular-nums drop-shadow-lg whitespace-nowrap inline-block relative">
+        <span className="block">{timeStr}</span>
+        <span className="text-xl leading-none tracking-normal absolute left-full top-2 ml-2">
           {dayPeriod}
         </span>
       </div>
-      <div className="text-3xl font-light mt-1 text-white/70 drop-shadow-md">{dateStr}</div>
+      <div className="text-[clamp(1.2rem,2vw,1.7rem)] font-light mt-1 text-white/70 drop-shadow-md">
+        {dateStr}
+      </div>
     </div>
   )
 }

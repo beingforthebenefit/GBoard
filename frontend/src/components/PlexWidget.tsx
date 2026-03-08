@@ -2,7 +2,7 @@ import { PlexSession } from '../types/index.js'
 import { GlassPanel } from './GlassPanel.js'
 
 interface PlexWidgetProps {
-  session: PlexSession | null
+  sessions: PlexSession[]
   loading: boolean
 }
 
@@ -15,20 +15,13 @@ function formatMs(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-export function PlexWidget({ session, loading }: PlexWidgetProps) {
-  // Hide entirely when not playing
-  if (!loading && !session) return null
+function stateIcon(state: PlexSession['playerState']): string {
+  if (state === 'paused') return '⏸'
+  if (state === 'buffering') return '⟳'
+  return '▶'
+}
 
-  if (loading) {
-    return (
-      <GlassPanel className="p-3 animate-pulse">
-        <div className="h-10 bg-white/10 rounded" />
-      </GlassPanel>
-    )
-  }
-
-  if (!session) return null
-
+function SessionCard({ session }: { session: PlexSession }) {
   const thumbUrl = session.thumbPath
     ? `/api/plex/thumb?path=${encodeURIComponent(session.thumbPath)}`
     : null
@@ -49,8 +42,8 @@ export function PlexWidget({ session, loading }: PlexWidgetProps) {
             {session.userAvatar ? (
               <img src={session.userAvatar} alt="" className="w-5 h-5 rounded-full" />
             ) : null}
+            <span className="text-white/50 text-sm">{stateIcon(session.playerState)}</span>
             <span className="text-white/40 text-sm">{session.userName}</span>
-            {session.playerState === 'paused' && <span className="text-white/30 text-sm">⏸</span>}
           </div>
         </div>
       </div>
@@ -65,5 +58,32 @@ export function PlexWidget({ session, loading }: PlexWidgetProps) {
         </div>
       </div>
     </GlassPanel>
+  )
+}
+
+export function PlexWidget({ sessions, loading }: PlexWidgetProps) {
+  if (loading) {
+    return (
+      <GlassPanel className="p-3 animate-pulse">
+        <div className="h-10 bg-white/10 rounded" />
+      </GlassPanel>
+    )
+  }
+
+  if (!sessions.length) {
+    return (
+      <GlassPanel className="p-4 text-white/60 text-center">
+        <div className="text-sm uppercase tracking-[0.14em] text-white/45">Plex</div>
+        <div className="text-base mt-1">No one is streaming</div>
+      </GlassPanel>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {sessions.map((session, idx) => (
+        <SessionCard key={`${session.userName}-${session.title}-${idx}`} session={session} />
+      ))}
+    </div>
   )
 }

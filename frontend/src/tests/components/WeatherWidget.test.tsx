@@ -37,11 +37,15 @@ describe('WeatherWidget', () => {
     ).toBeTruthy()
   })
 
-  it('centers the sunrise/sunset row', () => {
+  it('does not render sunrise/sunset details in the main weather card', () => {
     render(<WeatherWidget data={weatherData} loading={false} />)
-    const sunrise = screen.getByText((content) => content.includes('🌅'))
-    const sunRow = sunrise.closest('div')
-    expect(sunRow).toHaveClass('justify-center')
-    expect(sunRow).toHaveClass('text-center')
+    expect(screen.queryByText((content) => content.includes('🌅'))).toBeNull()
+    expect(screen.queryByText((content) => content.includes('🌇'))).toBeNull()
+  })
+
+  it('renders a stable fallback message when data is unavailable', () => {
+    render(<WeatherWidget data={null} loading={false} />)
+    expect(screen.getByText('Weather temporarily unavailable')).toBeDefined()
+    expect(screen.getByText('Retrying automatically...')).toBeDefined()
   })
 })
