@@ -3,20 +3,35 @@ const PIHOLE_PASSWORD = () => process.env.PIHOLE_PASSWORD || ''
 
 let sessionSid: string | null = null
 let authInFlight: Promise<string> | null = null
+let rateLimitedUntil = 0
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 async function authenticate(): Promise<string> {
   // Deduplicate concurrent auth calls
   if (authInFlight) return authInFlight
   authInFlight = (async () => {
     try {
+      // Respect rate-limit backoff
+      const waitMs = rateLimitedUntil - Date.now()
+      if (waitMs > 0) await sleep(waitMs)
+
       const res = await fetch(`${PIHOLE_URL()}/api/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: PIHOLE_PASSWORD() }),
       })
+      if (res.status === 429) {
+        // Back off for 30 seconds on rate limit
+        rateLimitedUntil = Date.now() + 30_000
+        throw new Error('Pi-hole auth rate limited, will retry after backoff')
+      }
       if (!res.ok) throw new Error(`Pi-hole auth failed: ${res.status}`)
       const data = (await res.json()) as { session: { sid: string } }
       sessionSid = data.session.sid
+      rateLimitedUntil = 0
       return sessionSid
     } finally {
       authInFlight = null
@@ -74,38 +89,50 @@ interface HistoryResponse {
   history: HistoryEntry[]
 }
 
+// Cache last successful result so we can serve stale data during rate limits
+let lastStats: PiholeStats | null = null
+
 export function _resetSession() {
   sessionSid = null
   authInFlight = null
+  rateLimitedUntil = 0
+  lastStats = null
 }
 
 export async function fetchPiholeStats(): Promise<PiholeStats> {
-  const [stats, blocking, history] = await Promise.all([
-    piholeGet<StatsResponse>('/api/stats/summary'),
-    piholeGet<BlockingResponse>('/api/dns/blocking'),
-    piholeGet<HistoryResponse>('/api/history'),
-  ])
+  try {
+    const [stats, blocking, history] = await Promise.all([
+      piholeGet<StatsResponse>('/api/stats/summary'),
+      piholeGet<BlockingResponse>('/api/dns/blocking'),
+      piholeGet<HistoryResponse>('/api/history'),
+    ])
 
-  // Sum entries from the last hour
-  const oneHourAgo = Math.floor(Date.now() / 1000) - 3600
-  let blockedLastHour = 0
-  let queriesLastHour = 0
-  if (history.history) {
-    for (const entry of history.history) {
-      if (entry.timestamp >= oneHourAgo) {
-        queriesLastHour += entry.total
-        blockedLastHour += entry.blocked
+    // Sum entries from the last hour
+    const oneHourAgo = Math.floor(Date.now() / 1000) - 3600
+    let blockedLastHour = 0
+    let queriesLastHour = 0
+    if (history.history) {
+      for (const entry of history.history) {
+        if (entry.timestamp >= oneHourAgo) {
+          queriesLastHour += entry.total
+          blockedLastHour += entry.blocked
+        }
       }
     }
-  }
 
-  return {
-    totalQueries: stats.queries.total,
-    blockedQueries: stats.queries.blocked,
-    blockedPercentage: stats.queries.percent_blocked,
-    domainsOnBlocklist: stats.gravity.domains_being_blocked,
-    status: blocking.blocking,
-    blockedLastHour,
-    queriesLastHour,
+    lastStats = {
+      totalQueries: stats.queries.total,
+      blockedQueries: stats.queries.blocked,
+      blockedPercentage: stats.queries.percent_blocked,
+      domainsOnBlocklist: stats.gravity.domains_being_blocked,
+      status: blocking.blocking,
+      blockedLastHour,
+      queriesLastHour,
+    }
+    return lastStats
+  } catch (err) {
+    // Return cached data if available during rate limits or transient errors
+    if (lastStats) return lastStats
+    throw err
   }
 }
