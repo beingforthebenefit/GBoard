@@ -17,14 +17,14 @@ export function SoberCounter({ sobrietyDate }: SoberCounterProps) {
 
   return (
     <GlassPanel className="p-4">
-      <div className="text-center text-white/60 text-xs font-semibold tracking-widest mb-3 uppercase">
+      <div className="text-center text-white/50 text-xs font-semibold tracking-widest mb-2 uppercase">
         Sober Time
       </div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="flex justify-center gap-4">
         {cells.map(({ value, label }) => (
           <div key={label} className="text-center">
-            <div className="text-4xl font-light text-white tabular-nums">{value}</div>
-            <div className="text-xs text-white/60 tracking-widest mt-1">{label}</div>
+            <div className="text-3xl font-light text-white tabular-nums leading-none">{value}</div>
+            <div className="text-[10px] text-white/50 tracking-widest mt-1">{label}</div>
           </div>
         ))}
       </div>

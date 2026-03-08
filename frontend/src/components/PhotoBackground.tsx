@@ -1,4 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
 
 interface PhotoBackgroundProps {
   photos: string[]
@@ -11,27 +20,28 @@ export function PhotoBackground({
   intervalMs = 5 * 60 * 1000,
   transitionMs = 2000,
 }: PhotoBackgroundProps) {
+  const shuffled = useMemo(() => shuffle(photos), [photos])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [nextIndex, setNextIndex] = useState(1)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   useEffect(() => {
-    if (photos.length < 2) return
+    if (shuffled.length < 2) return
 
     const timer = setInterval(() => {
       setIsTransitioning(true)
       const timeout = setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % photos.length)
-        setNextIndex((prev) => (prev + 1) % photos.length)
+        setCurrentIndex((prev) => (prev + 1) % shuffled.length)
+        setNextIndex((prev) => (prev + 1) % shuffled.length)
         setIsTransitioning(false)
       }, transitionMs)
       return () => clearTimeout(timeout)
     }, intervalMs)
 
     return () => clearInterval(timer)
-  }, [photos, intervalMs, transitionMs])
+  }, [shuffled, intervalMs, transitionMs])
 
-  if (photos.length === 0) {
+  if (shuffled.length === 0) {
     return <div className="fixed inset-0 -z-10 bg-gray-900" />
   }
 
@@ -41,7 +51,7 @@ export function PhotoBackground({
     <div className="fixed inset-0 -z-10">
       {/* Current photo — fades out during transition */}
       <img
-        src={photos[currentIndex]}
+        src={shuffled[currentIndex]}
         className={imgBase}
         style={{
           opacity: isTransitioning ? 0 : 1,
@@ -51,7 +61,7 @@ export function PhotoBackground({
       />
       {/* Next photo — fades in during transition */}
       <img
-        src={photos[nextIndex % photos.length]}
+        src={shuffled[nextIndex % shuffled.length]}
         className={imgBase}
         style={{
           opacity: isTransitioning ? 1 : 0,

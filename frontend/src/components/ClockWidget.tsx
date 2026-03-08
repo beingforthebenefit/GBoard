@@ -1,5 +1,4 @@
 import { useClock } from '../hooks/useClock.js'
-import { GlassPanel } from './GlassPanel.js'
 
 export function ClockWidget() {
   const now = useClock()
@@ -18,9 +17,11 @@ export function ClockWidget() {
   })
 
   return (
-    <GlassPanel className="p-6 text-white text-center">
-      <div className="text-6xl font-light tracking-widest tabular-nums">{timeStr}</div>
-      <div className="text-xl font-light mt-2 text-white/80">{dateStr}</div>
-    </GlassPanel>
+    <div className="text-white text-center py-2">
+      <div className="text-7xl font-extralight tracking-widest tabular-nums drop-shadow-lg">
+        {timeStr}
+      </div>
+      <div className="text-2xl font-light mt-1 text-white/70 drop-shadow-md">{dateStr}</div>
+    </div>
   )
 }

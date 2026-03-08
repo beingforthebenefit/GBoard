@@ -18,12 +18,15 @@ const EVENT_COLORS = [
 const HOUR_START = 9
 const HOUR_END = 22
 const TOTAL_HOURS = HOUR_END - HOUR_START
-const HOUR_PX = 52 // pixels per hour
-const GUTTER_W = 36 // px width of time gutter
+const HOUR_PX = 38 // pixels per hour
+const GUTTER_W = 40 // px width of time gutter
 const NUM_DAYS = 7
 
 function dayKey(d: Date) {
-  return d.toISOString().slice(0, 10)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function getDays(): Date[] {
@@ -47,10 +50,7 @@ function formatHour(h: number): string {
 }
 
 /** Clamp event into visible range and return top/height in px, or null if outside range */
-function eventLayout(
-  start: Date,
-  end: Date,
-): { top: number; height: number } | null {
+function eventLayout(start: Date, end: Date): { top: number; height: number } | null {
   const startH = start.getHours() + start.getMinutes() / 60
   const endH = end.getHours() + end.getMinutes() / 60
   if (endH <= HOUR_START || startH >= HOUR_END) return null
@@ -92,7 +92,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
           return (
             <div
               key={key}
-              className="flex-1 text-center text-xs font-semibold truncate px-0.5"
+              className="flex-1 text-center text-sm font-semibold truncate px-0.5"
               style={{ color: isToday ? '#fde047' : 'rgba(255,255,255,0.6)' }}
             >
               {formatDayHeader(d, isToday)}
@@ -105,14 +105,16 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
       <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
         {days.map((d) => {
           const key = dayKey(d)
-          const allDayEvents = events.filter((e) => e.allDay && e.start.slice(0, 10) === key)
+          const allDayEvents = events.filter((e) => e.allDay && dayKey(new Date(e.start)) === key)
           return (
             <div key={key} className="flex-1 px-0.5 min-h-[16px]">
               {allDayEvents.map((e) => (
                 <div
                   key={e.id}
-                  className="text-white rounded px-1 text-[9px] truncate mb-0.5"
-                  style={{ backgroundColor: EVENT_COLORS[(e.calendarIndex ?? 0) % EVENT_COLORS.length] }}
+                  className="text-white rounded px-1 text-xs truncate mb-0.5"
+                  style={{
+                    backgroundColor: EVENT_COLORS[(e.calendarIndex ?? 0) % EVENT_COLORS.length],
+                  }}
                 >
                   {e.title}
                 </div>
@@ -130,7 +132,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
             {Array.from({ length: TOTAL_HOURS }, (_, i) => (
               <div
                 key={i}
-                className="absolute right-1 text-[9px] leading-none"
+                className="absolute right-1 text-xs leading-none"
                 style={{ top: i * HOUR_PX - 5, color: 'rgba(255,255,255,0.4)' }}
               >
                 {formatHour(HOUR_START + i)}
@@ -142,9 +144,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
           {days.map((d) => {
             const key = dayKey(d)
             const isToday = key === todayKey
-            const timedEvents = events.filter(
-              (e) => !e.allDay && e.start.slice(0, 10) === key,
-            )
+            const timedEvents = events.filter((e) => !e.allDay && dayKey(new Date(e.start)) === key)
 
             return (
               <div
@@ -162,8 +162,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
                     className="absolute w-full border-t"
                     style={{
                       top: i * HOUR_PX,
-                      borderColor:
-                        i === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
+                      borderColor: i === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
                     }}
                   />
                 ))}
@@ -180,8 +179,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
                 {timedEvents.map((e) => {
                   const layout = eventLayout(new Date(e.start), new Date(e.end))
                   if (!layout) return null
-                  const color =
-                    EVENT_COLORS[(e.calendarIndex ?? 0) % EVENT_COLORS.length]
+                  const color = EVENT_COLORS[(e.calendarIndex ?? 0) % EVENT_COLORS.length]
                   return (
                     <div
                       key={e.id}
@@ -193,10 +191,10 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
                         borderLeft: `3px solid ${color}`,
                       }}
                     >
-                      <div className="text-white text-[9px] leading-tight font-medium truncate">
+                      <div className="text-white text-xs leading-tight font-medium truncate">
                         {e.title}
                       </div>
-                      <div className="text-white/60 text-[8px] leading-tight">
+                      <div className="text-white/60 text-[10px] leading-tight">
                         {new Date(e.start).toLocaleTimeString('en-US', {
                           hour: 'numeric',
                           minute: '2-digit',
