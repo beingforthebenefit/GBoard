@@ -76,7 +76,8 @@ export function SunArcWidget({ sunrise, sunset, loading }: SunArcWidgetProps) {
   const sunY = cy - orbitR * Math.sin(theta)
   const moonX = cx + orbitR * Math.cos(theta + Math.PI)
   const moonY = cy - orbitR * Math.sin(theta + Math.PI)
-  const dayOnRight = sunX >= cx
+  // Keep the local marker fixed; flip lit hemisphere based on local day/night phase.
+  const dayOnRight = cycleProgress < 0.5
   const markerX = cx + 10
   const markerY = cy - 2
 

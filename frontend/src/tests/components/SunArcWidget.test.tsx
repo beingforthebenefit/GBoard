@@ -34,4 +34,14 @@ describe('SunArcWidget', () => {
     expect(screen.getByText((text) => text.includes('🌇'))).toBeDefined()
     expect(container.querySelectorAll('svg').length).toBe(2)
   })
+
+  it('shows the local marker on the dark half after sunset', () => {
+    vi.setSystemTime(new Date('2026-03-08T22:30:00Z'))
+    const sunrise = Math.floor(Date.parse('2026-03-08T06:00:00Z') / 1000)
+    const sunset = Math.floor(Date.parse('2026-03-08T18:00:00Z') / 1000)
+    const { container } = render(<SunArcWidget sunrise={sunrise} sunset={sunset} loading={false} />)
+
+    const litRect = container.querySelectorAll('svg')[1]?.querySelector('rect')
+    expect(litRect?.getAttribute('x')).toBe('144')
+  })
 })
