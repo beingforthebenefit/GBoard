@@ -6,9 +6,11 @@ import { AstroWidget } from './components/AstroWidget.js'
 import { SoberCounter } from './components/SoberCounter.js'
 import { PlexWidget } from './components/PlexWidget.js'
 import { CalendarWidget } from './components/CalendarWidget.js'
+import { PiholeWidget } from './components/PiholeWidget.js'
 import { useWeather } from './hooks/useWeather.js'
 import { useCalendar } from './hooks/useCalendar.js'
 import { usePlex } from './hooks/usePlex.js'
+import { usePihole } from './hooks/usePihole.js'
 import { usePhotos } from './hooks/usePhotos.js'
 import { useVersion } from './hooks/useVersion.js'
 
@@ -19,6 +21,7 @@ export function App() {
   const { data: weatherData, loading: weatherLoading } = useWeather()
   const { events, loading: calendarLoading } = useCalendar()
   const { sessions, loading: plexLoading } = usePlex()
+  const { data: piholeData, loading: piholeLoading } = usePihole()
   const { photos } = usePhotos()
 
   return (
@@ -50,6 +53,7 @@ export function App() {
             style={{ animationDelay: '110ms' }}
           >
             <SoberCounter sobrietyDate={SOBRIETY_DATE} />
+            <PiholeWidget data={piholeData} loading={piholeLoading} />
             <PlexWidget sessions={sessions} loading={plexLoading} />
           </div>
         </div>
