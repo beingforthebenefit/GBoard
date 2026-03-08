@@ -2,17 +2,27 @@ const PIHOLE_URL = () => process.env.PIHOLE_URL || 'http://192.168.50.62'
 const PIHOLE_PASSWORD = () => process.env.PIHOLE_PASSWORD || ''
 
 let sessionSid: string | null = null
+let authInFlight: Promise<string> | null = null
 
 async function authenticate(): Promise<string> {
-  const res = await fetch(`${PIHOLE_URL()}/api/auth`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: PIHOLE_PASSWORD() }),
-  })
-  if (!res.ok) throw new Error(`Pi-hole auth failed: ${res.status}`)
-  const data = (await res.json()) as { session: { sid: string } }
-  sessionSid = data.session.sid
-  return sessionSid
+  // Deduplicate concurrent auth calls
+  if (authInFlight) return authInFlight
+  authInFlight = (async () => {
+    try {
+      const res = await fetch(`${PIHOLE_URL()}/api/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: PIHOLE_PASSWORD() }),
+      })
+      if (!res.ok) throw new Error(`Pi-hole auth failed: ${res.status}`)
+      const data = (await res.json()) as { session: { sid: string } }
+      sessionSid = data.session.sid
+      return sessionSid
+    } finally {
+      authInFlight = null
+    }
+  })()
+  return authInFlight
 }
 
 async function piholeGet<T>(path: string): Promise<T> {
@@ -66,6 +76,7 @@ interface HistoryResponse {
 
 export function _resetSession() {
   sessionSid = null
+  authInFlight = null
 }
 
 export async function fetchPiholeStats(): Promise<PiholeStats> {
