@@ -9,6 +9,8 @@ services:
       - NODE_ENV=production
     ports:
       - "${BACKEND_PORT:-3001}:3001"
+    volumes:
+      - photos-cache:/data/photos
     networks:
       - gboard
 
@@ -26,6 +28,9 @@ services:
       - backend
     networks:
       - gboard
+
+volumes:
+  photos-cache:
 
 networks:
   gboard:

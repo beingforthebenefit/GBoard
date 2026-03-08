@@ -41,13 +41,13 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
 
   return (
     <GlassPanel className="p-4 text-white flex flex-col gap-2">
-      {/* Current: icon + temp + description */}
-      <div className="flex items-center gap-2">
-        <WeatherIcon icon={current.icon} alt={current.description} />
-        <div>
+      {/* Current: centered icon + temp, with description beneath */}
+      <div className="flex flex-col items-center gap-1">
+        <div className="flex items-center justify-center gap-2">
+          <WeatherIcon icon={current.icon} alt={current.description} />
           <div className="text-5xl font-light leading-none">{current.temp}°</div>
-          <div className="text-white/70 capitalize text-sm">{current.description}</div>
         </div>
+        <div className="text-white/70 capitalize text-sm text-center">{current.description}</div>
       </div>
 
       {/* Details row */}

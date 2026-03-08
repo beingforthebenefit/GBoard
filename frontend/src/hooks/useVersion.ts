@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-const POLL_MS = 30 * 1000 // 30 seconds
+const POLL_MS = 10 * 1000 // 10 seconds
 
 export function useVersion() {
   const initialStartedAt = useRef<number | null>(null)
@@ -8,7 +8,7 @@ export function useVersion() {
   useEffect(() => {
     const check = async () => {
       try {
-        const res = await fetch('/api/version')
+        const res = await fetch('/api/version', { cache: 'no-store' })
         if (!res.ok) return
         const { startedAt } = (await res.json()) as { startedAt: number }
 
