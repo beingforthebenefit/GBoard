@@ -8,7 +8,7 @@ const makeSlot = (
   icon = '01d',
   description = 'clear sky'
 ) => ({
-  dt: 0,
+  dt: Math.floor(Date.parse(dt_txt.replace(' ', 'T') + 'Z') / 1000),
   dt_txt,
   main: { temp_max, temp_min },
   weather: [{ icon, description }],
@@ -74,5 +74,23 @@ describe('buildForecast', () => {
     const slots = [makeSlot(`${today} 12:00:00`, 75, 55)]
     const result = buildForecast(slots)
     expect(result).toHaveLength(0)
+  })
+
+  it('uses forecast timezone when skipping today (prevents Sunday from being dropped)', () => {
+    // Saturday 11:30 PM PST (UTC-8) => Sunday 07:30 UTC.
+    // If "today" is computed in UTC, Sunday would be incorrectly skipped.
+    const nowMs = Date.parse('2026-03-08T07:30:00Z')
+    const pstOffset = -8 * 3600
+    const slots = [
+      makeSlot('2026-03-08 18:00:00', 65, 53, '02d', 'few clouds'), // Sunday local
+      makeSlot('2026-03-09 18:00:00', 66, 54, '03d', 'cloudy'), // Monday local
+      makeSlot('2026-03-10 18:00:00', 67, 55, '04d', 'overcast'), // Tuesday local
+    ]
+
+    const result = buildForecast(slots, pstOffset, nowMs)
+    expect(result).toHaveLength(3)
+    expect(result[0].date).toBe('2026-03-08') // Sunday must be present
+    expect(result[1].date).toBe('2026-03-09')
+    expect(result[2].date).toBe('2026-03-10')
   })
 })

@@ -15,11 +15,12 @@ afterEach(() => {
 })
 
 describe('ClockWidget', () => {
-  it('renders a 12-hour time string with AM/PM', () => {
+  it('renders 12-hour time with a separate AM/PM marker', () => {
     render(<ClockWidget />)
-    // The exact value depends on local timezone; verify 12-hour format.
-    const timeEl = screen.getByText(/\b\d{1,2}:\d{2}:\d{2}\s?(AM|PM)\b/i)
-    expect(timeEl).toBeDefined()
+    const mainTime = screen.getByText(/\b\d{1,2}:\d{2}:\d{2}\b/)
+    const meridiem = screen.getByText(/^(AM|PM)$/i)
+    expect(mainTime).toBeDefined()
+    expect(meridiem).toBeDefined()
   })
 
   it('renders a date string', () => {

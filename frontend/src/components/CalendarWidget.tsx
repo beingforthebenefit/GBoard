@@ -8,7 +8,7 @@ interface CalendarWidgetProps {
 
 const EVENT_COLORS = [
   '#60a5fa', // blue-400
-  '#34d399', // emerald-400
+  '#6366f1', // indigo-500
   '#a78bfa', // violet-400
   '#f472b6', // pink-400
   '#fb923c', // orange-400
@@ -18,7 +18,7 @@ const EVENT_COLORS = [
 const HOUR_START = 9
 const HOUR_END = 22
 const TOTAL_HOURS = HOUR_END - HOUR_START
-const HOUR_PX = 42 // pixels per hour
+const HOUR_PX = 32 // pixels per hour (~25% shorter than before)
 const GUTTER_W = 44 // px width of time gutter
 const NUM_DAYS = 7
 
@@ -187,7 +187,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
                       style={{
                         top: layout.top + 1,
                         height: layout.height - 2,
-                        backgroundColor: color + 'cc',
+                        backgroundColor: color + 'b3',
                         borderLeft: `3px solid ${color}`,
                       }}
                     >

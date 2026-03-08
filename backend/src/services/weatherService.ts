@@ -18,6 +18,7 @@ interface OWMForecastItem {
 
 interface OWMForecastResponse {
   list: OWMForecastItem[]
+  city?: { timezone?: number }
 }
 
 interface CacheEntry {
@@ -65,35 +66,58 @@ export async function fetchWeather(): Promise<WeatherResponse> {
       sunrise: current.sys.sunrise,
       sunset: current.sys.sunset,
     },
-    forecast: buildForecast(forecast.list),
+    forecast: buildForecast(forecast.list, forecast.city?.timezone ?? 0),
   }
 
   cache = { data, fetchedAt: Date.now() }
   return data
 }
 
-export function buildForecast(items: OWMForecastItem[]): WeatherForecastDay[] {
-  // Group 3-hour slots by date, pick high/low, pick icon from midday slot
+function formatDateKey(unixSeconds: number, timezoneOffsetSeconds: number): string {
+  const d = new Date((unixSeconds + timezoneOffsetSeconds) * 1000)
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function localHour(unixSeconds: number, timezoneOffsetSeconds: number): number {
+  return new Date((unixSeconds + timezoneOffsetSeconds) * 1000).getUTCHours()
+}
+
+export function buildForecast(
+  items: OWMForecastItem[],
+  timezoneOffsetSeconds = 0,
+  nowMs = Date.now()
+): WeatherForecastDay[] {
+  // Group 3-hour slots by local forecast date (location timezone)
   const byDate = new Map<string, OWMForecastItem[]>()
 
   for (const item of items) {
-    const date = item.dt_txt.slice(0, 10) // "YYYY-MM-DD"
+    const date = formatDateKey(item.dt, timezoneOffsetSeconds)
     if (!byDate.has(date)) byDate.set(date, [])
     byDate.get(date)!.push(item)
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = formatDateKey(Math.floor(nowMs / 1000), timezoneOffsetSeconds)
   const days: WeatherForecastDay[] = []
 
-  for (const [date, slots] of byDate) {
+  for (const date of [...byDate.keys()].sort()) {
+    const slots = byDate.get(date)!
     if (date === today) continue // skip today
     if (days.length >= 3) break
 
     const high = Math.round(Math.max(...slots.map((s) => s.main.temp_max)))
     const low = Math.round(Math.min(...slots.map((s) => s.main.temp_min)))
 
-    // Prefer the midday slot (12:00) for icon/description; fallback to first
-    const midday = slots.find((s) => s.dt_txt.includes('12:00')) ?? slots[0]
+    // Prefer the local midday slot (12:00) for icon/description; fallback to nearest to noon.
+    const midday =
+      slots.find((s) => localHour(s.dt, timezoneOffsetSeconds) === 12) ??
+      [...slots].sort(
+        (a, b) =>
+          Math.abs(localHour(a.dt, timezoneOffsetSeconds) - 12) -
+          Math.abs(localHour(b.dt, timezoneOffsetSeconds) - 12)
+      )[0]
 
     days.push({
       date,

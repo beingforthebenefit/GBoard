@@ -15,6 +15,13 @@ interface PhotoBackgroundProps {
   transitionMs?: number
 }
 
+const IMAGE_RETRY_MS = 5 * 1000
+
+function withRetryParam(src: string, retryCount: number): string {
+  const sep = src.includes('?') ? '&' : '?'
+  return `${src}${sep}bgRetry=${retryCount}`
+}
+
 function LayeredPhoto({
   src,
   opacity,
@@ -24,6 +31,28 @@ function LayeredPhoto({
   opacity: number
   transitionMs: number
 }) {
+  const [retryCount, setRetryCount] = useState(0)
+  const [needsRetry, setNeedsRetry] = useState(false)
+
+  useEffect(() => {
+    setRetryCount(0)
+    setNeedsRetry(false)
+  }, [src])
+
+  useEffect(() => {
+    if (!needsRetry) return
+    const id = setTimeout(() => {
+      setRetryCount((prev) => prev + 1)
+      setNeedsRetry(false)
+    }, IMAGE_RETRY_MS)
+    return () => clearTimeout(id)
+  }, [needsRetry])
+
+  const retrySrc = withRetryParam(src, retryCount)
+
+  const onError = () => setNeedsRetry(true)
+  const onLoad = () => setNeedsRetry(false)
+
   return (
     <div
       className="absolute inset-0 overflow-hidden"
@@ -32,12 +61,24 @@ function LayeredPhoto({
         transition: `opacity ${transitionMs}ms ease-in-out`,
       }}
     >
-      {/* Back layer: fills the viewport, blurred and darkened */}
-      <img src={src} className="absolute inset-0 w-full h-full object-cover scale-110 blur-3xl" alt="" />
-      <div className="absolute inset-0 bg-black/60" />
+      {/* Back layer: fills height, blurred, and only lightly darkened */}
+      <img
+        src={retrySrc}
+        onError={onError}
+        onLoad={onLoad}
+        className="absolute inset-0 w-full h-full object-cover object-center scale-110 blur-3xl"
+        alt=""
+      />
+      <div className="absolute inset-0 bg-black/25" />
 
       {/* Front layer: sharp image fit to screen width */}
-      <img src={src} className="absolute inset-0 w-full h-full object-contain" alt="" />
+      <img
+        src={retrySrc}
+        onError={onError}
+        onLoad={onLoad}
+        className="absolute inset-0 w-full h-full object-contain"
+        alt=""
+      />
     </div>
   )
 }
@@ -87,7 +128,7 @@ export function PhotoBackground({
         transitionMs={transitionMs}
       />
       {/* Global readability overlay */}
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-black/10" />
     </div>
   )
 }

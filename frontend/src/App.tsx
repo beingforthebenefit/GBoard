@@ -26,13 +26,13 @@ export function App() {
       <div className="relative z-10 flex flex-col h-full p-4">
         {/* Top strip — weather | clock | sober */}
         <div className="flex-shrink-0 flex items-start gap-4">
-          <div className="w-72 flex-shrink-0">
+          <div className="w-80 flex-shrink-0">
             <WeatherWidget data={weatherData} loading={weatherLoading} />
           </div>
           <div className="flex-1 pt-1">
             <ClockWidget />
           </div>
-          <div className="w-64 flex-shrink-0 flex flex-col gap-2">
+          <div className="w-72 flex-shrink-0 flex flex-col gap-2">
             <SoberCounter sobrietyDate={SOBRIETY_DATE} />
             <PlexWidget session={session} loading={plexLoading} />
           </div>
