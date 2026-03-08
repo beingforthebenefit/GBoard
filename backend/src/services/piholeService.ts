@@ -1,15 +1,38 @@
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { join } from 'node:path'
+
 const PIHOLE_URL = () => process.env.PIHOLE_URL || 'http://192.168.50.62'
 const PIHOLE_PASSWORD = () => process.env.PIHOLE_PASSWORD || ''
+const SESSION_DIR = () => process.env.PIHOLE_SESSION_DIR || '/data/photos'
+const SESSION_FILE = () => join(SESSION_DIR(), 'pihole-session.json')
 
 let sessionSid: string | null = null
 let authInFlight: Promise<string> | null = null
 let rateLimitedUntil = 0
 
+function loadSessionFromDisk(): string | null {
+  try {
+    const data = JSON.parse(readFileSync(SESSION_FILE(), 'utf-8'))
+    return data.sid || null
+  } catch {
+    return null
+  }
+}
+
+function saveSessionToDisk(sid: string) {
+  try {
+    mkdirSync(SESSION_DIR(), { recursive: true })
+    writeFileSync(SESSION_FILE(), JSON.stringify({ sid }))
+  } catch {
+    // Non-critical — session just won't survive restarts
+  }
+}
+
 async function authenticate(): Promise<string> {
   // Deduplicate concurrent auth calls
   if (authInFlight) return authInFlight
 
-  // If rate-limited, fail fast — don't attempt auth at all
+  // If rate-limited / seats exhausted, fail fast
   if (Date.now() < rateLimitedUntil) {
     throw new Error('Pi-hole auth rate limited, backing off')
   }
@@ -22,14 +45,15 @@ async function authenticate(): Promise<string> {
         body: JSON.stringify({ password: PIHOLE_PASSWORD() }),
       })
       if (res.status === 429) {
-        // Back off for 60 seconds on rate limit
+        // Seats exhausted or rate limited — back off 60s
         rateLimitedUntil = Date.now() + 60_000
-        throw new Error('Pi-hole auth rate limited, backing off for 60s')
+        throw new Error('Pi-hole API seats exhausted, backing off for 60s')
       }
       if (!res.ok) throw new Error(`Pi-hole auth failed: ${res.status}`)
       const data = (await res.json()) as { session: { sid: string } }
       sessionSid = data.session.sid
       rateLimitedUntil = 0
+      saveSessionToDisk(sessionSid)
       return sessionSid
     } finally {
       authInFlight = null
@@ -39,7 +63,6 @@ async function authenticate(): Promise<string> {
 }
 
 async function piholeGet<T>(path: string): Promise<T> {
-  // Try with existing session, re-auth on 401
   for (let attempt = 0; attempt < 2; attempt++) {
     if (!sessionSid) await authenticate()
 
@@ -57,13 +80,26 @@ async function piholeGet<T>(path: string): Promise<T> {
   throw new Error('Pi-hole authentication failed after retry')
 }
 
+/** Delete the current session from Pi-hole to free a seat */
+export async function deletePiholeSession() {
+  if (!sessionSid) return
+  try {
+    await fetch(`${PIHOLE_URL()}/api/auth`, {
+      method: 'DELETE',
+      headers: { 'X-FTL-SID': sessionSid },
+    })
+  } catch {
+    // Best-effort cleanup
+  }
+  sessionSid = null
+}
+
 export interface PiholeStats {
   totalQueries: number
   blockedQueries: number
   blockedPercentage: number
   domainsOnBlocklist: number
   status: string
-  // History for "last hour" calculation
   blockedLastHour: number
   queriesLastHour: number
 }
@@ -87,7 +123,6 @@ interface HistoryResponse {
   history: HistoryEntry[]
 }
 
-// Cache last successful result so we can serve stale data during rate limits
 let lastStats: PiholeStats | null = null
 
 export function _resetSession() {
@@ -95,6 +130,11 @@ export function _resetSession() {
   authInFlight = null
   rateLimitedUntil = 0
   lastStats = null
+}
+
+/** Load persisted session from disk so we reuse it across restarts */
+export function loadSession() {
+  sessionSid = loadSessionFromDisk()
 }
 
 export async function fetchPiholeStats(): Promise<PiholeStats> {
@@ -105,7 +145,6 @@ export async function fetchPiholeStats(): Promise<PiholeStats> {
       piholeGet<HistoryResponse>('/api/history'),
     ])
 
-    // Sum entries from the last hour
     const oneHourAgo = Math.floor(Date.now() / 1000) - 3600
     let blockedLastHour = 0
     let queriesLastHour = 0
@@ -129,7 +168,6 @@ export async function fetchPiholeStats(): Promise<PiholeStats> {
     }
     return lastStats
   } catch (err) {
-    // Return cached data if available during rate limits or transient errors
     if (lastStats) return lastStats
     throw err
   }

@@ -6,6 +6,7 @@ import plexRouter from './routes/plex.js'
 import photosRouter from './routes/photos.js'
 import piholeRouter from './routes/pihole.js'
 import { loadFromDisk, startSync, startPeriodicSync } from './services/photosService.js'
+import { loadSession, deletePiholeSession } from './services/piholeService.js'
 
 const app = express()
 const PORT = 3001 // internal container port — BACKEND_PORT in .env only controls the host-side mapping
@@ -42,8 +43,18 @@ app.use('/api/pihole', piholeRouter)
 
 app.use(errorHandler)
 
+// Clean up Pi-hole session on shutdown to free API seat
+for (const sig of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(sig, () => {
+    deletePiholeSession().finally(() => process.exit(0))
+  })
+}
+
 app.listen(PORT, () => {
   console.log(`[GBoard API] listening on port ${PORT}`)
+
+  // Restore Pi-hole session from previous run
+  loadSession()
 
   // Load cached photos from disk instantly, then sync with iCloud in background
   loadFromDisk()
