@@ -11,6 +11,11 @@ const mockStats: PiholeStats = {
   status: 'enabled',
   blockedLastHour: 95,
   queriesLastHour: 300,
+  clients: [
+    { name: 'LivingRoomTV', ip: '192.168.1.40', queries: 1300 },
+    { name: 'iPhone', ip: '192.168.1.22', queries: 980 },
+    { name: '192.168.1.18', ip: '192.168.1.18', queries: 410 },
+  ],
 }
 
 describe('PiholeWidget', () => {
@@ -64,5 +69,18 @@ describe('PiholeWidget', () => {
   it('renders blocklist count', () => {
     render(<PiholeWidget data={mockStats} loading={false} />)
     expect(screen.getByText('120.0K domains on blocklist')).toBeDefined()
+  })
+
+  it('renders a compact top-clients list', () => {
+    render(<PiholeWidget data={mockStats} loading={false} />)
+    expect(screen.getByText('Top clients')).toBeDefined()
+    expect(screen.getByText('LivingRoomTV')).toBeDefined()
+    expect(screen.getByText('iPhone')).toBeDefined()
+    expect(screen.getByText('192.168.1.18')).toBeDefined()
+  })
+
+  it('hides top-clients section when no clients are returned', () => {
+    render(<PiholeWidget data={{ ...mockStats, clients: [] }} loading={false} />)
+    expect(screen.queryByText('Top clients')).toBeNull()
   })
 })

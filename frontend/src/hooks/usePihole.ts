@@ -10,6 +10,13 @@ export interface PiholeStats {
   status: string
   blockedLastHour: number
   queriesLastHour: number
+  clients: PiholeClient[]
+}
+
+export interface PiholeClient {
+  name: string
+  ip: string
+  queries: number
 }
 
 export function usePihole() {
@@ -25,8 +32,12 @@ export function usePihole() {
         const res = await fetch('/api/pihole')
         if (!res.ok) throw new Error(`Pi-hole API error: ${res.status}`)
         const json = await res.json()
+        const normalized: PiholeStats = {
+          ...json,
+          clients: Array.isArray(json.clients) ? json.clients : [],
+        }
         if (!cancelled) {
-          setData(json)
+          setData(normalized)
           setError(null)
         }
       } catch (e) {

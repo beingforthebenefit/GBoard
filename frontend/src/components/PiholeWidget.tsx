@@ -1,4 +1,4 @@
-import { PiholeStats } from '../hooks/usePihole.js'
+import { PiholeClient, PiholeStats } from '../hooks/usePihole.js'
 import { GlassPanel } from './GlassPanel.js'
 
 interface PiholeWidgetProps {
@@ -25,6 +25,11 @@ function StatCell({ value, label }: { value: string; label: string }) {
   )
 }
 
+function clientLabel(client: PiholeClient): string {
+  if (client.name && client.name !== client.ip) return client.name
+  return client.ip || 'Unknown client'
+}
+
 export function PiholeWidget({ data, loading }: PiholeWidgetProps) {
   if (loading) {
     return (
@@ -44,6 +49,7 @@ export function PiholeWidget({ data, loading }: PiholeWidgetProps) {
   }
 
   const statusColor = data.status === 'enabled' ? 'text-green-400' : 'text-red-400'
+  const topClients = data.clients.slice(0, 5)
 
   return (
     <GlassPanel className="p-4 text-white">
@@ -62,6 +68,29 @@ export function PiholeWidget({ data, loading }: PiholeWidgetProps) {
         <StatCell value={formatNumber(data.blockedQueries)} label="Total blocked" />
         <StatCell value={formatNumber(data.totalQueries)} label="Total queries" />
       </div>
+      {topClients.length > 0 && (
+        <div className="mt-3 pt-2 border-t border-white/10">
+          <div className="text-[10px] uppercase tracking-[0.14em] text-white/45 mb-1">
+            Top clients
+          </div>
+          <div className="space-y-1">
+            {topClients.map((client) => (
+              <div
+                key={`${client.ip}-${client.name}`}
+                className="flex items-center justify-between gap-2 text-xs"
+              >
+                <span
+                  className="truncate text-white/70"
+                  title={`${clientLabel(client)} (${client.ip})`}
+                >
+                  {clientLabel(client)}
+                </span>
+                <span className="tabular-nums text-white/55">{formatNumber(client.queries)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="mt-3 pt-2 border-t border-white/10 text-center">
         <span className="text-xs text-white/40">
           {formatNumber(data.domainsOnBlocklist)} domains on blocklist
