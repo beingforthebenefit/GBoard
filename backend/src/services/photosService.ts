@@ -6,6 +6,7 @@ interface CacheEntry {
 }
 
 let cache: CacheEntry | null = null
+let inflight: Promise<string[]> | null = null
 const CACHE_TTL_MS = 60 * 60 * 1000 // 60 minutes
 
 export async function fetchPhotos(): Promise<string[]> {
@@ -13,6 +14,16 @@ export async function fetchPhotos(): Promise<string[]> {
     return cache.photos
   }
 
+  // Deduplicate concurrent requests — only one iCloud API call at a time
+  if (inflight) return inflight
+
+  inflight = doFetch().finally(() => {
+    inflight = null
+  })
+  return inflight
+}
+
+async function doFetch(): Promise<string[]> {
   const albumUrl = process.env.ICLOUD_ALBUM_URL
   if (!albumUrl) throw new Error('Missing ICLOUD_ALBUM_URL env var')
 
@@ -27,7 +38,7 @@ export async function fetchPhotos(): Promise<string[]> {
   const urls = result.photos.flatMap((photo) => {
     // Pick the largest derivative (highest height) that has a URL
     const derivatives = Object.values(
-      photo.derivatives as Record<string, { height: number; url?: string }>,
+      photo.derivatives as Record<string, { height: number; url?: string }>
     )
     let bestUrl: string | undefined
     let bestHeight = -1
