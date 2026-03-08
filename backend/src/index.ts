@@ -4,6 +4,7 @@ import weatherRouter from './routes/weather.js'
 import calendarRouter from './routes/calendar.js'
 import plexRouter from './routes/plex.js'
 import photosRouter from './routes/photos.js'
+import piholeRouter from './routes/pihole.js'
 import { loadFromDisk, startSync, startPeriodicSync } from './services/photosService.js'
 
 const app = express()
@@ -37,6 +38,7 @@ app.use('/api/weather', weatherRouter)
 app.use('/api/calendar', calendarRouter)
 app.use('/api/plex', plexRouter)
 app.use('/api/photos', photosRouter)
+app.use('/api/pihole', piholeRouter)
 
 app.use(errorHandler)
 
