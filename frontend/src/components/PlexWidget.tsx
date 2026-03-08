@@ -59,7 +59,7 @@ export function PlexWidget({ session, loading }: PlexWidgetProps) {
         <div className="w-full bg-white/20 rounded-full h-1">
           <div className="bg-yellow-400 h-1 rounded-full" style={{ width: `${pct}%` }} />
         </div>
-        <div className="flex justify-between text-[10px] text-white/40 mt-0.5 tabular-nums">
+        <div className="flex justify-between text-xs text-white/40 mt-0.5 tabular-nums">
           <span>{formatMs(session.viewOffset)}</span>
           <span>{formatMs(session.duration)}</span>
         </div>

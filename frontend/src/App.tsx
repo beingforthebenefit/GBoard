@@ -29,7 +29,7 @@ export function App() {
           <div className="w-72 flex-shrink-0">
             <WeatherWidget data={weatherData} loading={weatherLoading} />
           </div>
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 pt-1">
             <ClockWidget />
           </div>
           <div className="w-64 flex-shrink-0 flex flex-col gap-2">

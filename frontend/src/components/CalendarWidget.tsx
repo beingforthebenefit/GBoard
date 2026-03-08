@@ -18,8 +18,8 @@ const EVENT_COLORS = [
 const HOUR_START = 9
 const HOUR_END = 22
 const TOTAL_HOURS = HOUR_END - HOUR_START
-const HOUR_PX = 38 // pixels per hour
-const GUTTER_W = 40 // px width of time gutter
+const HOUR_PX = 42 // pixels per hour
+const GUTTER_W = 44 // px width of time gutter
 const NUM_DAYS = 7
 
 function dayKey(d: Date) {
@@ -58,7 +58,7 @@ function eventLayout(start: Date, end: Date): { top: number; height: number } | 
   const clampedEnd = Math.min(endH, HOUR_END)
   return {
     top: (clampedStart - HOUR_START) * HOUR_PX,
-    height: Math.max((clampedEnd - clampedStart) * HOUR_PX, 18),
+    height: Math.max((clampedEnd - clampedStart) * HOUR_PX, 20),
   }
 }
 
@@ -83,7 +83,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
   const gridHeight = TOTAL_HOURS * HOUR_PX
 
   return (
-    <GlassPanel className="flex flex-col h-full p-2 overflow-hidden">
+    <GlassPanel className="flex flex-col h-full p-3 overflow-hidden">
       {/* Day headers */}
       <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
         {days.map((d) => {
@@ -132,8 +132,8 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
             {Array.from({ length: TOTAL_HOURS }, (_, i) => (
               <div
                 key={i}
-                className="absolute right-1 text-xs leading-none"
-                style={{ top: i * HOUR_PX - 5, color: 'rgba(255,255,255,0.4)' }}
+                className="absolute right-1 text-sm leading-none"
+                style={{ top: i * HOUR_PX - 6, color: 'rgba(255,255,255,0.4)' }}
               >
                 {formatHour(HOUR_START + i)}
               </div>
@@ -183,7 +183,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
                   return (
                     <div
                       key={e.id}
-                      className="absolute left-0.5 right-0.5 rounded px-1 overflow-hidden z-20"
+                      className="absolute left-0.5 right-0.5 rounded px-1.5 py-0.5 overflow-hidden z-20"
                       style={{
                         top: layout.top + 1,
                         height: layout.height - 2,
@@ -191,10 +191,10 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
                         borderLeft: `3px solid ${color}`,
                       }}
                     >
-                      <div className="text-white text-xs leading-tight font-medium truncate">
+                      <div className="text-white text-sm leading-tight font-medium truncate">
                         {e.title}
                       </div>
-                      <div className="text-white/60 text-[10px] leading-tight">
+                      <div className="text-white/60 text-xs leading-tight">
                         {new Date(e.start).toLocaleTimeString('en-US', {
                           hour: 'numeric',
                           minute: '2-digit',

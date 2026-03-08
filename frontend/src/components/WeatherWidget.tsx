@@ -71,9 +71,9 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
           })
           return (
             <div key={day.date} className="text-center">
-              <div className="text-white/50 text-[10px]">{label}</div>
+              <div className="text-white/50 text-xs">{label}</div>
               <WeatherIcon icon={day.icon} alt={day.description} />
-              <div className="text-[10px]">
+              <div className="text-xs">
                 <span className="font-medium">{day.high}°</span>
                 <span className="text-white/40"> {day.low}°</span>
               </div>
