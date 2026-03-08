@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { GlassPanel } from './GlassPanel.js'
 import { getAstrologySnapshot } from '../utils/astrology.js'
 
 export function AstroWidget() {
@@ -14,7 +13,7 @@ export function AstroWidget() {
   const constellation = snapshot.constellation
 
   return (
-    <GlassPanel className="relative overflow-hidden px-4 py-3 text-white backdrop-blur-none bg-slate-900/65">
+    <div className="relative overflow-hidden px-4 py-3 text-white bg-slate-900/65 border border-white/24 rounded-2xl shadow-xl isolate">
       <div className="absolute inset-0 bg-gradient-to-r from-sky-400/15 via-indigo-400/10 to-amber-300/10" />
       <div className="absolute inset-0 astro-stars opacity-70" />
 
@@ -93,6 +92,6 @@ export function AstroWidget() {
           </div>
         </div>
       </div>
-    </GlassPanel>
+    </div>
   )
 }
