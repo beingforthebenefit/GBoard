@@ -5,9 +5,7 @@ interface GlassPanelProps {
 
 export function GlassPanel({ children, className = '' }: GlassPanelProps) {
   return (
-    <div
-      className={`bg-black/50 backdrop-blur-md border border-white/24 rounded-2xl shadow-xl ${className}`}
-    >
+    <div className={`bg-black/60 border border-white/24 rounded-2xl shadow-xl ${className}`}>
       {children}
     </div>
   )

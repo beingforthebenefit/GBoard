@@ -14,12 +14,6 @@ body,
   padding: 0;
 }
 
-/* Ensure backdrop-filter works in all webkit browsers */
-.backdrop-blur-md {
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-
 @keyframes widget-enter {
   from {
     opacity: 0;
