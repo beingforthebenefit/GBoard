@@ -39,6 +39,15 @@ const clientsResponse = {
   ],
 }
 
+const blockedClientsResponse = {
+  clients: [
+    { name: 'LivingRoomTV', ip: '192.168.1.40', count: 390 },
+    { name: 'iPhone', ip: '192.168.1.22', count: 274 },
+    { name: 'Laptop', ip: '192.168.1.12', count: 120 },
+    { name: 'Tablet', ip: '192.168.1.30', count: 90 },
+  ],
+}
+
 // Use recent timestamps so they pass the "last hour" filter
 const now = Math.floor(Date.now() / 1000)
 const historyResponse = {
@@ -55,6 +64,12 @@ function mockSuccessfulFlow() {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(authResponse),
+      })
+    }
+    if (url.includes('/api/stats/top_clients?count=8&blocked=true')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(blockedClientsResponse),
       })
     }
     if (url.includes('/api/stats/summary')) {
@@ -113,6 +128,8 @@ describe('fetchPiholeStats', () => {
     expect(stats.clients[0].name).toBe('LivingRoomTV')
     expect(stats.clients[1].name).toBe('iPhone')
     expect(stats.clients[2].name).toBe('Laptop')
+    expect(stats.clients[0].blockedQueries).toBe(390)
+    expect(stats.clients[0].blockedPercentage).toBe(30)
   })
 
   it('filters out local Pi-hole and localhost entries from client list', async () => {

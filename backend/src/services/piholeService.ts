@@ -129,6 +129,8 @@ export interface PiholeClient {
   name: string
   ip: string
   queries: number
+  blockedQueries: number
+  blockedPercentage: number
 }
 
 interface ClientsResponseItem {
@@ -172,7 +174,13 @@ function normalizeClients(raw: unknown): PiholeClient[] {
         const countRaw = entry.count
         const queries = typeof countRaw === 'number' ? countRaw : 0
         if (!ip && !name) return null
-        return { name, ip: ip || fallbackName, queries }
+        return {
+          name,
+          ip: ip || fallbackName,
+          queries,
+          blockedQueries: 0,
+          blockedPercentage: 0,
+        }
       })
       .filter((item): item is PiholeClient => item !== null)
   }
@@ -188,6 +196,8 @@ function normalizeClients(raw: unknown): PiholeClient[] {
         name: key,
         ip: key,
         queries: typeof value === 'number' ? value : 0,
+        blockedQueries: 0,
+        blockedPercentage: 0,
       }))
       .filter((item) => item.queries > 0)
   }
@@ -227,6 +237,26 @@ function applyClientAlias(client: PiholeClient, aliases: Record<string, string>)
   return client
 }
 
+function applyBlockedClientStats(clients: PiholeClient[], blockedRaw: unknown): PiholeClient[] {
+  const blockedByKey = new Map<string, number>()
+  for (const client of normalizeClients(blockedRaw)) {
+    if (client.ip) blockedByKey.set(client.ip.toLowerCase(), client.queries)
+    if (client.name) blockedByKey.set(client.name.toLowerCase(), client.queries)
+  }
+
+  return clients.map((client) => {
+    const blockedQueries =
+      blockedByKey.get(client.ip.toLowerCase()) ?? blockedByKey.get(client.name.toLowerCase()) ?? 0
+    const blockedPercentage = client.queries > 0 ? (blockedQueries / client.queries) * 100 : 0
+
+    return {
+      ...client,
+      blockedQueries,
+      blockedPercentage,
+    }
+  })
+}
+
 function isFilteredClient(client: PiholeClient): boolean {
   const name = client.name.toLowerCase()
   const ip = client.ip.toLowerCase()
@@ -241,12 +271,19 @@ function isFilteredClient(client: PiholeClient): boolean {
 
 export async function fetchPiholeStats(): Promise<PiholeStats> {
   try {
-    const [stats, blocking, history, clientsRaw] = await Promise.all([
+    const [stats, blocking, history, clientsRaw, blockedClientsRaw] = await Promise.all([
       piholeGet<StatsResponse>('/api/stats/summary'),
       piholeGet<BlockingResponse>('/api/dns/blocking'),
       piholeGet<HistoryResponse>('/api/history'),
       piholeGet<ClientsResponse | Record<string, unknown>>('/api/stats/top_clients?count=8').catch(
         () => null
+      ),
+      piholeGet<ClientsResponse | Record<string, unknown>>(
+        '/api/stats/top_clients?count=8&blocked=true'
+      ).catch(() =>
+        piholeGet<ClientsResponse | Record<string, unknown>>(
+          '/api/stats/top_clients_blocked?count=8'
+        ).catch(() => null)
       ),
     ])
 
@@ -264,11 +301,14 @@ export async function fetchPiholeStats(): Promise<PiholeStats> {
 
     const aliases = parseClientAliases(PIHOLE_CLIENT_ALIASES())
 
-    const clients = normalizeClients(clientsRaw)
-      .map((client) => applyClientAlias(client, aliases))
-      .filter((client) => !isFilteredClient(client))
-      .sort((a, b) => b.queries - a.queries)
-      .slice(0, 5)
+    const clients = applyBlockedClientStats(
+      normalizeClients(clientsRaw)
+        .map((client) => applyClientAlias(client, aliases))
+        .filter((client) => !isFilteredClient(client))
+        .sort((a, b) => b.queries - a.queries)
+        .slice(0, 5),
+      blockedClientsRaw
+    )
 
     lastStats = {
       totalQueries: stats.queries.total,

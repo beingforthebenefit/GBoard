@@ -17,6 +17,8 @@ export interface PiholeClient {
   name: string
   ip: string
   queries: number
+  blockedQueries: number
+  blockedPercentage: number
 }
 
 export function usePihole() {
@@ -34,7 +36,15 @@ export function usePihole() {
         const json = await res.json()
         const normalized: PiholeStats = {
           ...json,
-          clients: Array.isArray(json.clients) ? json.clients : [],
+          clients: Array.isArray(json.clients)
+            ? json.clients.map((client: Partial<PiholeClient>) => ({
+                name: client.name ?? '',
+                ip: client.ip ?? '',
+                queries: client.queries ?? 0,
+                blockedQueries: client.blockedQueries ?? 0,
+                blockedPercentage: client.blockedPercentage ?? 0,
+              }))
+            : [],
         }
         if (!cancelled) {
           setData(normalized)

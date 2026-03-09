@@ -12,9 +12,27 @@ const mockStats: PiholeStats = {
   blockedLastHour: 95,
   queriesLastHour: 300,
   clients: [
-    { name: 'LivingRoomTV', ip: '192.168.1.40', queries: 1300 },
-    { name: 'iPhone', ip: '192.168.1.22', queries: 980 },
-    { name: '192.168.1.18', ip: '192.168.1.18', queries: 410 },
+    {
+      name: 'LivingRoomTV',
+      ip: '192.168.1.40',
+      queries: 1300,
+      blockedQueries: 390,
+      blockedPercentage: 30.0,
+    },
+    {
+      name: 'iPhone',
+      ip: '192.168.1.22',
+      queries: 980,
+      blockedQueries: 274,
+      blockedPercentage: 28.0,
+    },
+    {
+      name: '192.168.1.18',
+      ip: '192.168.1.18',
+      queries: 410,
+      blockedQueries: 82,
+      blockedPercentage: 20.0,
+    },
   ],
 }
 
@@ -48,12 +66,12 @@ describe('PiholeWidget', () => {
   it('renders blocked last hour', () => {
     render(<PiholeWidget data={mockStats} loading={false} />)
     expect(screen.getByText('95')).toBeDefined()
-    expect(screen.getByText('Blocked/hr')).toBeDefined()
+    expect(screen.getByText('Blk/hr')).toBeDefined()
   })
 
   it('renders blocked percentage', () => {
     render(<PiholeWidget data={mockStats} loading={false} />)
-    expect(screen.getByText('30.0%')).toBeDefined()
+    expect(screen.getAllByText('30.0%').length).toBeGreaterThan(0)
   })
 
   it('renders total blocked with K formatting', () => {
@@ -71,12 +89,16 @@ describe('PiholeWidget', () => {
     expect(screen.getByText('120.0K domains on blocklist')).toBeDefined()
   })
 
-  it('renders a compact top-clients list', () => {
+  it('renders a compact top-clients table with headers', () => {
     render(<PiholeWidget data={mockStats} loading={false} />)
     expect(screen.getByText('Top clients')).toBeDefined()
+    expect(screen.getByRole('columnheader', { name: 'Req' })).toBeDefined()
+    expect(screen.getByRole('columnheader', { name: 'Blk' })).toBeDefined()
     expect(screen.getByText('LivingRoomTV')).toBeDefined()
     expect(screen.getByText('iPhone')).toBeDefined()
     expect(screen.getByText('192.168.1.18')).toBeDefined()
+    expect(screen.getByText('390')).toBeDefined()
+    expect(screen.getByText('28.0%')).toBeDefined()
   })
 
   it('hides top-clients section when no clients are returned', () => {

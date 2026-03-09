@@ -61,6 +61,8 @@ export interface PiholeClient {
   name: string
   ip: string
   queries: number
+  blockedQueries: number
+  blockedPercentage: number
 }
 
 export interface PiholeResponse {
