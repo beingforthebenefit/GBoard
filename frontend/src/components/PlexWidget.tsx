@@ -6,15 +6,6 @@ interface PlexWidgetProps {
   loading: boolean
 }
 
-function formatMs(ms: number): string {
-  const totalSec = Math.floor(ms / 1000)
-  const h = Math.floor(totalSec / 3600)
-  const m = Math.floor((totalSec % 3600) / 60)
-  const s = totalSec % 60
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  return `${m}:${String(s).padStart(2, '0')}`
-}
-
 function stateIcon(state: PlexSession['playerState']): string {
   if (state === 'paused') return '⏸'
   if (state === 'buffering') return '⟳'
@@ -51,10 +42,6 @@ function SessionCard({ session }: { session: PlexSession }) {
       <div className="mt-2">
         <div className="w-full bg-white/20 rounded-full h-1.5">
           <div className="bg-yellow-400 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
-        </div>
-        <div className="flex justify-between text-sm text-white/40 mt-0.5 tabular-nums">
-          <span>{formatMs(session.viewOffset)}</span>
-          <span>{formatMs(session.duration)}</span>
         </div>
       </div>
     </GlassPanel>

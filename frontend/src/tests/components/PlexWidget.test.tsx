@@ -37,23 +37,6 @@ describe('PlexWidget', () => {
     expect(screen.getByText('Gerald')).toBeDefined()
   })
 
-  it('renders elapsed and total time', () => {
-    render(<PlexWidget sessions={[baseSession]} loading={false} />)
-    expect(screen.getByText('10:00')).toBeDefined()
-    expect(screen.getByText('45:00')).toBeDefined()
-  })
-
-  it('renders time with hours when duration exceeds 1 hour', () => {
-    const longSession: PlexSession = {
-      ...baseSession,
-      viewOffset: 3661000, // 1:01:01
-      duration: 7200000, // 2:00:00
-    }
-    render(<PlexWidget sessions={[longSession]} loading={false} />)
-    expect(screen.getByText('1:01:01')).toBeDefined()
-    expect(screen.getByText('2:00:00')).toBeDefined()
-  })
-
   it('shows pause indicator when paused', () => {
     const pausedSession: PlexSession = { ...baseSession, playerState: 'paused' }
     render(<PlexWidget sessions={[pausedSession]} loading={false} />)
