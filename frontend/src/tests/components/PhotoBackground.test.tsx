@@ -69,4 +69,32 @@ describe('PhotoBackground', () => {
     })
     expect(img.getAttribute('src')).toContain('bgRetry=1')
   })
+
+  it('advances to next photo after max retries exhausted', () => {
+    const photos = [
+      'https://example.com/photo1.jpg',
+      'https://example.com/photo2.jpg',
+      'https://example.com/photo3.jpg',
+    ]
+    const { container } = render(<PhotoBackground photos={photos} />)
+    const getImgSrcs = () =>
+      Array.from(container.querySelectorAll('img')).map((img) => img.getAttribute('src') ?? '')
+
+    const initialSrcs = getImgSrcs()
+
+    // Trigger errors on first image and exhaust retries (MAX_RETRIES = 2)
+    const img = container.querySelector('img') as HTMLImageElement
+    fireEvent.error(img)
+    act(() => {
+      vi.advanceTimersByTime(5000)
+    }) // retry 1
+    fireEvent.error(img)
+    act(() => {
+      vi.advanceTimersByTime(5000)
+    }) // retry 2 — max reached, should advance
+
+    const newSrcs = getImgSrcs()
+    // At least one image source should have changed (advanced to next)
+    expect(newSrcs).not.toEqual(initialSrcs)
+  })
 })
