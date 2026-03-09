@@ -13,7 +13,7 @@ export function AstroWidget() {
   const constellation = snapshot.constellation
 
   return (
-    <div className="relative overflow-hidden px-4 py-3 text-white bg-slate-900/80 border border-white/24 rounded-2xl shadow-xl isolate [backface-visibility:hidden]">
+    <div className="relative overflow-hidden px-4 py-4 text-white bg-slate-900/80 border border-white/24 rounded-2xl shadow-xl isolate [backface-visibility:hidden]">
       <div className="absolute inset-0 bg-gradient-to-r from-sky-400/15 via-indigo-400/10 to-amber-300/10" />
       <div className="absolute inset-0 astro-stars opacity-70" />
 
@@ -51,7 +51,7 @@ export function AstroWidget() {
               <span>Constellation</span>
               <span>{constellation.name}</span>
             </div>
-            <svg viewBox="0 0 100 62" className="w-full h-20 mt-1">
+            <svg viewBox="0 0 100 62" className="w-full h-28 mt-1">
               <rect x="0" y="0" width="100" height="62" rx="8" fill="rgba(2,6,23,0.35)" />
               {constellation.lines.map(([a, b], idx) => {
                 const start = constellation.stars[a]

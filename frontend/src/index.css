@@ -71,6 +71,12 @@ body,
     radial-gradient(circle at 86% 74%, rgba(255, 255, 255, 0.24) 0 1px, transparent 1.2px),
     radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.18) 0 0.8px, transparent 1px),
     radial-gradient(circle at 38% 55%, rgba(255, 255, 255, 0.14) 0 0.8px, transparent 1px);
-  background-size: 137px 113px, 149px 127px, 163px 139px, 151px 109px, 173px 131px, 143px 151px;
+  background-size:
+    137px 113px,
+    149px 127px,
+    163px 139px,
+    151px 109px,
+    173px 131px,
+    143px 151px;
   backface-visibility: hidden;
 }
