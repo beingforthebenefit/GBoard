@@ -1,6 +1,6 @@
 import { PhotoBackground } from './components/PhotoBackground.js'
 import { WeatherWidget } from './components/WeatherWidget.js'
-import { SunArcWidget } from './components/SunArcWidget.js'
+// import { SunArcWidget } from './components/SunArcWidget.js'
 import { ClockWidget } from './components/ClockWidget.js'
 import { AstroWidget } from './components/AstroWidget.js'
 import { SoberCounter } from './components/SoberCounter.js'
@@ -36,11 +36,7 @@ export function App() {
             style={{ animationDelay: '0ms' }}
           >
             <WeatherWidget data={weatherData} loading={weatherLoading} />
-            <SunArcWidget
-              sunrise={weatherData?.current.sunrise ?? null}
-              sunset={weatherData?.current.sunset ?? null}
-              loading={weatherLoading}
-            />
+            <SoberCounter sobrietyDate={SOBRIETY_DATE} />
           </div>
           <div className="flex-1 min-w-0 pt-1 widget-enter" style={{ animationDelay: '60ms' }}>
             <ClockWidget />
@@ -52,7 +48,6 @@ export function App() {
             className="w-72 flex-shrink-0 flex flex-col gap-2 widget-enter"
             style={{ animationDelay: '110ms' }}
           >
-            <SoberCounter sobrietyDate={SOBRIETY_DATE} />
             <PiholeWidget data={piholeData} loading={piholeLoading} />
             <PlexWidget sessions={sessions} loading={plexLoading} />
           </div>
