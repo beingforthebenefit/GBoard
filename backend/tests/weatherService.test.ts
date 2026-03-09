@@ -15,7 +15,7 @@ const makeSlot = (
 })
 
 describe('buildForecast', () => {
-  it('skips today and returns 3 future days', () => {
+  it('includes today and returns up to 4 days', () => {
     const today = new Date().toISOString().slice(0, 10)
     const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
     const day2 = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10)
@@ -30,10 +30,11 @@ describe('buildForecast', () => {
     ]
 
     const result = buildForecast(slots)
-    expect(result).toHaveLength(3)
-    expect(result[0].date).toBe(tomorrow)
-    expect(result[1].date).toBe(day2)
-    expect(result[2].date).toBe(day3)
+    expect(result).toHaveLength(4)
+    expect(result[0].date).toBe(today)
+    expect(result[1].date).toBe(tomorrow)
+    expect(result[2].date).toBe(day2)
+    expect(result[3].date).toBe(day3)
   })
 
   it('computes correct high and low from multiple slots', () => {
@@ -69,28 +70,28 @@ describe('buildForecast', () => {
     expect(result[0].icon).toBe('01d')
   })
 
-  it('returns empty array when no future slots', () => {
+  it('returns today when only today slots exist', () => {
     const today = new Date().toISOString().slice(0, 10)
     const slots = [makeSlot(`${today} 12:00:00`, 75, 55)]
     const result = buildForecast(slots)
-    expect(result).toHaveLength(0)
+    expect(result).toHaveLength(1)
+    expect(result[0].date).toBe(today)
   })
 
-  it('uses forecast timezone when skipping today (prevents Sunday from being dropped)', () => {
-    // Saturday 11:30 PM PST (UTC-8) => Sunday 07:30 UTC.
-    // If "today" is computed in UTC, Sunday would be incorrectly skipped.
-    const nowMs = Date.parse('2026-03-08T07:30:00Z')
+  it('uses forecast timezone for correct day grouping', () => {
     const pstOffset = -8 * 3600
     const slots = [
+      makeSlot('2026-03-07 18:00:00', 64, 52, '01d', 'clear'), // Saturday local
       makeSlot('2026-03-08 18:00:00', 65, 53, '02d', 'few clouds'), // Sunday local
       makeSlot('2026-03-09 18:00:00', 66, 54, '03d', 'cloudy'), // Monday local
       makeSlot('2026-03-10 18:00:00', 67, 55, '04d', 'overcast'), // Tuesday local
     ]
 
-    const result = buildForecast(slots, pstOffset, nowMs)
-    expect(result).toHaveLength(3)
-    expect(result[0].date).toBe('2026-03-08') // Sunday must be present
-    expect(result[1].date).toBe('2026-03-09')
-    expect(result[2].date).toBe('2026-03-10')
+    const result = buildForecast(slots, pstOffset)
+    expect(result).toHaveLength(4)
+    expect(result[0].date).toBe('2026-03-07')
+    expect(result[1].date).toBe('2026-03-08')
+    expect(result[2].date).toBe('2026-03-09')
+    expect(result[3].date).toBe('2026-03-10')
   })
 })
