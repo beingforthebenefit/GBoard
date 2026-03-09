@@ -105,7 +105,7 @@ export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
       <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
         {days.map((d) => {
           const key = dayKey(d)
-          const allDayEvents = events.filter((e) => e.allDay && dayKey(new Date(e.start)) === key)
+          const allDayEvents = events.filter((e) => e.allDay && e.start.slice(0, 10) === key)
           return (
             <div key={key} className="flex-1 px-0.5 min-h-[16px]">
               {allDayEvents.map((e) => (

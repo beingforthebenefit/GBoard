@@ -69,6 +69,25 @@ describe('CalendarWidget', () => {
     expect(screen.getByText('Birthday')).toBeDefined()
   })
 
+  it('places all-day event on correct day even with UTC midnight timestamp', () => {
+    // All-day event for March 8 sent as UTC midnight — should NOT appear on March 7
+    const event = makeEvent({
+      title: 'Tomorrow Event',
+      start: '2026-03-08T00:00:00.000Z',
+      end: '2026-03-09T00:00:00.000Z',
+      allDay: true,
+    })
+    const todayEvent = makeEvent({
+      title: 'Today Event',
+      start: '2026-03-07T00:00:00.000Z',
+      end: '2026-03-08T00:00:00.000Z',
+      allDay: true,
+    })
+    render(<CalendarWidget events={[event, todayEvent]} loading={false} />)
+    expect(screen.getByText('Tomorrow Event')).toBeDefined()
+    expect(screen.getByText('Today Event')).toBeDefined()
+  })
+
   it('does not render events outside the visible hour range', () => {
     const event = makeEvent({
       title: 'Early Morning',
