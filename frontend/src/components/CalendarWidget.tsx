@@ -20,7 +20,7 @@ const HOUR_END = 22
 const TOTAL_HOURS = HOUR_END - HOUR_START
 const HOUR_PX = 32 // pixels per hour (~25% shorter than before)
 const GUTTER_W = 44 // px width of time gutter
-const NUM_DAYS = 7
+const NUM_DAYS = 5
 
 function dayKey(d: Date) {
   const y = d.getFullYear()

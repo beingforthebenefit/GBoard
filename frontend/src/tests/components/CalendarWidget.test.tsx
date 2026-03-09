@@ -34,11 +34,11 @@ describe('CalendarWidget', () => {
     expect(screen.getByText('Today')).toBeDefined()
   })
 
-  it('renders 7 day columns', () => {
+  it('renders 5 day columns', () => {
     render(<CalendarWidget events={[]} loading={false} />)
-    // "Today" plus 6 more day headers
+    // "Today" plus 4 more day headers
     const dayHeaders = screen.getAllByText(/Today|Sun|Mon|Tue|Wed|Thu|Fri|Sat/)
-    expect(dayHeaders.length).toBeGreaterThanOrEqual(7)
+    expect(dayHeaders.length).toBeGreaterThanOrEqual(5)
   })
 
   it('renders time gutter labels', () => {

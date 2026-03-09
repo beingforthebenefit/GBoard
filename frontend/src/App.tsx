@@ -40,12 +40,9 @@ export function App() {
           </div>
           <div className="flex-1 min-w-0 pt-1 widget-enter" style={{ animationDelay: '60ms' }}>
             <ClockWidget />
-            <div className="max-w-3xl mx-auto mt-2 px-2">
-              <AstroWidget />
-            </div>
           </div>
           <div
-            className="w-72 flex-shrink-0 flex flex-col gap-2 widget-enter"
+            className="w-80 flex-shrink-0 flex flex-col gap-2 widget-enter"
             style={{ animationDelay: '110ms' }}
           >
             <PiholeWidget data={piholeData} loading={piholeLoading} />
@@ -56,9 +53,17 @@ export function App() {
         {/* Middle spacer — photo breathes here */}
         <div className="flex-1" />
 
-        {/* Bottom strip — calendar */}
-        <div className="flex-shrink-0 widget-enter" style={{ animationDelay: '160ms' }}>
-          <CalendarWidget events={events} loading={calendarLoading} />
+        {/* Bottom strip — calendar + astro */}
+        <div
+          className="flex-shrink-0 flex items-end gap-4 widget-enter"
+          style={{ animationDelay: '160ms' }}
+        >
+          <div className="flex-1 min-w-0">
+            <CalendarWidget events={events} loading={calendarLoading} />
+          </div>
+          <div className="w-72 flex-shrink-0">
+            <AstroWidget />
+          </div>
         </div>
       </div>
     </div>
