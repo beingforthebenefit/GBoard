@@ -115,7 +115,7 @@ export async function fetchUpcomingMedia(): Promise<UpcomingItem[]> {
   ])
 
   const items = [...episodes, ...movies]
-    .filter((item) => item.date >= startDate)
+    .filter((item) => item.date >= startDate && item.date < endDate)
     .sort((a, b) => a.date.localeCompare(b.date))
 
   cache = { items, fetchedAt: Date.now() }
