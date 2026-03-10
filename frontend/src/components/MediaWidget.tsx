@@ -48,7 +48,7 @@ export function MediaWidget({ items, loading }: MediaWidgetProps) {
       <div className="text-center text-white/50 text-sm font-semibold tracking-widest mb-3 uppercase">
         Upcoming
       </div>
-      <div className="space-y-3 max-h-48 overflow-y-auto">
+      <div className="space-y-3">
         {Array.from(grouped.entries()).map(([date, dateItems]) => (
           <div key={date}>
             <div className="text-xs text-white/40 font-semibold tracking-wider uppercase mb-1">

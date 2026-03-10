@@ -100,7 +100,7 @@ export async function fetchUpcomingMedia(): Promise<UpcomingItem[]> {
   const now = new Date()
   const startDate = now.toISOString().slice(0, 10)
   const end = new Date(now)
-  end.setDate(end.getDate() + 5)
+  end.setDate(end.getDate() + 3)
   const endDate = end.toISOString().slice(0, 10)
 
   const [episodes, movies] = await Promise.all([
