@@ -63,7 +63,7 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
       <div className="flex justify-between pt-1 border-t border-white/10">
         {forecast.map((day, i) => {
           const label =
-            i === 0 && day.date === new Date().toISOString().slice(0, 10)
+            i === 0
               ? 'Today'
               : new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', {
                   weekday: 'short',
