@@ -114,7 +114,9 @@ export async function fetchUpcomingMedia(): Promise<UpcomingItem[]> {
     }),
   ])
 
-  const items = [...episodes, ...movies].sort((a, b) => a.date.localeCompare(b.date))
+  const items = [...episodes, ...movies]
+    .filter((item) => item.date >= startDate)
+    .sort((a, b) => a.date.localeCompare(b.date))
 
   cache = { items, fetchedAt: Date.now() }
   return items
