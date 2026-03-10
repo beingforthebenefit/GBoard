@@ -237,16 +237,35 @@ function applyClientAlias(client: PiholeClient, aliases: Record<string, string>)
   return client
 }
 
-function applyBlockedClientStats(clients: PiholeClient[], blockedRaw: unknown): PiholeClient[] {
-  const blockedByKey = new Map<string, number>()
-  for (const client of normalizeClients(blockedRaw)) {
-    if (client.ip) blockedByKey.set(client.ip.toLowerCase(), client.queries)
-    if (client.name) blockedByKey.set(client.name.toLowerCase(), client.queries)
+function mergeClientsByName(clients: PiholeClient[]): PiholeClient[] {
+  const merged = new Map<string, PiholeClient>()
+  for (const client of clients) {
+    const key = client.name.toLowerCase()
+    const existing = merged.get(key)
+    if (existing) {
+      existing.queries += client.queries
+      existing.blockedQueries += client.blockedQueries
+    } else {
+      merged.set(key, { ...client })
+    }
+  }
+  return Array.from(merged.values())
+}
+
+function applyBlockedClientStats(
+  clients: PiholeClient[],
+  blockedRaw: unknown,
+  aliases: Record<string, string>
+): PiholeClient[] {
+  const blockedByName = new Map<string, number>()
+  for (const client of mergeClientsByName(
+    normalizeClients(blockedRaw).map((c) => applyClientAlias(c, aliases))
+  )) {
+    blockedByName.set(client.name.toLowerCase(), client.queries)
   }
 
   return clients.map((client) => {
-    const blockedQueries =
-      blockedByKey.get(client.ip.toLowerCase()) ?? blockedByKey.get(client.name.toLowerCase()) ?? 0
+    const blockedQueries = blockedByName.get(client.name.toLowerCase()) ?? 0
     const blockedPercentage = client.queries > 0 ? (blockedQueries / client.queries) * 100 : 0
 
     return {
@@ -301,13 +320,16 @@ export async function fetchPiholeStats(): Promise<PiholeStats> {
 
     const aliases = parseClientAliases(PIHOLE_CLIENT_ALIASES())
 
-    const clients = applyBlockedClientStats(
+    const aliasedClients = mergeClientsByName(
       normalizeClients(clientsRaw)
         .map((client) => applyClientAlias(client, aliases))
         .filter((client) => !isFilteredClient(client))
-        .sort((a, b) => b.queries - a.queries)
-        .slice(0, 5),
-      blockedClientsRaw
+    )
+
+    const clients = applyBlockedClientStats(
+      aliasedClients.sort((a, b) => b.queries - a.queries).slice(0, 5),
+      blockedClientsRaw,
+      aliases
     )
 
     lastStats = {

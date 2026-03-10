@@ -151,6 +151,17 @@ describe('fetchPiholeStats', () => {
     expect(stats.clients.find((c) => c.ip === '192.168.1.18')?.name).toBe("Gerald's iPad")
   })
 
+  it('merges clients that share the same alias name', async () => {
+    vi.stubEnv('PIHOLE_CLIENT_ALIASES', '192.168.1.22=Gerald iPhone,192.168.1.50=Gerald iPhone')
+    mockSuccessfulFlow()
+
+    const stats = await fetchPiholeStats()
+    const merged = stats.clients.filter((c) => c.name === 'Gerald iPhone')
+    expect(merged).toHaveLength(1)
+    // 980 (iPhone) + 120 (Guest) = 1100
+    expect(merged[0].queries).toBe(1100)
+  })
+
   it('sends X-FTL-SID header on API requests', async () => {
     mockSuccessfulFlow()
 
