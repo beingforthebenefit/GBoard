@@ -5,6 +5,7 @@ import calendarRouter from './routes/calendar.js'
 import plexRouter from './routes/plex.js'
 import photosRouter from './routes/photos.js'
 import piholeRouter from './routes/pihole.js'
+import mediaRouter from './routes/media.js'
 import { loadFromDisk, startSync, startPeriodicSync } from './services/photosService.js'
 import { loadSession, deletePiholeSession } from './services/piholeService.js'
 
@@ -40,6 +41,7 @@ app.use('/api/calendar', calendarRouter)
 app.use('/api/plex', plexRouter)
 app.use('/api/photos', photosRouter)
 app.use('/api/pihole', piholeRouter)
+app.use('/api/media', mediaRouter)
 
 app.use(errorHandler)
 

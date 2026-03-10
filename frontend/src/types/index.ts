@@ -43,6 +43,13 @@ export interface PlexSession {
   playerState: 'playing' | 'paused' | 'buffering'
 }
 
+export interface UpcomingItem {
+  title: string
+  type: 'episode' | 'movie'
+  date: string
+  subtitle: string
+}
+
 export interface SoberDuration {
   years: number
   months: number

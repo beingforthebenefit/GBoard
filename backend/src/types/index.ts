@@ -65,6 +65,17 @@ export interface PiholeClient {
   blockedPercentage: number
 }
 
+export interface UpcomingItem {
+  title: string
+  type: 'episode' | 'movie'
+  date: string
+  subtitle: string
+}
+
+export interface MediaResponse {
+  items: UpcomingItem[]
+}
+
 export interface PiholeResponse {
   totalQueries: number
   blockedQueries: number

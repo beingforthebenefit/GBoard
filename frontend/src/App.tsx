@@ -4,6 +4,7 @@ import { WeatherWidget } from './components/WeatherWidget.js'
 import { ClockWidget } from './components/ClockWidget.js'
 import { AstroWidget } from './components/AstroWidget.js'
 import { SoberCounter } from './components/SoberCounter.js'
+import { MediaWidget } from './components/MediaWidget.js'
 import { PlexWidget } from './components/PlexWidget.js'
 import { CalendarWidget } from './components/CalendarWidget.js'
 import { PiholeWidget } from './components/PiholeWidget.js'
@@ -13,6 +14,7 @@ import { usePlex } from './hooks/usePlex.js'
 import { usePihole } from './hooks/usePihole.js'
 import { usePhotos } from './hooks/usePhotos.js'
 import { useVersion } from './hooks/useVersion.js'
+import { useMedia } from './hooks/useMedia.js'
 
 const SOBRIETY_DATE = import.meta.env.VITE_SOBRIETY_DATE as string
 
@@ -23,6 +25,7 @@ export function App() {
   const { sessions, loading: plexLoading } = usePlex()
   const { data: piholeData, loading: piholeLoading } = usePihole()
   const { photos } = usePhotos()
+  const { items: mediaItems, loading: mediaLoading } = useMedia()
 
   return (
     <div className="h-screen w-full relative overflow-hidden font-sans flex flex-col">
@@ -37,6 +40,7 @@ export function App() {
           >
             <WeatherWidget data={weatherData} loading={weatherLoading} />
             <SoberCounter sobrietyDate={SOBRIETY_DATE} />
+            <MediaWidget items={mediaItems} loading={mediaLoading} />
           </div>
           <div className="flex-1 min-w-0 pt-1 widget-enter" style={{ animationDelay: '60ms' }}>
             <ClockWidget />
