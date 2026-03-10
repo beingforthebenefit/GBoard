@@ -32,7 +32,7 @@ GBoard/
 │   ├── src/
 │   │   ├── index.ts          # Entry point
 │   │   ├── types/index.ts    # Shared TypeScript interfaces
-│   │   ├── routes/           # Express routers (weather, calendar, plex, pihole, photos)
+│   │   ├── routes/           # Express routers (weather, calendar, plex, pihole, photos, media)
 │   │   ├── services/         # Business logic + external API integrations
 │   │   └── middleware/       # Error handler
 │   └── tests/
@@ -68,6 +68,7 @@ GBoard/
 | `GET /api/plex/thumb?path=...` | Proxy Plex thumbnails (hides token) | 1 hour |
 | `GET /api/photos` | List of cached iCloud photo filenames | Syncs hourly |
 | `GET /api/photos/image/:filename` | Serve cached photo file | - |
+| `GET /api/media` | Upcoming TV episodes + movies (Sonarr/Radarr) | 30 min |
 | `GET /api/pihole` | Pi-hole query stats + top clients (v6 API) | None (polled 1 min) |
 | `GET /api/version` | `{ startedAt }` timestamp for deploy detection | None (polled 10s) |
 | `GET /health` | Health check (200 OK) | - |
@@ -96,6 +97,8 @@ See `.env.example` for all required variables. Key ones:
 - `ICAL_URLS` — comma-separated ICS/CalDAV URLs
 - `ICLOUD_ALBUM_URL` — iCloud shared album
 - `PIHOLE_URL`, `PIHOLE_PASSWORD`, `PIHOLE_CLIENT_ALIASES` — Pi-hole v6
+- `SONARR_URL`, `SONARR_API_KEY` — Sonarr (upcoming TV episodes)
+- `RADARR_URL`, `RADARR_API_KEY` — Radarr (upcoming movies)
 - `SOBRIETY_DATE` / `VITE_SOBRIETY_DATE` — sobriety counter (backend + Vite build-time)
 - `PORT` (default 3000), `BACKEND_PORT` (default 3001)
 
