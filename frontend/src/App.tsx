@@ -40,7 +40,6 @@ export function App() {
           >
             <WeatherWidget data={weatherData} loading={weatherLoading} />
             <SoberCounter sobrietyDate={SOBRIETY_DATE} />
-            <MediaWidget items={mediaItems} loading={mediaLoading} />
           </div>
           <div className="flex-1 min-w-0 pt-1 widget-enter" style={{ animationDelay: '60ms' }}>
             <ClockWidget />
@@ -50,6 +49,7 @@ export function App() {
             style={{ animationDelay: '110ms' }}
           >
             <PiholeWidget data={piholeData} loading={piholeLoading} />
+            <MediaWidget items={mediaItems} loading={mediaLoading} />
             <PlexWidget sessions={sessions} loading={plexLoading} />
           </div>
         </div>

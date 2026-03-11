@@ -1,4 +1,4 @@
-import { PiholeClient, PiholeStats } from '../hooks/usePihole.js'
+import { PiholeStats } from '../hooks/usePihole.js'
 import { GlassPanel } from './GlassPanel.js'
 
 interface PiholeWidgetProps {
@@ -25,16 +25,6 @@ function StatCell({ value, label }: { value: string; label: string }) {
   )
 }
 
-function clientLabel(client: PiholeClient): string {
-  if (client.name && client.name !== client.ip) return client.name
-  return client.ip || 'Unknown client'
-}
-
-function compactClientLabel(client: PiholeClient): string {
-  const label = clientLabel(client)
-  return label.replace(/'/g, '').replace(/\s+/g, ' ').trim()
-}
-
 export function PiholeWidget({ data, loading }: PiholeWidgetProps) {
   if (loading) {
     return (
@@ -54,7 +44,6 @@ export function PiholeWidget({ data, loading }: PiholeWidgetProps) {
   }
 
   const statusColor = data.status === 'enabled' ? 'text-green-400' : 'text-red-400'
-  const topClients = data.clients.slice(0, 5)
 
   return (
     <GlassPanel className="p-4 text-white">
@@ -73,52 +62,6 @@ export function PiholeWidget({ data, loading }: PiholeWidgetProps) {
         <StatCell value={formatNumber(data.blockedQueries)} label="Blk total" />
         <StatCell value={formatNumber(data.totalQueries)} label="Req total" />
       </div>
-      {topClients.length > 0 && (
-        <div className="mt-3 pt-2 border-t border-white/10">
-          <div className="text-[10px] uppercase tracking-[0.14em] text-white/45 mb-1">
-            Top clients
-          </div>
-          <table className="w-full table-fixed text-[10px] leading-tight">
-            <colgroup>
-              <col className="w-[48%]" />
-              <col className="w-[18%]" />
-              <col className="w-[18%]" />
-              <col className="w-[16%]" />
-            </colgroup>
-            <thead>
-              <tr className="text-white/45 uppercase tracking-wide text-[9px]">
-                <th className="text-left font-normal pb-1">Client</th>
-                <th className="text-right font-normal pb-1">Req</th>
-                <th className="text-right font-normal pb-1">Blk</th>
-                <th className="text-right font-normal pb-1">%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topClients.map((client) => (
-                <tr key={`${client.ip}-${client.name}`} className="text-white/70 align-top">
-                  <td className="pr-2">
-                    <span
-                      className="block truncate"
-                      title={`${clientLabel(client)} (${client.ip})`}
-                    >
-                      {compactClientLabel(client)}
-                    </span>
-                  </td>
-                  <td className="text-right tabular-nums text-white/55 pl-1">
-                    {formatNumber(client.queries)}
-                  </td>
-                  <td className="text-right tabular-nums text-white/55 pl-1">
-                    {formatNumber(client.blockedQueries)}
-                  </td>
-                  <td className="text-right tabular-nums text-white/55 pl-1">
-                    {client.blockedPercentage.toFixed(1)}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
       <div className="mt-3 pt-2 border-t border-white/10 text-center">
         <span className="text-xs text-white/40">
           {formatNumber(data.domainsOnBlocklist)} domains on blocklist

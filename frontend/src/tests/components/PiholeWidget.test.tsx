@@ -89,20 +89,8 @@ describe('PiholeWidget', () => {
     expect(screen.getByText('120.0K domains on blocklist')).toBeDefined()
   })
 
-  it('renders a compact top-clients table with headers', () => {
+  it('does not render top-clients section', () => {
     render(<PiholeWidget data={mockStats} loading={false} />)
-    expect(screen.getByText('Top clients')).toBeDefined()
-    expect(screen.getByRole('columnheader', { name: 'Req' })).toBeDefined()
-    expect(screen.getByRole('columnheader', { name: 'Blk' })).toBeDefined()
-    expect(screen.getByText('LivingRoomTV')).toBeDefined()
-    expect(screen.getByText('iPhone')).toBeDefined()
-    expect(screen.getByText('192.168.1.18')).toBeDefined()
-    expect(screen.getByText('390')).toBeDefined()
-    expect(screen.getByText('28.0%')).toBeDefined()
-  })
-
-  it('hides top-clients section when no clients are returned', () => {
-    render(<PiholeWidget data={{ ...mockStats, clients: [] }} loading={false} />)
     expect(screen.queryByText('Top clients')).toBeNull()
   })
 })
