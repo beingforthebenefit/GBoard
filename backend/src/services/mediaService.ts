@@ -98,10 +98,12 @@ export async function fetchUpcomingMedia(): Promise<UpcomingItem[]> {
   }
 
   const now = new Date()
-  const startDate = now.toISOString().slice(0, 10)
+  const localDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const startDate = localDate(now)
   const end = new Date(now)
   end.setDate(end.getDate() + 2)
-  const endDate = end.toISOString().slice(0, 10)
+  const endDate = localDate(end)
 
   const [episodes, movies] = await Promise.all([
     fetchSonarr(startDate, endDate).catch((err) => {
