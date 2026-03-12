@@ -15,6 +15,8 @@ import { usePihole } from './hooks/usePihole.js'
 import { usePhotos } from './hooks/usePhotos.js'
 import { useVersion } from './hooks/useVersion.js'
 import { useMedia } from './hooks/useMedia.js'
+import { RadarWidget } from './components/RadarWidget.js'
+import { useRadar } from './hooks/useRadar.js'
 
 const SOBRIETY_DATE = import.meta.env.VITE_SOBRIETY_DATE as string
 
@@ -26,6 +28,7 @@ export function App() {
   const { data: piholeData, loading: piholeLoading } = usePihole()
   const { photos } = usePhotos()
   const { items: mediaItems, loading: mediaLoading } = useMedia()
+  const { data: radarData, loading: radarLoading } = useRadar()
 
   return (
     <div className="h-screen w-full relative overflow-hidden font-sans flex flex-col">
@@ -39,6 +42,7 @@ export function App() {
             style={{ animationDelay: '0ms' }}
           >
             <WeatherWidget data={weatherData} loading={weatherLoading} />
+            <RadarWidget data={radarData} loading={radarLoading} />
             <SoberCounter sobrietyDate={SOBRIETY_DATE} />
           </div>
           <div className="flex-1 min-w-0 pt-1 widget-enter" style={{ animationDelay: '60ms' }}>

@@ -56,3 +56,11 @@ export interface SoberDuration {
   days: number
   hours: number
 }
+
+export interface RadarData {
+  zoom: number
+  centerX: number
+  centerY: number
+  host: string
+  radarPath: string
+}
