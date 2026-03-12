@@ -37,7 +37,7 @@ export async function getRadarData(): Promise<RadarData> {
 
   const lat = parseFloat(process.env.WEATHER_LAT || '0')
   const lon = parseFloat(process.env.WEATHER_LON || '0')
-  const zoom = 8
+  const zoom = 6
   const { x, y } = latLonToTile(lat, lon, zoom)
 
   return { zoom, centerX: x, centerY: y, host, radarPath: latest.path }

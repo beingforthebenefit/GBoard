@@ -53,9 +53,9 @@ describe('getRadarData', () => {
     })
 
     const data = await getRadarData()
-    expect(data.zoom).toBe(8)
-    expect(data.centerX).toBe(43)
-    expect(data.centerY).toBe(102)
+    expect(data.zoom).toBe(6)
+    expect(data.centerX).toBe(10)
+    expect(data.centerY).toBe(25)
     expect(data.host).toBe('https://tilecache.rainviewer.com')
     expect(data.radarPath).toBe('/v2/radar/1710000600')
     expect(mockFetch).toHaveBeenCalledTimes(1)
