@@ -25,7 +25,7 @@ router.get('/radar', async (_req, res, next) => {
 router.get('/radar/base/:z/:x/:y', async (req, res, next) => {
   try {
     const { z, x, y } = req.params
-    const url = `https://basemaps.cartocdn.com/dark_nolabels/${z}/${x}/${y}.png`
+    const url = `https://basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png`
     const { buffer, contentType } = await proxyTile(url)
     res.set('Content-Type', contentType)
     res.set('Cache-Control', 'public, max-age=3600')

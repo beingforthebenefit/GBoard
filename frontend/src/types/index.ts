@@ -61,6 +61,8 @@ export interface RadarData {
   zoom: number
   centerX: number
   centerY: number
+  locX: number
+  locY: number
   host: string
   radarPath: string
 }

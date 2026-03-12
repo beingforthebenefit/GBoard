@@ -19,7 +19,7 @@ export function RadarWidget({ data, loading }: RadarWidgetProps) {
 
   if (!data) return null
 
-  const { zoom, centerX, centerY } = data
+  const { zoom, centerX, centerY, locX, locY } = data
   const offset = Math.floor(GRID / 2)
 
   const tiles: { x: number; y: number }[] = []
@@ -59,11 +59,18 @@ export function RadarWidget({ data, loading }: RadarWidgetProps) {
               />
             </div>
           ))}
-        </div>
 
-        {/* Location marker */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-2 h-2 rounded-full bg-blue-400/60 ring-2 ring-blue-400/30" />
+          {/* Location marker — inside the grid so locX/locY map directly */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div
+              className="absolute w-2 h-2 rounded-full bg-blue-400/80 ring-2 ring-blue-400/40"
+              style={{
+                left: `${locX * 100}%`,
+                top: `${locY * 100}%`,
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+          </div>
         </div>
       </div>
     </GlassPanel>

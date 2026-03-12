@@ -10,6 +10,9 @@ export interface RadarData {
   zoom: number
   centerX: number
   centerY: number
+  /** Location position within the 3x3 grid as 0–1 fractions */
+  locX: number
+  locY: number
   host: string
   radarPath: string
 }
@@ -38,9 +41,19 @@ export async function getRadarData(): Promise<RadarData> {
   const lat = parseFloat(process.env.WEATHER_LAT || '0')
   const lon = parseFloat(process.env.WEATHER_LON || '0')
   const zoom = 6
+  const GRID = 3
+  const offset = Math.floor(GRID / 2)
   const { x, y } = latLonToTile(lat, lon, zoom)
 
-  return { zoom, centerX: x, centerY: y, host, radarPath: latest.path }
+  // Fractional tile position for accurate marker placement
+  const n = Math.pow(2, zoom)
+  const fracTileX = ((lon + 180) / 360) * n
+  const latRad = (lat * Math.PI) / 180
+  const fracTileY = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n
+  const locX = (fracTileX - (x - offset)) / GRID
+  const locY = (fracTileY - (y - offset)) / GRID
+
+  return { zoom, centerX: x, centerY: y, locX, locY, host, radarPath: latest.path }
 }
 
 export async function proxyTile(url: string): Promise<{ buffer: Buffer; contentType: string }> {
