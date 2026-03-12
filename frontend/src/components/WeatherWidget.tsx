@@ -20,6 +20,14 @@ function WeatherIcon({
   )
 }
 
+function formatTime(unix: number): string {
+  const d = new Date(unix * 1000)
+  const h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
+  const ampm = h >= 12 ? 'pm' : 'am'
+  return `${h % 12 || 12}:${m}${ampm}`
+}
+
 export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
   if (loading) {
     return (
@@ -57,6 +65,8 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
         <span>Feels {current.feelsLike}°</span>
         <span>{current.humidity}%</span>
         <span>{current.windSpeed} mph</span>
+        <span>↑{formatTime(current.sunrise)}</span>
+        <span>↓{formatTime(current.sunset)}</span>
       </div>
 
       {/* Forecast row */}
