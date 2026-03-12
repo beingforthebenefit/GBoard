@@ -61,12 +61,16 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
       </div>
 
       {/* Details row */}
-      <div className="text-base text-white/60 flex flex-wrap justify-center gap-x-3 text-center">
+      <div className="text-sm text-white/60 flex justify-center gap-x-3 text-center">
         <span>Feels {current.feelsLike}°</span>
         <span>{current.humidity}%</span>
         <span>{current.windSpeed} mph</span>
-        <span>↑{formatTime(current.sunrise)}</span>
-        <span>↓{formatTime(current.sunset)}</span>
+      </div>
+
+      {/* Sunrise / Sunset */}
+      <div className="flex justify-center gap-x-4 text-sm text-white/50 tabular-nums">
+        <span>☀ {formatTime(current.sunrise)}</span>
+        <span>☾ {formatTime(current.sunset)}</span>
       </div>
 
       {/* Forecast row */}

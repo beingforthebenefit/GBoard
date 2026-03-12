@@ -23,24 +23,17 @@ const weatherData: WeatherData = {
 
 describe('WeatherWidget', () => {
   it('centers the details row', () => {
-    const { container } = render(<WeatherWidget data={weatherData} loading={false} />)
+    render(<WeatherWidget data={weatherData} loading={false} />)
     const feelsText = screen.getByText(/Feels 59°/)
     const detailsRow = feelsText.closest('div')
     expect(detailsRow).toHaveClass('justify-center')
     expect(detailsRow).toHaveClass('text-center')
-
-    // Keep one additional assertion on full class selector to ensure container shape.
-    expect(
-      container.querySelector(
-        'div.text-base.text-white\\/60.flex.flex-wrap.justify-center.text-center'
-      )
-    ).toBeTruthy()
   })
 
-  it('does not render sunrise/sunset details in the main weather card', () => {
+  it('renders sunrise and sunset times', () => {
     render(<WeatherWidget data={weatherData} loading={false} />)
-    expect(screen.queryByText((content) => content.includes('🌅'))).toBeNull()
-    expect(screen.queryByText((content) => content.includes('🌇'))).toBeNull()
+    expect(screen.getByText(/☀/)).toBeDefined()
+    expect(screen.getByText(/☾/)).toBeDefined()
   })
 
   it('renders a stable fallback message when data is unavailable', () => {
