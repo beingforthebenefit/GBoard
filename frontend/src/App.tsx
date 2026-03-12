@@ -43,13 +43,13 @@ export function App() {
           >
             <WeatherWidget data={weatherData} loading={weatherLoading} />
             <RadarWidget data={radarData} loading={radarLoading} />
-            <SoberCounter sobrietyDate={SOBRIETY_DATE} />
           </div>
           <div
             className="flex-1 min-w-0 pt-1 flex flex-col items-center gap-2 widget-enter"
             style={{ animationDelay: '60ms' }}
           >
             <ClockWidget />
+            <SoberCounter sobrietyDate={SOBRIETY_DATE} />
             <div className="w-72">
               <PiholeWidget data={piholeData} loading={piholeLoading} />
             </div>
