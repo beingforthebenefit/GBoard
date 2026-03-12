@@ -54,13 +54,48 @@ jobs:
         run: npm run typecheck
         working-directory: backend
 
-      - name: Unit tests (frontend)
-        run: npm run test
+      - name: Unit tests with coverage (backend)
+        run: npx vitest run --coverage
+        working-directory: backend
+
+      - name: Unit tests with coverage (frontend)
+        run: npx vitest run --coverage
         working-directory: frontend
 
-      - name: Unit tests (backend)
-        run: npm run test
-        working-directory: backend
+      - name: Extract coverage percentages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: coverage
+        run: |
+          BE=$(node -e "const c=require('./backend/coverage/coverage-summary.json'); console.log(c.total.lines.pct)")
+          FE=$(node -e "const c=require('./frontend/coverage/coverage-summary.json'); console.log(c.total.lines.pct)")
+          echo "backend=$BE" >> "$GITHUB_OUTPUT"
+          echo "frontend=$FE" >> "$GITHUB_OUTPUT"
+
+      - name: Update backend coverage badge
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: f09ac0dc7044ab52260ca7b473253927
+          filename: backend-coverage.json
+          label: backend coverage
+          message: ${{ steps.coverage.outputs.backend }}%
+          valColorRange: ${{ steps.coverage.outputs.backend }}
+          minColorRange: 40
+          maxColorRange: 90
+
+      - name: Update frontend coverage badge
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: f09ac0dc7044ab52260ca7b473253927
+          filename: frontend-coverage.json
+          label: frontend coverage
+          message: ${{ steps.coverage.outputs.frontend }}%
+          valColorRange: ${{ steps.coverage.outputs.frontend }}
+          minColorRange: 40
+          maxColorRange: 90
 
   docker-build:
     name: Docker Build Verification

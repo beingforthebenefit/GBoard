@@ -1,18 +1,23 @@
 # GBoard
 
+![CI](https://github.com/beingforthebenefit/GBoard/actions/workflows/ci.yml/badge.svg)
+![Backend Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/beingforthebenefit/f09ac0dc7044ab52260ca7b473253927/raw/backend-coverage.json)
+![Frontend Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/beingforthebenefit/f09ac0dc7044ab52260ca7b473253927/raw/frontend-coverage.json)
+
 A self-hosted dashboard — a Dakboard replacement. Runs in Docker, accessible via browser on your local network.
 
 ## Features
 
-- **Weather** — Current conditions, 3-day forecast, sunrise/sunset (OpenWeatherMap)
-- **Sun Arc** — Two visual representations side-by-side (wide track and orbital earth)
+- **Weather** — Current conditions, 4-day forecast, sunrise/sunset (OpenWeatherMap)
+- **Radar Map** — Live precipitation radar overlay via RainViewer on CartoDB dark tiles
 - **Clock & Date** — Live 12-hour digital clock with seconds
-- **Astrology Snapshot** — Sun sign of the day, sign date range, moon phase, weekday ruler insights, and matching constellation view in a center widget
+- **Astrology Snapshot** — Sun sign, moon phase, weekday ruler insights, constellation view
 - **Sober Counter** — Years / months / days / hours since your sobriety date
-- **Pi-hole Widget** — DNS blocking status, key stats, and compact top-client list
-- **Plex Now Playing** — Shows all active streams as cards; progress animates smoothly between backend polls, with an idle placeholder when no one is streaming
+- **Pi-hole Widget** — DNS blocking status and key stats
+- **Upcoming Media** — Next 2 days of TV episodes (Sonarr) and movies (Radarr)
+- **Plex Now Playing** — Active streams with progress animation and idle placeholder
 - **Calendar** — 7-day rolling view from iCloud shared CalDAV/ICS calendars
-- **Photo Background** — Rotating photos from an iCloud shared album with dual-layer backdrop (sharp foreground + blurred fill), with failed image loads retried every 5 seconds
+- **Photo Background** — Rotating iCloud shared album photos with blurred fill backdrop
 
 ## Quick Start
 
@@ -88,6 +93,8 @@ Nginx  (port 3000)
                              ├─ /api/calendar ──▶ iCloud CalDAV ICS
                              ├─ /api/pihole   ──▶ Pi-hole
                              ├─ /api/plex     ──▶ Plex (local LAN)
+                             ├─ /api/media    ──▶ Sonarr / Radarr
+                             ├─ /api/weather/radar ──▶ RainViewer
                              └─ /api/photos   ──▶ iCloud shared album
 ```
 

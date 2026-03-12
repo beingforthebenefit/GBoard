@@ -18,6 +18,9 @@ frontend/dist/
 backend/dist/
 *.tsbuildinfo
 
+# Coverage
+coverage/
+
 # Logs
 *.log
 npm-debug.log*
