@@ -45,14 +45,19 @@ export function App() {
             <RadarWidget data={radarData} loading={radarLoading} />
             <SoberCounter sobrietyDate={SOBRIETY_DATE} />
           </div>
-          <div className="flex-1 min-w-0 pt-1 widget-enter" style={{ animationDelay: '60ms' }}>
+          <div
+            className="flex-1 min-w-0 pt-1 flex flex-col items-center gap-2 widget-enter"
+            style={{ animationDelay: '60ms' }}
+          >
             <ClockWidget />
+            <div className="w-72">
+              <PiholeWidget data={piholeData} loading={piholeLoading} />
+            </div>
           </div>
           <div
             className="w-80 flex-shrink-0 flex flex-col gap-2 widget-enter"
             style={{ animationDelay: '110ms' }}
           >
-            <PiholeWidget data={piholeData} loading={piholeLoading} />
             <MediaWidget items={mediaItems} loading={mediaLoading} />
             <PlexWidget sessions={sessions} loading={plexLoading} />
           </div>
