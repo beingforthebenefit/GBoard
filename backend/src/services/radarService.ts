@@ -17,7 +17,7 @@ export interface RadarData {
 let rvCache: { data: RainViewerResponse; fetchedAt: number } | null = null
 const CACHE_TTL = 5 * 60 * 1000
 
-function latLonToTile(lat: number, lon: number, zoom: number) {
+export function latLonToTile(lat: number, lon: number, zoom: number) {
   const n = Math.pow(2, zoom)
   const x = Math.floor(((lon + 180) / 360) * n)
   const latRad = (lat * Math.PI) / 180
