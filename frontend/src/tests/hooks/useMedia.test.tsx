@@ -24,11 +24,11 @@ describe('useMedia', () => {
     fetchMock.mockReset()
   })
 
-  it('fetches media items and totalItems on mount', async () => {
+  it('fetches media items and lastDayRemaining on mount', async () => {
     const items = [{ title: 'Show', type: 'episode', date: '2026-03-13', subtitle: 'S01E01' }]
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ items, totalItems: 5 }),
+      json: async () => ({ items, lastDayRemaining: 3 }),
     })
 
     const { result } = renderHook(() => useMedia())
@@ -37,7 +37,7 @@ describe('useMedia', () => {
     await flushEffects()
     expect(result.current.loading).toBe(false)
     expect(result.current.items).toEqual(items)
-    expect(result.current.totalItems).toBe(5)
+    expect(result.current.lastDayRemaining).toBe(3)
   })
 
   it('silently handles fetch failure', async () => {
@@ -48,7 +48,7 @@ describe('useMedia', () => {
 
     expect(result.current.loading).toBe(false)
     expect(result.current.items).toEqual([])
-    expect(result.current.totalItems).toBe(0)
+    expect(result.current.lastDayRemaining).toBe(0)
   })
 
   it('silently handles network error', async () => {
@@ -59,10 +59,10 @@ describe('useMedia', () => {
 
     expect(result.current.loading).toBe(false)
     expect(result.current.items).toEqual([])
-    expect(result.current.totalItems).toBe(0)
+    expect(result.current.lastDayRemaining).toBe(0)
   })
 
-  it('falls back to items.length when totalItems missing', async () => {
+  it('defaults lastDayRemaining to 0 when missing from response', async () => {
     const items = [{ title: 'Show', type: 'episode', date: '2026-03-13', subtitle: 'S01E01' }]
     fetchMock.mockResolvedValue({
       ok: true,
@@ -72,13 +72,13 @@ describe('useMedia', () => {
     const { result } = renderHook(() => useMedia())
     await flushEffects()
 
-    expect(result.current.totalItems).toBe(1)
+    expect(result.current.lastDayRemaining).toBe(0)
   })
 
   it('polls every 30 minutes', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ items: [], totalItems: 0 }),
+      json: async () => ({ items: [], lastDayRemaining: 0 }),
     })
 
     renderHook(() => useMedia())
@@ -95,7 +95,7 @@ describe('useMedia', () => {
   it('cleans up on unmount', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ items: [], totalItems: 0 }),
+      json: async () => ({ items: [], lastDayRemaining: 0 }),
     })
 
     const { unmount } = renderHook(() => useMedia())

@@ -24,37 +24,49 @@ describe('MediaWidget', () => {
   })
 
   it('renders loading skeleton when loading', () => {
-    const { container } = render(<MediaWidget items={[]} totalItems={0} loading={true} />)
+    const { container } = render(<MediaWidget items={[]} lastDayRemaining={0} loading={true} />)
     expect(container.querySelector('.animate-pulse')).toBeTruthy()
   })
 
   it('returns null when items array is empty and not loading', () => {
-    const { container } = render(<MediaWidget items={[]} totalItems={0} loading={false} />)
+    const { container } = render(<MediaWidget items={[]} lastDayRemaining={0} loading={false} />)
     expect(container.innerHTML).toBe('')
   })
 
   it('renders "Upcoming" heading', () => {
-    render(<MediaWidget items={[makeItem()]} totalItems={1} loading={false} />)
+    render(<MediaWidget items={[makeItem()]} lastDayRemaining={1} loading={false} />)
     expect(screen.getByText('Upcoming')).toBeDefined()
   })
 
   it('shows "Today" for items with today date', () => {
     render(
-      <MediaWidget items={[makeItem({ date: '2026-03-12' })]} totalItems={1} loading={false} />
+      <MediaWidget
+        items={[makeItem({ date: '2026-03-12' })]}
+        lastDayRemaining={1}
+        loading={false}
+      />
     )
     expect(screen.getByText('Today')).toBeDefined()
   })
 
   it('shows "Tomorrow" for items with tomorrow date', () => {
     render(
-      <MediaWidget items={[makeItem({ date: '2026-03-13' })]} totalItems={1} loading={false} />
+      <MediaWidget
+        items={[makeItem({ date: '2026-03-13' })]}
+        lastDayRemaining={1}
+        loading={false}
+      />
     )
     expect(screen.getByText('Tomorrow')).toBeDefined()
   })
 
   it('shows formatted date for items further in the future', () => {
     render(
-      <MediaWidget items={[makeItem({ date: '2026-03-15' })]} totalItems={1} loading={false} />
+      <MediaWidget
+        items={[makeItem({ date: '2026-03-15' })]}
+        lastDayRemaining={1}
+        loading={false}
+      />
     )
     expect(screen.getByText(/Sun/)).toBeDefined()
     expect(screen.getByText(/Mar/)).toBeDefined()
@@ -67,7 +79,7 @@ describe('MediaWidget', () => {
       makeItem({ title: 'Show B', date: '2026-03-12' }),
       makeItem({ title: 'Show C', date: '2026-03-13' }),
     ]
-    render(<MediaWidget items={items} totalItems={3} loading={false} />)
+    render(<MediaWidget items={items} lastDayRemaining={3} loading={false} />)
     expect(screen.getByText('Today')).toBeDefined()
     expect(screen.getByText('Tomorrow')).toBeDefined()
     expect(screen.getByText('Show A')).toBeDefined()
@@ -76,7 +88,9 @@ describe('MediaWidget', () => {
   })
 
   it('renders episode emoji for episode type', () => {
-    render(<MediaWidget items={[makeItem({ type: 'episode' })]} totalItems={1} loading={false} />)
+    render(
+      <MediaWidget items={[makeItem({ type: 'episode' })]} lastDayRemaining={1} loading={false} />
+    )
     expect(screen.getByText('📺')).toBeDefined()
   })
 
@@ -84,7 +98,7 @@ describe('MediaWidget', () => {
     render(
       <MediaWidget
         items={[makeItem({ type: 'movie', title: 'A Movie' })]}
-        totalItems={1}
+        lastDayRemaining={1}
         loading={false}
       />
     )
@@ -95,7 +109,7 @@ describe('MediaWidget', () => {
     render(
       <MediaWidget
         items={[makeItem({ title: 'Breaking Bad', subtitle: 'S05E16' })]}
-        totalItems={1}
+        lastDayRemaining={1}
         loading={false}
       />
     )
@@ -103,15 +117,15 @@ describe('MediaWidget', () => {
     expect(screen.getByText('S05E16')).toBeDefined()
   })
 
-  it('shows truncation indicator when totalItems > items.length', () => {
+  it('shows truncation indicator when lastDayRemaining > 0', () => {
     const items = [makeItem({ title: 'Show 1' }), makeItem({ title: 'Show 2' })]
-    render(<MediaWidget items={items} totalItems={15} loading={false} />)
-    expect(screen.getByText('& 13 more upcoming')).toBeDefined()
+    render(<MediaWidget items={items} lastDayRemaining={5} loading={false} />)
+    expect(screen.getByText('& 5 more upcoming')).toBeDefined()
   })
 
-  it('does not show truncation indicator when all items are shown', () => {
+  it('does not show truncation indicator when lastDayRemaining is 0', () => {
     const items = [makeItem({ title: 'Show 1' })]
-    render(<MediaWidget items={items} totalItems={1} loading={false} />)
+    render(<MediaWidget items={items} lastDayRemaining={0} loading={false} />)
     expect(screen.queryByText(/more upcoming/)).toBeNull()
   })
 })

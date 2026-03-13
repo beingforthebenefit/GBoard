@@ -5,7 +5,7 @@ const REFRESH_MS = 30 * 60 * 1000 // 30 minutes
 
 export function useMedia() {
   const [items, setItems] = useState<UpcomingItem[]>([])
-  const [totalItems, setTotalItems] = useState(0)
+  const [lastDayRemaining, setLastDayRemaining] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export function useMedia() {
         const json = await res.json()
         if (!cancelled) {
           setItems(json.items)
-          setTotalItems(json.totalItems ?? json.items?.length ?? 0)
+          setLastDayRemaining(json.lastDayRemaining ?? 0)
         }
       } catch {
         // silent — widget just stays empty
@@ -35,5 +35,5 @@ export function useMedia() {
     }
   }, [])
 
-  return { items, totalItems, loading }
+  return { items, lastDayRemaining, loading }
 }

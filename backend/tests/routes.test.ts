@@ -255,7 +255,7 @@ describe('media routes', () => {
   })
 
   it('returns media result with items and totalItems', async () => {
-    const result = { items: [{ title: 'Breaking Bad' }], totalItems: 1 }
+    const result = { items: [{ title: 'Breaking Bad' }], totalItems: 1, lastDayRemaining: 0 }
     vi.mocked(fetchUpcomingMedia).mockResolvedValue(result as any)
 
     const req = mockReq()

@@ -26,7 +26,7 @@ vi.mock('../../hooks/usePhotos.js', () => ({
 }))
 
 vi.mock('../../hooks/useMedia.js', () => ({
-  useMedia: () => ({ items: [], totalItems: 0, loading: true }),
+  useMedia: () => ({ items: [], lastDayRemaining: 0, loading: true }),
 }))
 
 vi.mock('../../hooks/useRadar.js', () => ({

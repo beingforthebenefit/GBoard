@@ -36,6 +36,7 @@ export const MAX_ITEMS = 10
 export interface MediaResult {
   items: UpcomingItem[]
   totalItems: number
+  lastDayRemaining: number
 }
 
 let cache: { data: MediaResult; fetchedAt: number } | null = null
@@ -44,8 +45,9 @@ export function _resetCache() {
   cache = null
 }
 
-function toDateString(iso: string): string {
-  return iso.slice(0, 10)
+function toLocalDateString(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 async function fetchSonarr(startDate: string, endDate: string): Promise<UpcomingItem[]> {
@@ -65,7 +67,7 @@ async function fetchSonarr(startDate: string, endDate: string): Promise<Upcoming
     const season = ep.seasonNumber ?? 0
     const episode = ep.episodeNumber ?? 0
     const code = `S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`
-    const date = ep.airDate || (ep.airDateUtc ? toDateString(ep.airDateUtc) : '')
+    const date = ep.airDate || (ep.airDateUtc ? toLocalDateString(ep.airDateUtc) : '')
 
     return {
       title: seriesTitle,
@@ -89,7 +91,7 @@ async function fetchRadarr(startDate: string, endDate: string): Promise<Upcoming
 
   return movies.map((movie) => {
     const releaseDate = movie.digitalRelease || movie.physicalRelease || movie.inCinemas || ''
-    const date = releaseDate ? toDateString(releaseDate) : ''
+    const date = releaseDate ? toLocalDateString(releaseDate) : ''
 
     return {
       title: movie.title || 'Unknown Movie',
@@ -128,9 +130,19 @@ export async function fetchUpcomingMedia(): Promise<MediaResult> {
     .filter((item) => item.date >= startDate && item.date < endDate)
     .sort((a, b) => a.date.localeCompare(b.date))
 
+  const displayed = allItems.slice(0, MAX_ITEMS)
+  let lastDayRemaining = 0
+  if (displayed.length > 0 && displayed.length < allItems.length) {
+    const lastDate = displayed[displayed.length - 1].date
+    const totalOnLastDay = allItems.filter((item) => item.date === lastDate).length
+    const shownOnLastDay = displayed.filter((item) => item.date === lastDate).length
+    lastDayRemaining = totalOnLastDay - shownOnLastDay
+  }
+
   const result: MediaResult = {
-    items: allItems.slice(0, MAX_ITEMS),
+    items: displayed,
     totalItems: allItems.length,
+    lastDayRemaining,
   }
 
   cache = { data: result, fetchedAt: Date.now() }

@@ -3,7 +3,7 @@ import { GlassPanel } from './GlassPanel.js'
 
 interface MediaWidgetProps {
   items: UpcomingItem[]
-  totalItems: number
+  lastDayRemaining: number
   loading: boolean
 }
 
@@ -31,7 +31,7 @@ function groupByDate(items: UpcomingItem[]): Map<string, UpcomingItem[]> {
   return groups
 }
 
-export function MediaWidget({ items, totalItems, loading }: MediaWidgetProps) {
+export function MediaWidget({ items, lastDayRemaining, loading }: MediaWidgetProps) {
   if (loading) {
     return (
       <GlassPanel className="p-4 animate-pulse">
@@ -43,7 +43,6 @@ export function MediaWidget({ items, totalItems, loading }: MediaWidgetProps) {
   if (items.length === 0) return null
 
   const grouped = groupByDate(items)
-  const remaining = totalItems - items.length
 
   return (
     <GlassPanel className="p-4">
@@ -72,8 +71,10 @@ export function MediaWidget({ items, totalItems, loading }: MediaWidgetProps) {
           </div>
         ))}
       </div>
-      {remaining > 0 && (
-        <div className="text-center text-xs text-white/30 mt-3">& {remaining} more upcoming</div>
+      {lastDayRemaining > 0 && (
+        <div className="text-center text-xs text-white/30 mt-3">
+          & {lastDayRemaining} more upcoming
+        </div>
       )}
     </GlassPanel>
   )

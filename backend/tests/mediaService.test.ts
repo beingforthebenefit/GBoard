@@ -28,6 +28,7 @@ describe('fetchUpcomingMedia', () => {
     const result = await fetchUpcomingMedia()
     expect(result.items).toEqual([])
     expect(result.totalItems).toBe(0)
+    expect(result.lastDayRemaining).toBe(0)
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
@@ -203,6 +204,42 @@ describe('fetchUpcomingMedia', () => {
     expect(result.totalItems).toBe(14) // 14 days window
     expect(result.items[0].title).toBe('Show 0')
     expect(result.items[9].title).toBe('Show 9')
+    // Each show is on a different day, so the last day has no truncated items
+    expect(result.lastDayRemaining).toBe(0)
+  })
+
+  it('reports lastDayRemaining when last displayed day is truncated', async () => {
+    vi.stubEnv('SONARR_URL', 'http://sonarr.test')
+    vi.stubEnv('SONARR_API_KEY', 'key')
+    vi.stubEnv('RADARR_URL', '')
+    vi.stubEnv('RADARR_API_KEY', '')
+
+    // 3 shows today, 12 shows tomorrow — only 7 of tomorrow's fit in MAX_ITEMS (10)
+    const episodes = [
+      ...Array.from({ length: 3 }, (_, i) => ({
+        seriesTitle: `Today ${i}`,
+        seasonNumber: 1,
+        episodeNumber: i + 1,
+        airDate: today,
+      })),
+      ...Array.from({ length: 12 }, (_, i) => ({
+        seriesTitle: `Tomorrow ${i}`,
+        seasonNumber: 1,
+        episodeNumber: i + 1,
+        airDate: tomorrow,
+      })),
+    ]
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(episodes),
+    })
+
+    const result = await fetchUpcomingMedia()
+    expect(result.items).toHaveLength(10)
+    expect(result.totalItems).toBe(15)
+    // 12 tomorrow items total, 7 shown (10 - 3 today) = 5 remaining
+    expect(result.lastDayRemaining).toBe(5)
   })
 
   it('filters out items beyond the date window', async () => {
