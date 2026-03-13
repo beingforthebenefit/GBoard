@@ -70,7 +70,15 @@ describe('useRadar', () => {
   it('polls every 5 minutes', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ zoom: 6, centerX: 10, centerY: 25, locX: 0.5, locY: 0.5, host: '', radarPath: '' }),
+      json: async () => ({
+        zoom: 6,
+        centerX: 10,
+        centerY: 25,
+        locX: 0.5,
+        locY: 0.5,
+        host: '',
+        radarPath: '',
+      }),
     })
 
     renderHook(() => useRadar())
@@ -87,7 +95,15 @@ describe('useRadar', () => {
   it('cleans up on unmount', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ zoom: 6, centerX: 10, centerY: 25, locX: 0.5, locY: 0.5, host: '', radarPath: '' }),
+      json: async () => ({
+        zoom: 6,
+        centerX: 10,
+        centerY: 25,
+        locX: 0.5,
+        locY: 0.5,
+        host: '',
+        radarPath: '',
+      }),
     })
 
     const { unmount } = renderHook(() => useRadar())

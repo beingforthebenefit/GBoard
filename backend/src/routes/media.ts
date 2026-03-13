@@ -5,8 +5,8 @@ const router = Router()
 
 router.get('/', async (_req, res, next) => {
   try {
-    const items = await fetchUpcomingMedia()
-    res.json({ items })
+    const result = await fetchUpcomingMedia()
+    res.json(result)
   } catch (err) {
     next(err)
   }

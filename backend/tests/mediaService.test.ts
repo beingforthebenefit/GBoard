@@ -19,14 +19,15 @@ beforeEach(() => {
 })
 
 describe('fetchUpcomingMedia', () => {
-  it('returns empty array when no URLs configured', async () => {
+  it('returns empty result when no URLs configured', async () => {
     vi.stubEnv('SONARR_URL', '')
     vi.stubEnv('SONARR_API_KEY', '')
     vi.stubEnv('RADARR_URL', '')
     vi.stubEnv('RADARR_API_KEY', '')
 
-    const items = await fetchUpcomingMedia()
-    expect(items).toEqual([])
+    const result = await fetchUpcomingMedia()
+    expect(result.items).toEqual([])
+    expect(result.totalItems).toBe(0)
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
@@ -49,14 +50,15 @@ describe('fetchUpcomingMedia', () => {
         ]),
     })
 
-    const items = await fetchUpcomingMedia()
-    expect(items).toHaveLength(1)
-    expect(items[0]).toEqual({
+    const result = await fetchUpcomingMedia()
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0]).toEqual({
       title: 'Breaking Bad',
       type: 'episode',
       date: today,
       subtitle: 'S02E05',
     })
+    expect(result.totalItems).toBe(1)
   })
 
   it('fetches movies from Radarr', async () => {
@@ -77,9 +79,9 @@ describe('fetchUpcomingMedia', () => {
         ]),
     })
 
-    const items = await fetchUpcomingMedia()
-    expect(items).toHaveLength(1)
-    expect(items[0]).toEqual({
+    const result = await fetchUpcomingMedia()
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0]).toEqual({
       title: 'Dune 3',
       type: 'movie',
       date: tomorrow,
@@ -110,10 +112,11 @@ describe('fetchUpcomingMedia', () => {
       })
     })
 
-    const items = await fetchUpcomingMedia()
-    expect(items).toHaveLength(2)
-    expect(items[0].title).toBe('Movie A')
-    expect(items[1].title).toBe('Show B')
+    const result = await fetchUpcomingMedia()
+    expect(result.items).toHaveLength(2)
+    expect(result.items[0].title).toBe('Movie A')
+    expect(result.items[1].title).toBe('Show B')
+    expect(result.totalItems).toBe(2)
   })
 
   it('uses cache on subsequent calls', async () => {
@@ -149,9 +152,9 @@ describe('fetchUpcomingMedia', () => {
       })
     })
 
-    const items = await fetchUpcomingMedia()
-    expect(items).toHaveLength(1)
-    expect(items[0].title).toBe('Movie')
+    const result = await fetchUpcomingMedia()
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0].title).toBe('Movie')
   })
 
   it('prefers series.title over seriesTitle', async () => {
@@ -173,8 +176,33 @@ describe('fetchUpcomingMedia', () => {
         ]),
     })
 
-    const items = await fetchUpcomingMedia()
-    expect(items[0].title).toBe('Nested Title')
+    const result = await fetchUpcomingMedia()
+    expect(result.items[0].title).toBe('Nested Title')
+  })
+
+  it('truncates to MAX_ITEMS and reports totalItems', async () => {
+    vi.stubEnv('SONARR_URL', 'http://sonarr.test')
+    vi.stubEnv('SONARR_API_KEY', 'key')
+    vi.stubEnv('RADARR_URL', '')
+    vi.stubEnv('RADARR_API_KEY', '')
+
+    const episodes = Array.from({ length: 15 }, (_, i) => ({
+      seriesTitle: `Show ${i}`,
+      seasonNumber: 1,
+      episodeNumber: i + 1,
+      airDate: dateOffset(i),
+    }))
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(episodes),
+    })
+
+    const result = await fetchUpcomingMedia()
+    expect(result.items).toHaveLength(10)
+    expect(result.totalItems).toBe(14) // 14 days window
+    expect(result.items[0].title).toBe('Show 0')
+    expect(result.items[9].title).toBe('Show 9')
   })
 
   it('filters out items beyond the date window', async () => {
@@ -183,7 +211,7 @@ describe('fetchUpcomingMedia', () => {
     vi.stubEnv('RADARR_URL', '')
     vi.stubEnv('RADARR_API_KEY', '')
 
-    const dayAfterTomorrow = dateOffset(2)
+    const beyondWindow = dateOffset(15)
 
     mockFetch.mockResolvedValue({
       ok: true,
@@ -194,13 +222,13 @@ describe('fetchUpcomingMedia', () => {
             seriesTitle: 'Out of Range',
             seasonNumber: 1,
             episodeNumber: 2,
-            airDate: dayAfterTomorrow,
+            airDate: beyondWindow,
           },
         ]),
     })
 
-    const items = await fetchUpcomingMedia()
-    expect(items).toHaveLength(1)
-    expect(items[0].title).toBe('In Range')
+    const result = await fetchUpcomingMedia()
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0].title).toBe('In Range')
   })
 })

@@ -68,7 +68,7 @@ GBoard/
 | `GET /api/plex/thumb?path=...` | Proxy Plex thumbnails (hides token) | 1 hour |
 | `GET /api/photos` | List of cached iCloud photo filenames | Syncs hourly |
 | `GET /api/photos/image/:filename` | Serve cached photo file | - |
-| `GET /api/media` | Upcoming TV episodes + movies (Sonarr/Radarr) | 30 min |
+| `GET /api/media` | Next 10 upcoming TV/movies (Sonarr/Radarr, 14-day window) | 30 min |
 | `GET /api/pihole` | Pi-hole query stats + top clients (v6 API) | None (polled 1 min) |
 | `GET /api/version` | `{ startedAt }` timestamp for deploy detection | None (polled 10s) |
 | `GET /health` | Health check (200 OK) | - |

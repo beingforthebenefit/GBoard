@@ -25,7 +25,15 @@ describe('useCalendar', () => {
   })
 
   it('fetches events on mount', async () => {
-    const events = [{ id: '1', title: 'Meeting', start: '2026-03-13T10:00:00Z', end: '2026-03-13T11:00:00Z', allDay: false }]
+    const events = [
+      {
+        id: '1',
+        title: 'Meeting',
+        start: '2026-03-13T10:00:00Z',
+        end: '2026-03-13T11:00:00Z',
+        allDay: false,
+      },
+    ]
     fetchMock.mockResolvedValue({
       ok: true,
       json: async () => ({ events }),

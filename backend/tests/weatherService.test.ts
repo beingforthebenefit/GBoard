@@ -138,7 +138,8 @@ describe('fetchWeather', () => {
 
     vi.stubGlobal(
       'fetch',
-      vi.fn()
+      vi
+        .fn()
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve(currentResponse),
@@ -173,7 +174,8 @@ describe('fetchWeather', () => {
       city: { timezone: 0 },
     }
 
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(currentResponse),
@@ -194,10 +196,7 @@ describe('fetchWeather', () => {
   })
 
   it('throws on non-ok current weather response', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: false, status: 401 })
-    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 401 }))
 
     await expect(fetchWeather()).rejects.toThrow('OWM current weather error: 401')
   })
@@ -205,7 +204,8 @@ describe('fetchWeather', () => {
   it('throws on non-ok forecast response', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn()
+      vi
+        .fn()
         .mockResolvedValueOnce({
           ok: true,
           json: () =>

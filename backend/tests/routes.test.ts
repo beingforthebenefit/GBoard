@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('../src/services/weatherService.js', () => ({
@@ -51,9 +52,7 @@ function mockReq(overrides = {}) {
 
 // Helper to extract the route handler from an Express router
 function getHandler(router: any, method: string, path: string) {
-  const layer = router.stack.find(
-    (l: any) => l.route?.path === path && l.route?.methods[method]
-  )
+  const layer = router.stack.find((l: any) => l.route?.path === path && l.route?.methods[method])
   if (!layer) throw new Error(`No ${method} handler for ${path}`)
   return layer.route.stack[0].handle
 }
@@ -144,9 +143,7 @@ describe('weather routes', () => {
 
       await getHandler(router, 'get', '/radar/base/:z/:x/:y')(req, res, next)
 
-      expect(proxyTile).toHaveBeenCalledWith(
-        'https://basemaps.cartocdn.com/dark_all/5/10/15.png'
-      )
+      expect(proxyTile).toHaveBeenCalledWith('https://basemaps.cartocdn.com/dark_all/5/10/15.png')
       expect(res.set).toHaveBeenCalledWith('Content-Type', 'image/png')
       expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=3600')
       expect(res.send).toHaveBeenCalledWith(tileResult.buffer)
@@ -257,9 +254,9 @@ describe('media routes', () => {
     router = mod.default
   })
 
-  it('returns items wrapped in { items }', async () => {
-    const items = [{ title: 'Breaking Bad', airDate: '2026-03-12' }]
-    vi.mocked(fetchUpcomingMedia).mockResolvedValue(items as any)
+  it('returns media result with items and totalItems', async () => {
+    const result = { items: [{ title: 'Breaking Bad' }], totalItems: 1 }
+    vi.mocked(fetchUpcomingMedia).mockResolvedValue(result as any)
 
     const req = mockReq()
     const res = mockRes()
@@ -268,7 +265,7 @@ describe('media routes', () => {
     await getHandler(router, 'get', '/')(req, res, next)
 
     expect(fetchUpcomingMedia).toHaveBeenCalled()
-    expect(res.json).toHaveBeenCalledWith({ items })
+    expect(res.json).toHaveBeenCalledWith(result)
     expect(next).not.toHaveBeenCalled()
   })
 
@@ -336,10 +333,7 @@ describe('photos routes', () => {
       const handler = getHandler(router, 'get', '/image/:filename')
       handler(req, res)
 
-      expect(res.sendFile).toHaveBeenCalledWith(
-        '/data/photos/sunset.jpg',
-        expect.any(Function)
-      )
+      expect(res.sendFile).toHaveBeenCalledWith('/data/photos/sunset.jpg', expect.any(Function))
     })
 
     it('strips path traversal from filename', () => {
@@ -352,10 +346,7 @@ describe('photos routes', () => {
       handler(req, res)
 
       // path.basename('../../etc/passwd') => 'passwd'
-      expect(res.sendFile).toHaveBeenCalledWith(
-        '/data/photos/passwd',
-        expect.any(Function)
-      )
+      expect(res.sendFile).toHaveBeenCalledWith('/data/photos/passwd', expect.any(Function))
     })
 
     it('returns 404 when sendFile fails', () => {

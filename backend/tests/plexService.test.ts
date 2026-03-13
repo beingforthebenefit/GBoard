@@ -209,20 +209,14 @@ describe('fetchPlexSessions', () => {
   })
 
   it('returns empty array on network error', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValue(new Error('Network error'))
-    )
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')))
 
     const sessions = await fetchPlexSessions()
     expect(sessions).toEqual([])
   })
 
   it('returns empty array on non-ok response', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: false, status: 500 })
-    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }))
 
     const sessions = await fetchPlexSessions()
     expect(sessions).toEqual([])

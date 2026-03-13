@@ -27,7 +27,7 @@ export function App() {
   const { sessions, loading: plexLoading } = usePlex()
   const { data: piholeData, loading: piholeLoading } = usePihole()
   const { photos } = usePhotos()
-  const { items: mediaItems, loading: mediaLoading } = useMedia()
+  const { items: mediaItems, totalItems: mediaTotalItems, loading: mediaLoading } = useMedia()
   const { data: radarData, loading: radarLoading } = useRadar()
 
   return (
@@ -58,7 +58,7 @@ export function App() {
             className="w-80 flex-shrink-0 flex flex-col gap-2 widget-enter"
             style={{ animationDelay: '110ms' }}
           >
-            <MediaWidget items={mediaItems} loading={mediaLoading} />
+            <MediaWidget items={mediaItems} totalItems={mediaTotalItems} loading={mediaLoading} />
             <PlexWidget sessions={sessions} loading={plexLoading} />
           </div>
         </div>

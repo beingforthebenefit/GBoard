@@ -34,7 +34,13 @@ describe('usePihole', () => {
       blockedLastHour: 10,
       queriesLastHour: 50,
       clients: [
-        { name: 'iPhone', ip: '192.168.1.10', queries: 100, blockedQueries: 5, blockedPercentage: 5 },
+        {
+          name: 'iPhone',
+          ip: '192.168.1.10',
+          queries: 100,
+          blockedQueries: 5,
+          blockedPercentage: 5,
+        },
       ],
     }
     fetchMock.mockResolvedValue({

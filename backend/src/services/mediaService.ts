@@ -30,7 +30,15 @@ interface RadarrMovie {
   inCinemas?: string
 }
 
-let cache: { items: UpcomingItem[]; fetchedAt: number } | null = null
+const WINDOW_DAYS = 14
+export const MAX_ITEMS = 10
+
+export interface MediaResult {
+  items: UpcomingItem[]
+  totalItems: number
+}
+
+let cache: { data: MediaResult; fetchedAt: number } | null = null
 
 export function _resetCache() {
   cache = null
@@ -92,9 +100,9 @@ async function fetchRadarr(startDate: string, endDate: string): Promise<Upcoming
   })
 }
 
-export async function fetchUpcomingMedia(): Promise<UpcomingItem[]> {
+export async function fetchUpcomingMedia(): Promise<MediaResult> {
   if (cache && Date.now() - cache.fetchedAt < CACHE_TTL) {
-    return cache.items
+    return cache.data
   }
 
   const now = new Date()
@@ -102,7 +110,7 @@ export async function fetchUpcomingMedia(): Promise<UpcomingItem[]> {
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   const startDate = localDate(now)
   const end = new Date(now)
-  end.setDate(end.getDate() + 2)
+  end.setDate(end.getDate() + WINDOW_DAYS)
   const endDate = localDate(end)
 
   const [episodes, movies] = await Promise.all([
@@ -116,10 +124,15 @@ export async function fetchUpcomingMedia(): Promise<UpcomingItem[]> {
     }),
   ])
 
-  const items = [...episodes, ...movies]
+  const allItems = [...episodes, ...movies]
     .filter((item) => item.date >= startDate && item.date < endDate)
     .sort((a, b) => a.date.localeCompare(b.date))
 
-  cache = { items, fetchedAt: Date.now() }
-  return items
+  const result: MediaResult = {
+    items: allItems.slice(0, MAX_ITEMS),
+    totalItems: allItems.length,
+  }
+
+  cache = { data: result, fetchedAt: Date.now() }
+  return result
 }
