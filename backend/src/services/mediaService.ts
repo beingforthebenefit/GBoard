@@ -67,7 +67,7 @@ async function fetchSonarr(startDate: string, endDate: string): Promise<Upcoming
     const season = ep.seasonNumber ?? 0
     const episode = ep.episodeNumber ?? 0
     const code = `S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`
-    const date = ep.airDate || (ep.airDateUtc ? toLocalDateString(ep.airDateUtc) : '')
+    const date = ep.airDateUtc ? toLocalDateString(ep.airDateUtc) : (ep.airDate || '')
 
     return {
       title: seriesTitle,
