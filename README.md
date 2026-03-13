@@ -15,7 +15,7 @@ A self-hosted dashboard — a Dakboard replacement. Runs in Docker, accessible v
 - **Sober Counter** — Years / months / days / hours since your sobriety date
 - **Pi-hole Widget** — DNS blocking status and key stats
 - **Upcoming Media** — Next 10 upcoming TV episodes (Sonarr) and movies (Radarr), grouped by day
-- **Plex Now Playing** — Active streams with progress animation and idle placeholder
+- **Plex Now Playing** — Active streams with progress animation, hidden when idle
 - **Calendar** — 7-day rolling view from iCloud shared CalDAV/ICS calendars
 - **Photo Background** — Rotating iCloud shared album photos with blurred fill backdrop
 
