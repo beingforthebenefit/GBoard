@@ -6,6 +6,10 @@
 
 A self-hosted dashboard — a Dakboard replacement. Runs in Docker, accessible via browser on your local network.
 
+<p align="center">
+  <img src="screenshot.png" width="55%" alt="GBoard dashboard screenshot" />
+</p>
+
 ## Features
 
 - **Weather** — Current conditions, 4-day forecast, sunrise/sunset (OpenWeatherMap)
