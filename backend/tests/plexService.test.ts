@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest'
-import { mapMetadata, mapMetadataList } from '../src/services/plexService.js'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+  mapMetadata,
+  mapMetadataList,
+  fetchPlexSessions,
+  fetchPlexSession,
+} from '../src/services/plexService.js'
 
 const baseUser = { title: 'Gerald', thumb: 'https://plex.tv/avatar.jpg' }
 const basePlayer = { state: 'playing' }
@@ -134,5 +139,145 @@ describe('mapMetadata', () => {
     expect(sessions[0].userName).toBe('A')
     expect(sessions[1].title).toBe('Lost')
     expect(sessions[1].playerState).toBe('paused')
+  })
+})
+
+describe('fetchPlexSessions', () => {
+  beforeEach(() => {
+    vi.stubEnv('PLEX_URL', 'http://plex.local:32400')
+    vi.stubEnv('PLEX_TOKEN', 'test-token')
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.restoreAllMocks()
+  })
+
+  it('throws when PLEX_URL is missing', async () => {
+    vi.stubEnv('PLEX_URL', '')
+    await expect(fetchPlexSessions()).rejects.toThrow('Missing PLEX_URL or PLEX_TOKEN env vars')
+  })
+
+  it('throws when PLEX_TOKEN is missing', async () => {
+    vi.stubEnv('PLEX_TOKEN', '')
+    await expect(fetchPlexSessions()).rejects.toThrow('Missing PLEX_URL or PLEX_TOKEN env vars')
+  })
+
+  it('returns sessions on successful fetch', async () => {
+    const mockResponse = {
+      MediaContainer: {
+        size: 1,
+        Metadata: [
+          {
+            type: 'movie',
+            title: 'Inception',
+            duration: 8880000,
+            viewOffset: 1000000,
+            Player: { state: 'playing' },
+            User: { title: 'Gerald', thumb: 'https://plex.tv/avatar.jpg' },
+          },
+        ],
+      },
+    }
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      })
+    )
+
+    const sessions = await fetchPlexSessions()
+    expect(sessions).toHaveLength(1)
+    expect(sessions[0].title).toBe('Inception')
+    expect(sessions[0].type).toBe('movie')
+    expect(sessions[0].userName).toBe('Gerald')
+  })
+
+  it('returns empty array when size is 0', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ MediaContainer: { size: 0 } }),
+      })
+    )
+
+    const sessions = await fetchPlexSessions()
+    expect(sessions).toEqual([])
+  })
+
+  it('returns empty array on network error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new Error('Network error'))
+    )
+
+    const sessions = await fetchPlexSessions()
+    expect(sessions).toEqual([])
+  })
+
+  it('returns empty array on non-ok response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500 })
+    )
+
+    const sessions = await fetchPlexSessions()
+    expect(sessions).toEqual([])
+  })
+})
+
+describe('fetchPlexSession', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.restoreAllMocks()
+  })
+
+  it('returns the first session or null', async () => {
+    vi.stubEnv('PLEX_URL', 'http://plex.local:32400')
+    vi.stubEnv('PLEX_TOKEN', 'test-token')
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            MediaContainer: {
+              size: 1,
+              Metadata: [
+                {
+                  type: 'movie',
+                  title: 'Test Movie',
+                  Player: { state: 'playing' },
+                  User: { title: 'User1' },
+                },
+              ],
+            },
+          }),
+      })
+    )
+
+    const session = await fetchPlexSession()
+    expect(session).not.toBeNull()
+    expect(session!.title).toBe('Test Movie')
+  })
+
+  it('returns null when no sessions', async () => {
+    vi.stubEnv('PLEX_URL', 'http://plex.local:32400')
+    vi.stubEnv('PLEX_TOKEN', 'test-token')
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ MediaContainer: { size: 0 } }),
+      })
+    )
+
+    const session = await fetchPlexSession()
+    expect(session).toBeNull()
   })
 })
