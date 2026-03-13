@@ -16,9 +16,9 @@ const baseSession: PlexSession = {
 }
 
 describe('PlexWidget', () => {
-  it('renders idle placeholder when not loading and no session', () => {
-    render(<PlexWidget sessions={[]} loading={false} />)
-    expect(screen.getByText('No one is streaming')).toBeDefined()
+  it('does not render anything when not loading and no session', () => {
+    const { container } = render(<PlexWidget sessions={[]} loading={false} />)
+    expect(container.firstChild).toBeNull()
   })
 
   it('renders a loading skeleton when loading', () => {

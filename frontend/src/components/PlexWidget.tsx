@@ -58,12 +58,7 @@ export function PlexWidget({ sessions, loading }: PlexWidgetProps) {
   }
 
   if (!sessions.length) {
-    return (
-      <GlassPanel className="p-4 text-white/60 text-center">
-        <div className="text-sm uppercase tracking-[0.14em] text-white/45">Plex</div>
-        <div className="text-base mt-1">No one is streaming</div>
-      </GlassPanel>
-    )
+    return
   }
 
   return (
