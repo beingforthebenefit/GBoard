@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchPiholeStats, _resetSession } from '../src/services/piholeService.js'
+import {
+  fetchPiholeStats,
+  deletePiholeSession,
+  loadSession,
+  _resetSession,
+} from '../src/services/piholeService.js'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -251,5 +256,149 @@ describe('fetchPiholeStats', () => {
     expect(stats.blockedLastHour).toBe(0)
     expect(stats.queriesLastHour).toBe(0)
     expect(stats.clients).toEqual([])
+  })
+
+  it('handles legacy top_sources format in client response', async () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('/api/auth')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(authResponse),
+        })
+      }
+      if (url.includes('/api/stats/summary')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(statsResponse),
+        })
+      }
+      if (url.includes('/api/dns/blocking')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(blockingResponse),
+        })
+      }
+      if (url.includes('/api/history')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(historyResponse),
+        })
+      }
+      if (url.includes('/api/stats/top_clients?count=8&blocked=true')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              top_sources: { '192.168.1.40': 200, '192.168.1.22': 150 },
+            }),
+        })
+      }
+      if (url.includes('/api/stats/top_clients')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              top_sources: {
+                '192.168.1.40': 1300,
+                '192.168.1.22': 980,
+                '192.168.1.12': 600,
+              },
+            }),
+        })
+      }
+      return Promise.resolve({ ok: false, status: 404 })
+    })
+
+    const stats = await fetchPiholeStats()
+    expect(stats.clients.length).toBeGreaterThan(0)
+    // Verify clients were parsed from legacy top_sources format
+    expect(stats.clients[0].queries).toBeGreaterThan(0)
+  })
+
+  it('rate limits after 429 response and fails fast on subsequent calls', async () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('/api/auth')) {
+        return Promise.resolve({
+          ok: false,
+          status: 429,
+        })
+      }
+      return Promise.resolve({ ok: false, status: 404 })
+    })
+
+    // First call triggers the 429
+    await expect(fetchPiholeStats()).rejects.toThrow()
+
+    // Reset mock to prove it won't be called again
+    mockFetch.mockClear()
+
+    // Subsequent call should fail fast without calling fetch
+    await expect(fetchPiholeStats()).rejects.toThrow('rate limited')
+    expect(mockFetch.mock.calls.filter(([url]: [string]) => url.includes('/api/auth')).length).toBe(
+      0
+    )
+  })
+})
+
+describe('deletePiholeSession', () => {
+  it('sends DELETE to /api/auth when session exists', async () => {
+    // First authenticate to get a session
+    mockFetch.mockImplementation((url: string, opts?: { method?: string }) => {
+      if (url.includes('/api/auth') && opts?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(authResponse),
+        })
+      }
+      if (url.includes('/api/auth') && opts?.method === 'DELETE') {
+        return Promise.resolve({ ok: true })
+      }
+      if (url.includes('/api/stats/summary')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(statsResponse),
+        })
+      }
+      if (url.includes('/api/dns/blocking')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(blockingResponse),
+        })
+      }
+      if (url.includes('/api/history')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(historyResponse),
+        })
+      }
+      if (url.includes('/api/stats/top_clients')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(clientsResponse),
+        })
+      }
+      return Promise.resolve({ ok: false, status: 404 })
+    })
+
+    await fetchPiholeStats()
+    await deletePiholeSession()
+
+    const deleteCalls = mockFetch.mock.calls.filter(
+      ([url, opts]: [string, { method?: string }]) =>
+        url.includes('/api/auth') && opts?.method === 'DELETE'
+    )
+    expect(deleteCalls).toHaveLength(1)
+  })
+
+  it('does nothing when no session exists', async () => {
+    await deletePiholeSession()
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+})
+
+describe('loadSession', () => {
+  it('can be called without error when no session file exists', () => {
+    vi.stubEnv('PIHOLE_SESSION_DIR', '/tmp/nonexistent-pihole-test')
+    expect(() => loadSession()).not.toThrow()
   })
 })

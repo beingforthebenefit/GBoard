@@ -96,7 +96,21 @@ describe('proxyTile', () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       arrayBuffer: async () => fakePixels.buffer,
-      headers: new Map([['content-type', 'image/png']]),
+      headers: { get: (name: string) => (name === 'content-type' ? 'image/png' : null) },
+    })
+
+    const { buffer, contentType } = await proxyTile('https://example.com/tile.png')
+    expect(buffer).toBeInstanceOf(Buffer)
+    expect(buffer.length).toBe(4)
+    expect(contentType).toBe('image/png')
+  })
+
+  it('defaults to image/png when content-type header is missing', async () => {
+    const fakePixels = new Uint8Array([137, 80, 78, 71])
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      arrayBuffer: async () => fakePixels.buffer,
+      headers: { get: () => null },
     })
 
     const { buffer, contentType } = await proxyTile('https://example.com/tile.png')

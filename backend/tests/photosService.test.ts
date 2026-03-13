@@ -6,6 +6,7 @@ import {
   fetchPhotos,
   loadFromDisk,
   startSync,
+  startPeriodicSync,
   getCacheDir,
   _resetCache,
 } from '../src/services/photosService.js'
@@ -190,5 +191,41 @@ describe('photosService', () => {
   it('loadFromDisk returns empty when no manifest exists', async () => {
     const result = await loadFromDisk()
     expect(result).toEqual([])
+  })
+
+  it('fetchPhotos falls back to disk when memory cache is empty', async () => {
+    // First sync to put photos on disk
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/disk-photo.JPG', 500)],
+    })
+
+    await startSync()
+
+    // Clear memory cache but leave disk intact
+    _resetCache()
+    mockGetImages.mockReset()
+
+    const result = await fetchPhotos()
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatch(/^\/api\/photos\/image\//)
+    // Should not have called iCloud again
+    expect(mockGetImages).not.toHaveBeenCalled()
+  })
+
+  it('fetchPhotos falls back to sync when both memory and disk are empty', async () => {
+    // Memory is empty (fresh _resetCache), disk has no manifest
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/fresh.JPG', 500)],
+    })
+
+    const result = await fetchPhotos()
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatch(/^\/api\/photos\/image\//)
+    // Should have called iCloud to do a full sync
+    expect(mockGetImages).toHaveBeenCalledTimes(1)
+  })
+
+  it('startPeriodicSync can be called without error', () => {
+    expect(() => startPeriodicSync()).not.toThrow()
   })
 })

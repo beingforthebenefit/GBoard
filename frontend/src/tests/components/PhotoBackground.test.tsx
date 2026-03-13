@@ -97,4 +97,45 @@ describe('PhotoBackground', () => {
     // At least one image source should have changed (advanced to next)
     expect(newSrcs).not.toEqual(initialSrcs)
   })
+
+  it('triggers crossfade transition after intervalMs elapses', () => {
+    const intervalMs = 10_000
+    const transitionMs = 2000
+    const photos = [
+      'https://example.com/photo1.jpg',
+      'https://example.com/photo2.jpg',
+      'https://example.com/photo3.jpg',
+    ]
+    const { container } = render(
+      <PhotoBackground photos={photos} intervalMs={intervalMs} transitionMs={transitionMs} />
+    )
+
+    // Before interval fires, first layer should be fully opaque (opacity 1)
+    const getLayers = () =>
+      Array.from(container.querySelectorAll<HTMLDivElement>('.absolute.inset-0.overflow-hidden'))
+    const layers = getLayers()
+    expect(layers.length).toBe(2)
+    expect(layers[0].style.opacity).toBe('1')
+    expect(layers[1].style.opacity).toBe('0')
+
+    // Advance past the interval to trigger setIsTransitioning(true)
+    act(() => {
+      vi.advanceTimersByTime(intervalMs)
+    })
+
+    const layersAfter = getLayers()
+    // After transition starts, current layer fades out, next fades in
+    expect(layersAfter[0].style.opacity).toBe('0')
+    expect(layersAfter[1].style.opacity).toBe('1')
+
+    // After transitionMs, advance completes and resets
+    act(() => {
+      vi.advanceTimersByTime(transitionMs)
+    })
+
+    const layersReset = getLayers()
+    // After advance, opacity resets (isTransitioning = false again)
+    expect(layersReset[0].style.opacity).toBe('1')
+    expect(layersReset[1].style.opacity).toBe('0')
+  })
 })

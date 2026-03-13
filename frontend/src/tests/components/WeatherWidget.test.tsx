@@ -41,4 +41,25 @@ describe('WeatherWidget', () => {
     expect(screen.getByText('Weather temporarily unavailable')).toBeDefined()
     expect(screen.getByText('Retrying automatically...')).toBeDefined()
   })
+
+  it('renders loading skeleton with animate-pulse when loading is true', () => {
+    const { container } = render(<WeatherWidget data={null} loading={true} />)
+    const pulseEl = container.querySelector('.animate-pulse')
+    expect(pulseEl).toBeTruthy()
+    const skeleton = container.querySelector('.bg-white\\/10')
+    expect(skeleton).toBeTruthy()
+    expect(skeleton?.classList.contains('rounded')).toBe(true)
+  })
+
+  it('renders forecast row with Today label and day names', () => {
+    render(<WeatherWidget data={weatherData} loading={false} />)
+    expect(screen.getByText('Today')).toBeDefined()
+    // The remaining forecast entries should render as short day names
+    const allText = document.body.textContent ?? ''
+    expect(allText).toContain('63°')
+    expect(allText).toContain('54°')
+    expect(allText).toContain('59°')
+    expect(allText).toContain('52°')
+    expect(allText).toContain('62°')
+  })
 })
