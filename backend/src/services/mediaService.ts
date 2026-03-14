@@ -47,7 +47,10 @@ export function _resetCache() {
 
 function toLocalDateString(iso: string): string {
   const d = new Date(iso)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 async function fetchSonarr(startDate: string, endDate: string): Promise<UpcomingItem[]> {
@@ -67,7 +70,7 @@ async function fetchSonarr(startDate: string, endDate: string): Promise<Upcoming
     const season = ep.seasonNumber ?? 0
     const episode = ep.episodeNumber ?? 0
     const code = `S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`
-    const date = ep.airDateUtc ? toLocalDateString(ep.airDateUtc) : (ep.airDate || '')
+    const date = ep.airDateUtc ? toLocalDateString(ep.airDateUtc) : ep.airDate || ''
 
     return {
       title: seriesTitle,
