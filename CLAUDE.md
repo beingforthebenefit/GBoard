@@ -19,9 +19,12 @@ docker compose run --rm --build frontend sh -c "npm run lint && npm run format:c
 docker compose run --rm --build backend npm run typecheck
 docker compose run --rm --build frontend npm run typecheck
 
-# Deploy (rebuilds + triggers frontend auto-reload via /api/version polling)
-docker compose up --build -d backend
-# Frontend-only changes still need backend rebuild for the reload trigger
+# Deploy
+# Backend-only changes: rebuild backend (triggers frontend auto-reload via /api/version polling)
+docker compose up --build --force-recreate -d backend
+# Frontend code changes: rebuild frontend FIRST, then backend to trigger reload
+docker compose up --build --force-recreate -d frontend
+docker compose up --build --force-recreate -d backend
 ```
 
 ## Project Structure
