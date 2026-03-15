@@ -12,11 +12,45 @@ function stateIcon(state: PlexSession['playerState']): string {
   return '▶'
 }
 
-function SessionCard({ session }: { session: PlexSession }) {
+function SessionCard({ session, compact }: { session: PlexSession; compact?: boolean }) {
   const thumbUrl = session.thumbPath
     ? `/api/plex/thumb?path=${encodeURIComponent(session.thumbPath)}`
     : null
   const pct = session.duration > 0 ? Math.round((session.viewOffset / session.duration) * 100) : 0
+
+  if (compact) {
+    return (
+      <GlassPanel className="p-2.5 text-white">
+        <div className="flex gap-2.5 items-center">
+          {thumbUrl && (
+            <img src={thumbUrl} alt="" className="w-9 h-9 rounded object-cover flex-shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold truncate">{session.title}</div>
+            <div className="flex items-center gap-1.5 text-xs text-white/50 whitespace-nowrap">
+              {session.userAvatar && (
+                <img
+                  src={session.userAvatar}
+                  alt=""
+                  className="w-4 h-4 rounded-full flex-shrink-0"
+                />
+              )}
+              <span className="flex-shrink-0">{stateIcon(session.playerState)}</span>
+              <span className="text-white/40 flex-shrink-0">{session.userName}</span>
+              {session.subtitle && (
+                <span className="text-white/30 truncate ml-auto">{session.subtitle}</span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="mt-1.5">
+          <div className="w-full bg-white/20 rounded-full h-1">
+            <div className="bg-yellow-400 h-1 rounded-full" style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+      </GlassPanel>
+    )
+  }
 
   return (
     <GlassPanel className="p-4 text-white">
@@ -61,10 +95,16 @@ export function PlexWidget({ sessions, loading }: PlexWidgetProps) {
     return
   }
 
+  const compact = sessions.length >= 2
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className={`flex flex-col ${compact ? 'gap-1.5' : 'gap-2'}`}>
       {sessions.map((session, idx) => (
-        <SessionCard key={`${session.userName}-${session.title}-${idx}`} session={session} />
+        <SessionCard
+          key={`${session.userName}-${session.title}-${idx}`}
+          session={session}
+          compact={compact}
+        />
       ))}
     </div>
   )

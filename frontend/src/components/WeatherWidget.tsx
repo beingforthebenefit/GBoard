@@ -1,9 +1,10 @@
-import { WeatherData } from '../types/index.js'
+import { WeatherData, WeatherForecastHour } from '../types/index.js'
 import { GlassPanel } from './GlassPanel.js'
 
 interface WeatherWidgetProps {
   data: WeatherData | null
   loading: boolean
+  hourlyForecast?: WeatherForecastHour[]
 }
 
 function WeatherIcon({
@@ -28,7 +29,14 @@ function formatTime(unix: number): string {
   return `${h % 12 || 12}:${m}${ampm}`
 }
 
-export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
+function formatHourLabel(unix: number): string {
+  const d = new Date(unix * 1000)
+  const h = d.getHours()
+  const ampm = h >= 12 ? 'p' : 'a'
+  return `${h % 12 || 12}${ampm}`
+}
+
+export function WeatherWidget({ data, loading, hourlyForecast }: WeatherWidgetProps) {
   if (loading) {
     return (
       <GlassPanel className="p-4 text-white animate-pulse">
@@ -64,7 +72,17 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
       <div className="text-sm text-white/60 flex justify-center gap-x-3 text-center">
         <span>Feels {current.feelsLike}°</span>
         <span>{current.humidity}%</span>
-        <span>{current.windSpeed} mph</span>
+        <span>
+          {current.windSpeed} mph {current.windDirection}
+          {current.windGust != null && ` (${current.windGust}g)`}
+        </span>
+      </div>
+
+      {/* Extended details */}
+      <div className="text-xs text-white/45 flex justify-center gap-x-3 text-center tabular-nums">
+        <span>Dew {current.dewPoint}°</span>
+        <span>{current.pressure} hPa</span>
+        <span>Vis {current.visibility} mi</span>
       </div>
 
       {/* Sunrise / Sunset */}
@@ -94,6 +112,20 @@ export function WeatherWidget({ data, loading }: WeatherWidgetProps) {
           )
         })}
       </div>
+
+      {/* Hourly forecast — shown when radar is hidden */}
+      {hourlyForecast && hourlyForecast.length > 0 && (
+        <div className="flex justify-between pt-1 border-t border-white/10">
+          {hourlyForecast.slice(0, 6).map((hour) => (
+            <div key={hour.time} className="text-center">
+              <div className="text-white/50 text-xs">{formatHourLabel(hour.time)}</div>
+              <WeatherIcon icon={hour.icon} className="w-7 h-7 mx-auto" />
+              <div className="text-xs font-medium">{hour.temp}°</div>
+              {hour.pop > 0 && <div className="text-[10px] text-blue-300/60">{hour.pop}%</div>}
+            </div>
+          ))}
+        </div>
+      )}
     </GlassPanel>
   )
 }

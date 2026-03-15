@@ -17,6 +17,7 @@ import { useVersion } from './hooks/useVersion.js'
 import { useMedia } from './hooks/useMedia.js'
 import { RadarWidget } from './components/RadarWidget.js'
 import { useRadar } from './hooks/useRadar.js'
+import { useAvailableHeight } from './hooks/useAvailableHeight.js'
 
 const SOBRIETY_DATE = import.meta.env.VITE_SOBRIETY_DATE as string
 
@@ -27,46 +28,61 @@ export function App() {
   const { sessions, loading: plexLoading } = usePlex()
   const { data: piholeData, loading: piholeLoading } = usePihole()
   const { photos } = usePhotos()
-  const {
-    items: mediaItems,
-    lastDayRemaining: mediaLastDayRemaining,
-    loading: mediaLoading,
-  } = useMedia()
+  const { items: mediaItems, loading: mediaLoading } = useMedia()
   const { data: radarData, loading: radarLoading } = useRadar()
+
+  // Left column is the height anchor — its natural content drives all column heights
+  const { ref: leftColRef, height: leftColHeight } = useAvailableHeight<HTMLDivElement>()
+
+  // Show radar only when there's actual precipitation
+  const showRadar = radarData?.hasPrecipitation === true
+  // Always show hourly forecast when radar is hidden (makes weather widget taller as anchor)
+  const hourlyForecast = !showRadar ? weatherData?.hourly : undefined
+
+  // Other columns are constrained to match the left column's measured height
+  const colStyle = leftColHeight > 0 ? { height: leftColHeight } : undefined
 
   return (
     <div className="h-screen w-full relative overflow-hidden font-sans flex flex-col">
       <PhotoBackground photos={photos} />
 
       <div className="relative z-10 flex flex-col h-full p-4">
-        {/* Top strip */}
+        {/* Top strip — left column anchors height, others match */}
         <div className="flex-shrink-0 flex items-start gap-4">
+          {/* Left column: Weather + Radar — height anchor */}
           <div
+            ref={leftColRef}
             className="w-80 flex-shrink-0 flex flex-col gap-2 widget-enter"
             style={{ animationDelay: '0ms' }}
           >
-            <WeatherWidget data={weatherData} loading={weatherLoading} />
-            <RadarWidget data={radarData} loading={radarLoading} />
+            <WeatherWidget
+              data={weatherData}
+              loading={weatherLoading}
+              hourlyForecast={hourlyForecast}
+            />
+            {showRadar && <RadarWidget data={radarData} loading={radarLoading} />}
           </div>
+
+          {/* Center column: Clock + Sober + Pi-hole (compacts to fit anchor) */}
           <div
-            className="flex-1 min-w-0 pt-1 flex flex-col items-center gap-2 widget-enter"
-            style={{ animationDelay: '60ms' }}
+            className="flex-1 min-w-0 pt-1 flex flex-col items-center gap-2 overflow-hidden widget-enter"
+            style={{ animationDelay: '60ms', ...colStyle }}
           >
             <ClockWidget />
             <SoberCounter sobrietyDate={SOBRIETY_DATE} />
-            <div className="w-72">
-              <PiholeWidget data={piholeData} loading={piholeLoading} />
-            </div>
-          </div>
-          <div
-            className="w-80 flex-shrink-0 flex flex-col gap-2 widget-enter"
-            style={{ animationDelay: '110ms' }}
-          >
-            <MediaWidget
-              items={mediaItems}
-              lastDayRemaining={mediaLastDayRemaining}
-              loading={mediaLoading}
+            <PiholeWidget
+              data={piholeData}
+              loading={piholeLoading}
+              className="w-72 flex-1 min-h-0"
             />
+          </div>
+
+          {/* Right column: Media (compacts to fit anchor) + Plex */}
+          <div
+            className="w-80 flex-shrink-0 flex flex-col gap-2 overflow-hidden widget-enter"
+            style={{ animationDelay: '110ms', ...colStyle }}
+          >
+            <MediaWidget items={mediaItems} loading={mediaLoading} className="flex-1 min-h-0" />
             <PlexWidget sessions={sessions} loading={plexLoading} />
           </div>
         </div>
