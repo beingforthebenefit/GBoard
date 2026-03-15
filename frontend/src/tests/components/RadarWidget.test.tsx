@@ -11,6 +11,7 @@ const radarData: RadarData = {
   locY: 0.5,
   host: 'tile.openweathermap.org',
   radarPath: '/map/precipitation_new',
+  hasPrecipitation: true,
 }
 
 describe('RadarWidget', () => {
@@ -22,6 +23,13 @@ describe('RadarWidget', () => {
   it('returns null when data is null and not loading', () => {
     const { container } = render(<RadarWidget data={null} loading={false} />)
     expect(container.innerHTML).toBe('')
+  })
+
+  it('renders normally even when hasPrecipitation is false (parent controls visibility)', () => {
+    const data = { ...radarData, hasPrecipitation: false }
+    const { container } = render(<RadarWidget data={data} loading={false} />)
+    const images = container.querySelectorAll('img')
+    expect(images.length).toBe(18)
   })
 
   it('renders a 3x3 grid of tile pairs (base + overlay)', () => {

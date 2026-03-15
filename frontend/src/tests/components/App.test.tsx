@@ -92,6 +92,6 @@ describe('App', () => {
     expect(getByTestId('plex-widget')).toBeTruthy()
     expect(getByTestId('calendar-widget')).toBeTruthy()
     expect(getByTestId('pihole-widget')).toBeTruthy()
-    expect(getByTestId('radar-widget')).toBeTruthy()
+    // RadarWidget is conditionally rendered (only when precipitation detected)
   })
 })

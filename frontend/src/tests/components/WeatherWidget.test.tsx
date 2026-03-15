@@ -10,6 +10,11 @@ const weatherData: WeatherData = {
     description: 'broken clouds',
     humidity: 74,
     windSpeed: 4,
+    windDirection: 'NE',
+    windGust: 8,
+    pressure: 1015,
+    visibility: 10,
+    dewPoint: 49,
     icon: '03d',
     sunrise: 1772871120,
     sunset: 1772914500,
@@ -19,6 +24,7 @@ const weatherData: WeatherData = {
     { date: '2026-03-09', high: 59, low: 52, description: 'cloudy', icon: '03d' },
     { date: '2026-03-10', high: 62, low: 54, description: 'cloudy', icon: '03d' },
   ],
+  hourly: [],
 }
 
 describe('WeatherWidget', () => {
