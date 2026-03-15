@@ -15,9 +15,10 @@ export interface RadarData {
   locY: number
   host: string
   radarPath: string
+  hasPrecipitation: boolean
 }
 
-let rvCache: { data: RainViewerResponse; fetchedAt: number } | null = null
+let radarCache: { data: RadarData; fetchedAt: number } | null = null
 const CACHE_TTL = 5 * 60 * 1000
 
 export function latLonToTile(lat: number, lon: number, zoom: number) {
@@ -29,13 +30,15 @@ export function latLonToTile(lat: number, lon: number, zoom: number) {
 }
 
 export async function getRadarData(): Promise<RadarData> {
-  if (!rvCache || Date.now() - rvCache.fetchedAt > CACHE_TTL) {
-    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json')
-    if (!res.ok) throw new Error(`RainViewer API error: ${res.status}`)
-    rvCache = { data: (await res.json()) as RainViewerResponse, fetchedAt: Date.now() }
+  if (radarCache && Date.now() - radarCache.fetchedAt < CACHE_TTL) {
+    return radarCache.data
   }
 
-  const { host, radar } = rvCache.data
+  const res = await fetch('https://api.rainviewer.com/public/weather-maps.json')
+  if (!res.ok) throw new Error(`RainViewer API error: ${res.status}`)
+  const rv = (await res.json()) as RainViewerResponse
+
+  const { host, radar } = rv
   const latest = radar.past[radar.past.length - 1]
 
   const lat = parseFloat(process.env.WEATHER_LAT || '0')
@@ -53,7 +56,32 @@ export async function getRadarData(): Promise<RadarData> {
   const locX = (fracTileX - (x - offset)) / GRID
   const locY = (fracTileY - (y - offset)) / GRID
 
-  return { zoom, centerX: x, centerY: y, locX, locY, host, radarPath: latest.path }
+  // Check center overlay tile size to detect precipitation.
+  // Fully transparent 256x256 PNGs compress to ~200-400 bytes;
+  // tiles with precipitation data are typically 2KB+.
+  const PRECIP_THRESHOLD = 3000
+  let hasPrecipitation = true
+  try {
+    const overlayUrl = `${host}${latest.path}/256/${zoom}/${x}/${y}/6/0_1.png`
+    const { buffer } = await proxyTile(overlayUrl)
+    hasPrecipitation = buffer.length > PRECIP_THRESHOLD
+  } catch {
+    // If tile fetch fails, assume precipitation (show radar as fallback)
+  }
+
+  const data: RadarData = {
+    zoom,
+    centerX: x,
+    centerY: y,
+    locX,
+    locY,
+    host,
+    radarPath: latest.path,
+    hasPrecipitation,
+  }
+
+  radarCache = { data, fetchedAt: Date.now() }
+  return data
 }
 
 export async function proxyTile(url: string): Promise<{ buffer: Buffer; contentType: string }> {
@@ -65,5 +93,5 @@ export async function proxyTile(url: string): Promise<{ buffer: Buffer; contentT
 
 // Export for testing
 export function _resetCache() {
-  rvCache = null
+  radarCache = null
 }

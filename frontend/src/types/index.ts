@@ -5,6 +5,11 @@ export interface WeatherCurrent {
   icon: string
   humidity: number
   windSpeed: number
+  windDirection: string
+  windGust: number | null
+  pressure: number
+  visibility: number
+  dewPoint: number
   sunrise: number
   sunset: number
 }
@@ -17,9 +22,17 @@ export interface WeatherForecastDay {
   description: string
 }
 
+export interface WeatherForecastHour {
+  time: number
+  temp: number
+  icon: string
+  pop: number
+}
+
 export interface WeatherData {
   current: WeatherCurrent
   forecast: WeatherForecastDay[]
+  hourly: WeatherForecastHour[]
 }
 
 export interface CalendarEvent {
@@ -65,4 +78,5 @@ export interface RadarData {
   locY: number
   host: string
   radarPath: string
+  hasPrecipitation: boolean
 }

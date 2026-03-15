@@ -1,12 +1,13 @@
-import { WeatherResponse, WeatherForecastDay } from '../types/index.js'
+import { WeatherResponse, WeatherForecastDay, WeatherForecastHour } from '../types/index.js'
 
 const OWM_BASE = 'https://api.openweathermap.org/data/2.5'
 
 interface OWMCurrentResponse {
-  main: { temp: number; feels_like: number; humidity: number }
+  main: { temp: number; feels_like: number; humidity: number; pressure: number }
   weather: { description: string; icon: string }[]
-  wind: { speed: number }
+  wind: { speed: number; deg?: number; gust?: number }
   sys: { sunrise: number; sunset: number }
+  visibility?: number
 }
 
 interface OWMForecastItem {
@@ -14,6 +15,7 @@ interface OWMForecastItem {
   dt_txt: string
   main: { temp_max: number; temp_min: number }
   weather: { icon: string; description: string }[]
+  pop?: number
 }
 
 interface OWMForecastResponse {
@@ -55,6 +57,15 @@ export async function fetchWeather(): Promise<WeatherResponse> {
   const current = (await currentRes.json()) as OWMCurrentResponse
   const forecast = (await forecastRes.json()) as OWMForecastResponse
 
+  const tz = forecast.city?.timezone ?? 0
+
+  const tempC = (current.main.temp - 32) * (5 / 9)
+  const dewC = tempC - (100 - current.main.humidity) / 5
+  const dewPointF = Math.round(dewC * (9 / 5) + 32)
+
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+  const windDirection = current.wind.deg != null ? dirs[Math.round(current.wind.deg / 45) % 8] : ''
+
   const data: WeatherResponse = {
     current: {
       temp: Math.round(current.main.temp),
@@ -63,10 +74,16 @@ export async function fetchWeather(): Promise<WeatherResponse> {
       icon: current.weather[0]?.icon ?? '',
       humidity: current.main.humidity,
       windSpeed: Math.round(current.wind.speed),
+      windDirection,
+      windGust: current.wind.gust != null ? Math.round(current.wind.gust) : null,
+      pressure: current.main.pressure,
+      visibility: Math.round((current.visibility ?? 10000) / 1609.34),
+      dewPoint: dewPointF,
       sunrise: current.sys.sunrise,
       sunset: current.sys.sunset,
     },
-    forecast: buildForecast(forecast.list, forecast.city?.timezone ?? 0),
+    forecast: buildForecast(forecast.list, tz),
+    hourly: buildHourlyForecast(forecast.list, tz),
   }
 
   cache = { data, fetchedAt: Date.now() }
@@ -126,6 +143,22 @@ export function buildForecast(
   }
 
   return days
+}
+
+export function buildHourlyForecast(
+  items: OWMForecastItem[],
+  timezoneOffsetSeconds = 0
+): WeatherForecastHour[] {
+  const now = Date.now() / 1000
+  return items
+    .filter((item) => item.dt > now)
+    .slice(0, 8)
+    .map((item) => ({
+      time: item.dt + timezoneOffsetSeconds,
+      temp: Math.round(item.main.temp_max),
+      icon: item.weather[0]?.icon ?? '',
+      pop: Math.round((item.pop ?? 0) * 100),
+    }))
 }
 
 // Export for testing
