@@ -23,7 +23,7 @@ function withRetryParam(src: string, retryCount: number): string {
   return `${src}${sep}bgRetry=${retryCount}`
 }
 
-function LayeredPhoto({
+function PhotoImage({
   src,
   opacity,
   transitionMs,
@@ -61,32 +61,17 @@ function LayeredPhoto({
   const onLoad = () => setNeedsRetry(false)
 
   return (
-    <div
-      className="absolute inset-0 overflow-hidden"
+    <img
+      src={retrySrc}
+      onError={onError}
+      onLoad={onLoad}
+      className="absolute inset-0 w-full h-full object-cover"
+      alt=""
       style={{
         opacity,
         transition: `opacity ${transitionMs}ms ease-in-out`,
       }}
-    >
-      {/* Back layer: fills height, blurred, and only lightly darkened */}
-      <img
-        src={retrySrc}
-        onError={onError}
-        onLoad={onLoad}
-        className="absolute inset-0 w-full h-full object-cover object-center scale-110 blur-xl"
-        alt=""
-      />
-      <div className="absolute inset-0 bg-black/25" />
-
-      {/* Front layer: sharp image fit to screen width */}
-      <img
-        src={retrySrc}
-        onError={onError}
-        onLoad={onLoad}
-        className="absolute inset-0 w-full h-full object-contain"
-        alt=""
-      />
-    </div>
+    />
   )
 }
 
@@ -120,27 +105,35 @@ export function PhotoBackground({
   }, [shuffled, intervalMs, transitionMs, advance])
 
   if (shuffled.length === 0) {
-    return <div className="fixed inset-0 -z-10 bg-gray-900" />
+    return (
+      <div className="w-full h-full rounded-2xl" style={{ backgroundColor: 'var(--photo-bg)' }} />
+    )
   }
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
-      {/* Current photo group */}
-      <LayeredPhoto
+    <div
+      className="w-full h-full rounded-2xl overflow-hidden relative"
+      style={{ backgroundColor: 'var(--photo-bg)' }}
+    >
+      <PhotoImage
         src={shuffled[currentIndex]}
         opacity={isTransitioning ? 0 : 1}
         transitionMs={transitionMs}
         onFailed={advance}
       />
-      {/* Next photo group */}
-      <LayeredPhoto
+      <PhotoImage
         src={shuffled[nextIndex % shuffled.length]}
         opacity={isTransitioning ? 1 : 0}
         transitionMs={transitionMs}
         onFailed={advance}
       />
-      {/* Global readability overlay */}
-      <div className="absolute inset-0 bg-black/10" />
+      {/* Bottom fade into dashboard bg */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
+        style={{
+          background: `linear-gradient(to top, var(--photo-fade), transparent)`,
+        }}
+      />
     </div>
   )
 }

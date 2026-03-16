@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { UpcomingItem } from '../types/index.js'
-import { GlassPanel } from './GlassPanel.js'
-import { useAvailableHeight } from '../hooks/useAvailableHeight.js'
 
 interface MediaWidgetProps {
   items: UpcomingItem[]
@@ -42,7 +40,7 @@ function isTomorrow(dateStr: string): boolean {
   return date.getTime() === tomorrow.getTime()
 }
 
-/** Merge same-show episodes on the same date: "Family Guy S24E08" + "S24E09" → "Family Guy — E08, E09" */
+/** Merge same-show episodes on the same date */
 function combineEpisodes(items: UpcomingItem[]): CombinedItem[] {
   const result: CombinedItem[] = []
   const seen = new Map<string, CombinedItem>()
@@ -51,7 +49,6 @@ function combineEpisodes(items: UpcomingItem[]): CombinedItem[] {
     const key = `${item.date}:${item.title}`
     const existing = seen.get(key)
     if (existing && item.type === 'episode') {
-      // Strip the season prefix (e.g. "S24E09" → "E09")
       const ep = item.subtitle.replace(/^S\d+/, '')
       existing.subtitle = `${existing.subtitle}, ${ep}`
     } else {
@@ -77,18 +74,13 @@ function groupByDate(items: CombinedItem[]): Map<string, CombinedItem[]> {
   return groups
 }
 
-// Header "UPCOMING" ~36px, date headers ~22px each, item rows ~24px each, footer ~24px, padding ~32px
-const HEADER_HEIGHT = 36
-const DATE_HEADER_HEIGHT = 22
-const ITEM_ROW_HEIGHT = 24
-const FOOTER_HEIGHT = 24
-const PADDING = 32
+const HEADER_HEIGHT = 32
+const DATE_HEADER_HEIGHT = 24
+const ITEM_ROW_HEIGHT = 26
 
 interface CalcResult {
   visibleItems: CombinedItem[]
-  /** Message like "& 3 more on Wed, Mar 18" — only when a day is partially truncated */
   truncatedMessage: string | null
-  /** Whether the marquee should be used (today+tomorrow don't fit statically) */
   useMarquee: boolean
 }
 
@@ -97,11 +89,10 @@ function calcVisibleItems(items: CombinedItem[], containerHeight: number): CalcR
     return { visibleItems: items, truncatedMessage: null, useMarquee: false }
 
   const grouped = groupByDate(items)
-  let budget = containerHeight - HEADER_HEIGHT - PADDING
+  let budget = containerHeight - HEADER_HEIGHT
   const visibleItems: CombinedItem[] = []
   let truncatedMessage: string | null = null
 
-  // Phase 1: Always include ALL today + tomorrow items
   for (const [date, dateItems] of grouped) {
     if (isToday(date) || isTomorrow(date)) {
       visibleItems.push(...dateItems)
@@ -109,13 +100,9 @@ function calcVisibleItems(items: CombinedItem[], containerHeight: number): CalcR
     }
   }
 
-  // If today+tomorrow overflow the container, use marquee (no room for more days)
   const useMarquee = budget < 0
 
-  // Phase 2: Fill remaining space with subsequent days (only if budget remains)
   if (!useMarquee) {
-    // Reserve space for potential footer
-    budget -= FOOTER_HEIGHT
     for (const [date, dateItems] of grouped) {
       if (isToday(date) || isTomorrow(date)) continue
 
@@ -125,7 +112,6 @@ function calcVisibleItems(items: CombinedItem[], containerHeight: number): CalcR
         visibleItems.push(...dateItems.slice(0, rowsToShow))
         budget -= DATE_HEADER_HEIGHT + rowsToShow * ITEM_ROW_HEIGHT
 
-        // If this day was partially truncated, show how many are hidden from it
         if (rowsToShow < dateItems.length) {
           const remaining = dateItems.length - rowsToShow
           truncatedMessage = `& ${remaining} more on ${formatDate(date)}`
@@ -142,22 +128,30 @@ function calcVisibleItems(items: CombinedItem[], containerHeight: number): CalcR
 
 function ItemRow({ item }: { item: CombinedItem }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-white/30 w-4 flex-shrink-0">
-        {item.type === 'episode' ? '📺' : '🎬'}
+    <div className="flex items-baseline gap-2">
+      <span
+        className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+        style={{
+          backgroundColor: item.type === 'movie' ? 'var(--accent)' : 'var(--text-4)',
+        }}
+      />
+      <span className="text-sm font-normal truncate flex-1" style={{ color: 'var(--text-2)' }}>
+        {item.title}
       </span>
-      <span className="text-sm text-white truncate">{item.title}</span>
-      <span className="text-xs text-white/40 flex-shrink-0 ml-auto">{item.subtitle}</span>
+      <span
+        className="text-[11px] font-light flex-shrink-0 ml-auto"
+        style={{ color: 'var(--text-4)' }}
+      >
+        {item.subtitle}
+      </span>
     </div>
   )
 }
 
-/** Auto-scrolling container that shows all items with date headers, scrolling when they overflow */
 function MarqueeList({ items }: { items: CombinedItem[] }) {
   const outerRef = useRef<HTMLDivElement>(null)
   const [scrollDistance, setScrollDistance] = useState(0)
 
-  // Use ResizeObserver so we recalculate after flexbox layout settles
   useEffect(() => {
     const outer = outerRef.current
     if (!outer) return
@@ -185,13 +179,16 @@ function MarqueeList({ items }: { items: CombinedItem[] }) {
             : undefined
         }
       >
-        <div className="space-y-3">
+        <div className="space-y-2">
           {Array.from(grouped.entries()).map(([date, dateItems]) => (
             <div key={date}>
-              <div className="text-xs text-white/40 font-semibold tracking-wider uppercase mb-1">
+              <div
+                className="text-[10px] font-medium tracking-wider uppercase mb-1"
+                style={{ color: 'var(--text-4)' }}
+              >
                 {formatDate(date)}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {dateItems.map((item, i) => (
                   <ItemRow key={`${item.title}-${i}`} item={item} />
                 ))}
@@ -205,51 +202,57 @@ function MarqueeList({ items }: { items: CombinedItem[] }) {
 }
 
 export function MediaWidget({ items, loading, className = '' }: MediaWidgetProps) {
-  const { ref, height: containerHeight } = useAvailableHeight<HTMLDivElement>()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerHeight, setContainerHeight] = useState(0)
 
-  if (loading) {
-    return (
-      <div ref={ref} className={className}>
-        <GlassPanel className="p-4 animate-pulse h-full">
-          <div className="h-20 bg-white/10 rounded" />
-        </GlassPanel>
-      </div>
-    )
-  }
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setContainerHeight(el.clientHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
+  if (loading) return null
   if (items.length === 0) return null
 
   const combined = combineEpisodes(items)
   const { visibleItems, truncatedMessage, useMarquee } = calcVisibleItems(combined, containerHeight)
 
   return (
-    <div ref={ref} className={className}>
-      <GlassPanel className="p-4 h-full flex flex-col">
-        <div className="text-center text-white/50 text-sm font-semibold tracking-widest mb-3 uppercase">
-          Upcoming
-        </div>
-        {useMarquee ? (
-          <MarqueeList items={visibleItems} />
-        ) : (
-          <div className="space-y-3 flex-1 min-h-0">
-            {Array.from(groupByDate(visibleItems).entries()).map(([date, dateItems]) => (
-              <div key={date}>
-                <div className="text-xs text-white/40 font-semibold tracking-wider uppercase mb-1">
-                  {formatDate(date)}
-                </div>
-                <div className="space-y-1">
-                  {dateItems.map((item, i) => (
-                    <ItemRow key={`${item.title}-${i}`} item={item} />
-                  ))}
-                </div>
+    <div ref={containerRef} className={className}>
+      <div
+        className="text-[11px] font-medium uppercase tracking-widest mb-2"
+        style={{ color: 'var(--text-3)' }}
+      >
+        Upcoming
+      </div>
+      {useMarquee ? (
+        <MarqueeList items={visibleItems} />
+      ) : (
+        <div className="space-y-2">
+          {Array.from(groupByDate(visibleItems).entries()).map(([date, dateItems]) => (
+            <div key={date}>
+              <div
+                className="text-[10px] font-medium tracking-wider uppercase mb-1"
+                style={{ color: 'var(--text-4)' }}
+              >
+                {formatDate(date)}
               </div>
-            ))}
-          </div>
-        )}
-        {truncatedMessage && (
-          <div className="text-center text-xs text-white/30 mt-3">{truncatedMessage}</div>
-        )}
-      </GlassPanel>
+              <div className="space-y-0.5">
+                {dateItems.map((item, i) => (
+                  <ItemRow key={`${item.title}-${i}`} item={item} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {truncatedMessage && (
+        <div className="text-center text-[11px] mt-2" style={{ color: 'var(--text-4)' }}>
+          {truncatedMessage}
+        </div>
+      )}
     </div>
   )
 }

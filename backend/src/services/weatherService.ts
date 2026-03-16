@@ -119,7 +119,7 @@ export function buildForecast(
 
   for (const date of [...byDate.keys()].sort()) {
     const slots = byDate.get(date)!
-    if (days.length >= 4) break
+    if (days.length >= 6) break
 
     const high = Math.round(Math.max(...slots.map((s) => s.main.temp_max)))
     const low = Math.round(Math.min(...slots.map((s) => s.main.temp_min)))

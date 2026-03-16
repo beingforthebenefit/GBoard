@@ -11,21 +11,22 @@ describe('PhotoBackground', () => {
     vi.useRealTimers()
   })
 
-  it('renders a dark fallback when no photos', () => {
+  it('renders empty placeholder when no photos', () => {
     const { container } = render(<PhotoBackground photos={[]} />)
-    expect(container.querySelector('.bg-gray-900')).toBeTruthy()
+    const el = container.querySelector('.rounded-2xl')
+    expect(el).toBeTruthy()
   })
 
-  it('renders a single photo without crashing', () => {
+  it('renders images when photos provided', () => {
     const { container } = render(<PhotoBackground photos={['https://example.com/photo1.jpg']} />)
     const imgs = container.querySelectorAll('img')
-    expect(imgs.length).toBe(4)
+    expect(imgs.length).toBe(2)
     for (const img of imgs) {
       expect(img.src.startsWith('https://example.com/photo1.jpg')).toBe(true)
     }
   })
 
-  it('renders two layered photo groups for crossfade when given multiple photos', () => {
+  it('renders two photo images for crossfade when given multiple photos', () => {
     const photos = [
       'https://example.com/photo1.jpg',
       'https://example.com/photo2.jpg',
@@ -33,20 +34,13 @@ describe('PhotoBackground', () => {
     ]
     const { container } = render(<PhotoBackground photos={photos} />)
     const imgs = container.querySelectorAll('img')
-    expect(imgs.length).toBe(4)
-  })
-
-  it('renders the dark overlays for readability and backdrop', () => {
-    const { container } = render(<PhotoBackground photos={['https://example.com/photo1.jpg']} />)
-    expect(container.querySelector('.bg-black\\/10')).toBeTruthy()
-    expect(container.querySelector('.bg-black\\/25')).toBeTruthy()
+    expect(imgs.length).toBe(2)
   })
 
   it('uses all provided photos (shuffle does not lose any)', () => {
     const photos = Array.from({ length: 10 }, (_, i) => `https://example.com/p${i}.jpg`)
     const { container } = render(<PhotoBackground photos={photos} />)
     const imgs = container.querySelectorAll('img')
-    // Both displayed photos should be from the original set
     for (const img of imgs) {
       expect(photos.some((photo) => img.src.startsWith(photo))).toBe(true)
     }
@@ -82,19 +76,17 @@ describe('PhotoBackground', () => {
 
     const initialSrcs = getImgSrcs()
 
-    // Trigger errors on first image and exhaust retries (MAX_RETRIES = 2)
     const img = container.querySelector('img') as HTMLImageElement
     fireEvent.error(img)
     act(() => {
       vi.advanceTimersByTime(5000)
-    }) // retry 1
+    })
     fireEvent.error(img)
     act(() => {
       vi.advanceTimersByTime(5000)
-    }) // retry 2 — max reached, should advance
+    })
 
     const newSrcs = getImgSrcs()
-    // At least one image source should have changed (advanced to next)
     expect(newSrcs).not.toEqual(initialSrcs)
   })
 
@@ -110,32 +102,26 @@ describe('PhotoBackground', () => {
       <PhotoBackground photos={photos} intervalMs={intervalMs} transitionMs={transitionMs} />
     )
 
-    // Before interval fires, first layer should be fully opaque (opacity 1)
-    const getLayers = () =>
-      Array.from(container.querySelectorAll<HTMLDivElement>('.absolute.inset-0.overflow-hidden'))
-    const layers = getLayers()
-    expect(layers.length).toBe(2)
-    expect(layers[0].style.opacity).toBe('1')
-    expect(layers[1].style.opacity).toBe('0')
+    const getImgs = () => Array.from(container.querySelectorAll<HTMLImageElement>('img'))
+    const imgs = getImgs()
+    expect(imgs.length).toBe(2)
+    expect(imgs[0].style.opacity).toBe('1')
+    expect(imgs[1].style.opacity).toBe('0')
 
-    // Advance past the interval to trigger setIsTransitioning(true)
     act(() => {
       vi.advanceTimersByTime(intervalMs)
     })
 
-    const layersAfter = getLayers()
-    // After transition starts, current layer fades out, next fades in
-    expect(layersAfter[0].style.opacity).toBe('0')
-    expect(layersAfter[1].style.opacity).toBe('1')
+    const imgsAfter = getImgs()
+    expect(imgsAfter[0].style.opacity).toBe('0')
+    expect(imgsAfter[1].style.opacity).toBe('1')
 
-    // After transitionMs, advance completes and resets
     act(() => {
       vi.advanceTimersByTime(transitionMs)
     })
 
-    const layersReset = getLayers()
-    // After advance, opacity resets (isTransitioning = false again)
-    expect(layersReset[0].style.opacity).toBe('1')
-    expect(layersReset[1].style.opacity).toBe('0')
+    const imgsReset = getImgs()
+    expect(imgsReset[0].style.opacity).toBe('1')
+    expect(imgsReset[1].style.opacity).toBe('0')
   })
 })

@@ -1,9 +1,9 @@
 import { CalendarEvent } from '../types/index.js'
-import { GlassPanel } from './GlassPanel.js'
 
 interface CalendarWidgetProps {
   events: CalendarEvent[]
   loading: boolean
+  className?: string
 }
 
 const EVENT_COLORS = [
@@ -15,11 +15,6 @@ const EVENT_COLORS = [
   '#94a3b8', // slate-400
 ]
 
-const HOUR_START = 9
-const HOUR_END = 22
-const TOTAL_HOURS = HOUR_END - HOUR_START
-const HOUR_PX = 32 // pixels per hour (~25% shorter than before)
-const GUTTER_W = 44 // px width of time gutter
 const NUM_DAYS = 5
 
 function dayKey(d: Date) {
@@ -39,182 +34,81 @@ function getDays(): Date[] {
   })
 }
 
-function formatDayHeader(d: Date, isToday: boolean): string {
+function formatDayLabel(d: Date, isToday: boolean): string {
   if (isToday) return 'Today'
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })
+  return d.toLocaleDateString('en-US', { weekday: 'short' })
 }
 
-function formatHour(h: number): string {
-  if (h === 12) return '12p'
-  return h < 12 ? `${h}a` : `${h - 12}p`
+function formatTime(dateStr: string): string {
+  const d = new Date(dateStr)
+  const h = d.getHours()
+  const m = d.getMinutes()
+  const ampm = h >= 12 ? 'p' : 'a'
+  const hour = h % 12 || 12
+  return m === 0 ? `${hour}${ampm}` : `${hour}:${String(m).padStart(2, '0')}${ampm}`
 }
 
-/** Clamp event into visible range and return top/height in px, or null if outside range */
-function eventLayout(start: Date, end: Date): { top: number; height: number } | null {
-  const startH = start.getHours() + start.getMinutes() / 60
-  const endH = end.getHours() + end.getMinutes() / 60
-  if (endH <= HOUR_START || startH >= HOUR_END) return null
-  const clampedStart = Math.max(startH, HOUR_START)
-  const clampedEnd = Math.min(endH, HOUR_END)
-  return {
-    top: (clampedStart - HOUR_START) * HOUR_PX,
-    height: Math.max((clampedEnd - clampedStart) * HOUR_PX, 20),
-  }
-}
-
-export function CalendarWidget({ events, loading }: CalendarWidgetProps) {
-  if (loading) {
-    return (
-      <GlassPanel className="p-4 animate-pulse">
-        <div className="h-40 bg-white/10 rounded" />
-      </GlassPanel>
-    )
-  }
+export function CalendarWidget({ events, loading, className = '' }: CalendarWidgetProps) {
+  if (loading) return null
 
   const days = getDays()
-  const todayKey = dayKey(days[0])
-  const now = new Date()
-  const nowPct =
-    now.getHours() + now.getMinutes() / 60 >= HOUR_START &&
-    now.getHours() + now.getMinutes() / 60 < HOUR_END
-      ? ((now.getHours() + now.getMinutes() / 60 - HOUR_START) / TOTAL_HOURS) * 100
-      : null
-
-  const gridHeight = TOTAL_HOURS * HOUR_PX
+  const todayStr = dayKey(days[0])
 
   return (
-    <GlassPanel className="flex flex-col h-full p-3 overflow-hidden">
-      {/* Day headers */}
-      <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
+    <div className={className}>
+      <div
+        className="text-[11px] font-medium uppercase tracking-widest mb-2"
+        style={{ color: 'var(--text-3)' }}
+      >
+        This Week
+      </div>
+      <div className="space-y-1.5">
         {days.map((d) => {
           const key = dayKey(d)
-          const isToday = key === todayKey
-          return (
-            <div
-              key={key}
-              className="flex-1 text-center text-sm font-semibold truncate px-0.5"
-              style={{ color: isToday ? '#fde047' : 'rgba(255,255,255,0.6)' }}
-            >
-              {formatDayHeader(d, isToday)}
-            </div>
-          )
-        })}
-      </div>
+          const isToday = key === todayStr
+          const dayEvents = events.filter((e) => {
+            const eKey = e.start.slice(0, 10)
+            return eKey === key
+          })
 
-      {/* All-day events row */}
-      <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
-        {days.map((d) => {
-          const key = dayKey(d)
-          const allDayEvents = events.filter((e) => e.allDay && e.start.slice(0, 10) === key)
           return (
-            <div key={key} className="flex-1 px-0.5 min-h-[16px]">
-              {allDayEvents.map((e) => (
-                <div
-                  key={e.id}
-                  className="text-white rounded-md px-1 text-xs truncate mb-0.5"
-                  style={{
-                    backgroundColor: EVENT_COLORS[(e.calendarIndex ?? 0) % EVENT_COLORS.length],
-                  }}
-                >
-                  {e.title}
-                </div>
-              ))}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Time grid — scrollable */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex relative" style={{ height: gridHeight }}>
-          {/* Time gutter */}
-          <div className="flex-shrink-0 relative" style={{ width: GUTTER_W }}>
-            {Array.from({ length: TOTAL_HOURS }, (_, i) => (
+            <div key={key} className="flex gap-2.5 items-baseline text-sm">
               <div
-                key={i}
-                className="absolute right-1 text-sm leading-none"
-                style={{ top: i * HOUR_PX - 6, color: 'rgba(255,255,255,0.28)' }}
+                className="w-10 flex-shrink-0 font-medium text-xs"
+                style={{ color: isToday ? 'var(--cal-accent)' : 'var(--text-3)' }}
               >
-                {formatHour(HOUR_START + i)}
+                {formatDayLabel(d, isToday)}
               </div>
-            ))}
-          </div>
-
-          {/* Day columns */}
-          {days.map((d) => {
-            const key = dayKey(d)
-            const isToday = key === todayKey
-            const timedEvents = events.filter((e) => !e.allDay && dayKey(new Date(e.start)) === key)
-
-            return (
-              <div
-                key={key}
-                className="flex-1 relative border-l"
-                style={{
-                  borderColor: 'rgba(255,255,255,0.1)',
-                  backgroundColor: isToday ? 'rgba(255,255,255,0.03)' : undefined,
-                }}
-              >
-                {/* Hour lines */}
-                {Array.from({ length: TOTAL_HOURS }, (_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-full border-t"
-                    style={{
-                      top: i * HOUR_PX,
-                      borderColor: i === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
-                    }}
-                  />
-                ))}
-
-                {/* Current time indicator (today column only) */}
-                {isToday && nowPct !== null && (
-                  <div
-                    className="absolute w-full z-10"
-                    style={{ top: `${nowPct}%`, height: 2, backgroundColor: '#fbbf24' }}
-                  />
+              <div className="flex-1 min-w-0">
+                {dayEvents.length === 0 ? (
+                  <span style={{ color: 'var(--text-4)' }}>—</span>
+                ) : (
+                  dayEvents.map((e) => {
+                    const color = EVENT_COLORS[(e.calendarIndex ?? 0) % EVENT_COLORS.length]
+                    return (
+                      <div key={e.id} className="truncate" style={{ color: 'var(--text-2)' }}>
+                        {!e.allDay && (
+                          <span style={{ color: 'var(--text-4)' }} className="text-xs">
+                            {formatTime(e.start)}–{formatTime(e.end)}{' '}
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            borderLeft: `2px solid ${color}`,
+                            paddingLeft: 5,
+                          }}
+                        >
+                          {e.title}
+                        </span>
+                      </div>
+                    )
+                  })
                 )}
-
-                {/* Timed events */}
-                {timedEvents.map((e) => {
-                  const layout = eventLayout(new Date(e.start), new Date(e.end))
-                  if (!layout) return null
-                  const color = EVENT_COLORS[(e.calendarIndex ?? 0) % EVENT_COLORS.length]
-                  return (
-                    <div
-                      key={e.id}
-                      className="absolute left-0.5 right-0.5 rounded-xl px-1.5 py-0.5 overflow-hidden z-20"
-                      style={{
-                        top: layout.top + 1,
-                        height: layout.height - 2,
-                        backgroundColor: color + 'b3',
-                        borderLeft: `3px solid ${color}`,
-                      }}
-                    >
-                      <div className="text-white text-sm leading-tight font-medium truncate">
-                        {e.title}
-                      </div>
-                      <div className="text-white/60 text-xs leading-tight">
-                        {new Date(e.start).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true,
-                        })}
-                        {' – '}
-                        {new Date(e.end).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true,
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
               </div>
-            )
-          })}
-        </div>
+            </div>
+          )
+        })}
       </div>
-    </GlassPanel>
+    </div>
   )
 }

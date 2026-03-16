@@ -17,7 +17,7 @@ afterEach(() => {
 describe('ClockWidget', () => {
   it('renders 12-hour time with a separate AM/PM marker', () => {
     render(<ClockWidget />)
-    const mainTime = screen.getByText(/\b\d{1,2}:\d{2}:\d{2}\b/)
+    const mainTime = screen.getByText(/\b\d{1,2}:\d{2}\b/)
     const meridiem = screen.getByText(/^(AM|PM)$/i)
     expect(mainTime).toBeDefined()
     expect(meridiem).toBeDefined()

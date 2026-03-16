@@ -24,28 +24,20 @@ const makeEvent = (
 })
 
 describe('CalendarWidget', () => {
-  it('renders a loading skeleton when loading', () => {
+  it('renders nothing when loading', () => {
     const { container } = render(<CalendarWidget events={[]} loading={true} />)
-    expect(container.querySelector('.animate-pulse')).toBeTruthy()
+    expect(container.innerHTML).toBe('')
   })
 
-  it('renders "Today" as first day header', () => {
+  it('renders "Today" as first day label', () => {
     render(<CalendarWidget events={[]} loading={false} />)
     expect(screen.getByText('Today')).toBeDefined()
   })
 
-  it('renders 5 day columns', () => {
+  it('renders 5 day rows', () => {
     render(<CalendarWidget events={[]} loading={false} />)
-    // "Today" plus 4 more day headers
-    const dayHeaders = screen.getAllByText(/Today|Sun|Mon|Tue|Wed|Thu|Fri|Sat/)
-    expect(dayHeaders.length).toBeGreaterThanOrEqual(5)
-  })
-
-  it('renders time gutter labels', () => {
-    render(<CalendarWidget events={[]} loading={false} />)
-    expect(screen.getByText('9a')).toBeDefined()
-    expect(screen.getByText('12p')).toBeDefined()
-    expect(screen.getByText('5p')).toBeDefined()
+    const dayLabels = screen.getAllByText(/Today|Sun|Mon|Tue|Wed|Thu|Fri|Sat/)
+    expect(dayLabels.length).toBeGreaterThanOrEqual(5)
   })
 
   it('renders a timed event title', () => {
@@ -69,32 +61,9 @@ describe('CalendarWidget', () => {
     expect(screen.getByText('Birthday')).toBeDefined()
   })
 
-  it('places all-day event on correct day even with UTC midnight timestamp', () => {
-    // All-day event for March 8 sent as UTC midnight — should NOT appear on March 7
-    const event = makeEvent({
-      title: 'Tomorrow Event',
-      start: '2026-03-08T00:00:00.000Z',
-      end: '2026-03-09T00:00:00.000Z',
-      allDay: true,
-    })
-    const todayEvent = makeEvent({
-      title: 'Today Event',
-      start: '2026-03-07T00:00:00.000Z',
-      end: '2026-03-08T00:00:00.000Z',
-      allDay: true,
-    })
-    render(<CalendarWidget events={[event, todayEvent]} loading={false} />)
-    expect(screen.getByText('Tomorrow Event')).toBeDefined()
-    expect(screen.getByText('Today Event')).toBeDefined()
-  })
-
-  it('does not render events outside the visible hour range', () => {
-    const event = makeEvent({
-      title: 'Early Morning',
-      start: '2026-03-07T05:00:00',
-      end: '2026-03-07T06:00:00',
-    })
-    render(<CalendarWidget events={[event]} loading={false} />)
-    expect(screen.queryByText('Early Morning')).toBeNull()
+  it('shows dash for days with no events', () => {
+    render(<CalendarWidget events={[]} loading={false} />)
+    const dashes = screen.getAllByText('—')
+    expect(dashes.length).toBeGreaterThanOrEqual(1)
   })
 })

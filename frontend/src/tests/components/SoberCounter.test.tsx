@@ -7,9 +7,9 @@ vi.mock('../../hooks/useSoberCounter.js', () => ({
 }))
 
 describe('SoberCounter', () => {
-  it('renders the "Sober Time" heading', () => {
+  it('renders the "Sober" label', () => {
     render(<SoberCounter sobrietyDate="2025-01-09" />)
-    expect(screen.getByText('Sober Time')).toBeDefined()
+    expect(screen.getByText('Sober')).toBeDefined()
   })
 
   it('renders all four duration cells with correct values', () => {
@@ -22,9 +22,9 @@ describe('SoberCounter', () => {
 
   it('renders all four labels', () => {
     render(<SoberCounter sobrietyDate="2025-01-09" />)
-    expect(screen.getByText('YEARS')).toBeDefined()
-    expect(screen.getByText('MONTHS')).toBeDefined()
-    expect(screen.getByText('DAYS')).toBeDefined()
-    expect(screen.getByText('HOURS')).toBeDefined()
+    expect(screen.getByText('yr')).toBeDefined()
+    expect(screen.getByText('mo')).toBeDefined()
+    expect(screen.getByText('dy')).toBeDefined()
+    expect(screen.getByText('hr')).toBeDefined()
   })
 })

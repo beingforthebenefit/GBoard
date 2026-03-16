@@ -12,22 +12,30 @@ describe('AstroWidget', () => {
     vi.useRealTimers()
   })
 
-  it('renders the current sign, range, and day ruler details', () => {
+  it('renders the current sign name', () => {
     render(<AstroWidget />)
-
-    expect(screen.getByText('Cosmic Snapshot')).toBeDefined()
     expect(screen.getAllByText('Pisces').length).toBeGreaterThan(0)
-    expect(screen.getByText('Feb 19 - Mar 20')).toBeDefined()
-    expect(screen.getByText(/Saturday · Saturn/)).toBeDefined()
   })
 
-  it('shows moon and guidance details', () => {
+  it('renders sign range and moon phase', () => {
     render(<AstroWidget />)
+    expect(screen.getByText(/Feb 19/)).toBeDefined()
+    expect(screen.getByText(/Mar 20/)).toBeDefined()
+  })
 
-    expect(screen.getByText('Constellation')).toBeDefined()
-    expect(screen.getByText('Notable star: Alrescha')).toBeDefined()
-    expect(screen.getByText(/Moon illumination:/)).toBeDefined()
+  it('renders day and element tags', () => {
+    render(<AstroWidget />)
+    expect(screen.getByText('Saturday')).toBeDefined()
+    expect(screen.getByText('Water · Mutable')).toBeDefined()
+  })
+
+  it('renders a lucky time tag', () => {
+    render(<AstroWidget />)
     expect(screen.getByText(/Lucky/)).toBeDefined()
+  })
+
+  it('renders the daily message', () => {
+    render(<AstroWidget />)
     expect(screen.getByText(/Saturday is ruled by Saturn/)).toBeDefined()
   })
 })

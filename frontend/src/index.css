@@ -14,6 +14,73 @@ body,
   padding: 0;
 }
 
+/* ── Day / Night theme variables ── */
+
+:root,
+html.light {
+  --bg: #f5f1ea;
+  --surface: #faf8f5;
+  --border: #d8d0c4;
+  --text: #1a1a1a;
+  --text-2: #555550;
+  --text-3: #8a8580;
+  --text-4: #c4b9a8;
+  --accent: #b8553a;
+  --accent-2: #b8553a;
+  --green: #6a8a62;
+  --photo-bg: #ede7dd;
+  --forecast-bg: #faf8f5;
+  --sober-bg: #faf8f5;
+  --sober-text: #b8553a;
+  --pihole-bg: #faf8f5;
+  --plex-bg: #faf8f5;
+  --cal-accent: #b8553a;
+  --cal-border: #e8e2d8;
+  --astro-bg: #faf8f5;
+  --astro-accent: #4a6d8c;
+  --progress-bg: #e8e2d8;
+  --progress-fill: #b8553a;
+  --photo-fade: #f5f1ea;
+  --event-opacity: 0.85;
+}
+
+html.dark {
+  --bg: #000000;
+  --surface: #141416;
+  --border: #333340;
+  --text: #e8e8ec;
+  --text-2: #a0a0a8;
+  --text-3: #606068;
+  --text-4: #3a3a42;
+  --accent: #e8a87c;
+  --accent-2: #6b8afd;
+  --green: #6bcb77;
+  --photo-bg: #141416;
+  --forecast-bg: #222228;
+  --sober-bg: #1a1a1e;
+  --sober-text: #e8a87c;
+  --pihole-bg: #1a1a1e;
+  --plex-bg: #1a1a1e;
+  --cal-accent: #6b8afd;
+  --cal-border: #333340;
+  --astro-bg: #1a1a1e;
+  --astro-accent: #6b8afd;
+  --progress-bg: #2a2a30;
+  --progress-fill: #6b8afd;
+  --photo-fade: #000000;
+  --event-opacity: 0.9;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition:
+    background-color 1.5s ease,
+    color 0.8s ease;
+}
+
+/* ── Animations ── */
+
 @keyframes widget-enter {
   from {
     opacity: 0;
@@ -44,20 +111,6 @@ body,
   animation: media-marquee 10s ease-in-out infinite alternate;
 }
 
-@keyframes astro-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.astro-spin-slow {
-  animation: astro-spin 120s linear infinite;
-  transform-origin: 50% 50%;
-}
-
 @keyframes astro-twinkle {
   0%,
   100% {
@@ -70,6 +123,20 @@ body,
 
 .astro-twinkle {
   animation: astro-twinkle 3.4s ease-in-out infinite;
+}
+
+@keyframes astro-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.astro-spin-slow {
+  animation: astro-spin 120s linear infinite;
+  transform-origin: 50% 50%;
 }
 
 .astro-stars {
@@ -88,4 +155,29 @@ body,
     173px 131px,
     143px 151px;
   backface-visibility: hidden;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.pulse-dot {
+  animation: pulse-dot 2s infinite;
+}
+
+/* ── Themed card ── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition:
+    background-color 1.5s ease,
+    border-color 1.5s ease;
 }

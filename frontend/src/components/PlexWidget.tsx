@@ -1,110 +1,60 @@
 import { PlexSession } from '../types/index.js'
-import { GlassPanel } from './GlassPanel.js'
 
 interface PlexWidgetProps {
   sessions: PlexSession[]
   loading: boolean
 }
 
-function stateIcon(state: PlexSession['playerState']): string {
-  if (state === 'paused') return '⏸'
-  if (state === 'buffering') return '⟳'
-  return '▶'
-}
-
-function SessionCard({ session, compact }: { session: PlexSession; compact?: boolean }) {
+function SessionCard({ session }: { session: PlexSession }) {
   const thumbUrl = session.thumbPath
     ? `/api/plex/thumb?path=${encodeURIComponent(session.thumbPath)}`
     : null
   const pct = session.duration > 0 ? Math.round((session.viewOffset / session.duration) * 100) : 0
 
-  if (compact) {
-    return (
-      <GlassPanel className="p-2.5 text-white">
-        <div className="flex gap-2.5 items-center">
-          {thumbUrl && (
-            <img src={thumbUrl} alt="" className="w-9 h-9 rounded object-cover flex-shrink-0" />
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold truncate">{session.title}</div>
-            <div className="flex items-center gap-1.5 text-xs text-white/50 whitespace-nowrap">
-              {session.userAvatar && (
-                <img
-                  src={session.userAvatar}
-                  alt=""
-                  className="w-4 h-4 rounded-full flex-shrink-0"
-                />
-              )}
-              <span className="flex-shrink-0">{stateIcon(session.playerState)}</span>
-              <span className="text-white/40 flex-shrink-0">{session.userName}</span>
-              {session.subtitle && (
-                <span className="text-white/30 truncate ml-auto">{session.subtitle}</span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="mt-1.5">
-          <div className="w-full bg-white/20 rounded-full h-1">
-            <div className="bg-yellow-400 h-1 rounded-full" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
-      </GlassPanel>
-    )
-  }
-
   return (
-    <GlassPanel className="p-4 text-white">
-      <div className="flex gap-3 items-start">
-        {thumbUrl && (
-          <img src={thumbUrl} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="text-base font-semibold truncate">{session.title}</div>
-          {session.subtitle && (
-            <div className="text-white/50 text-sm truncate">{session.subtitle}</div>
-          )}
-          <div className="flex items-center gap-2 mt-1">
-            {session.userAvatar ? (
-              <img src={session.userAvatar} alt="" className="w-5 h-5 rounded-full" />
-            ) : null}
-            <span className="text-white/50 text-sm">{stateIcon(session.playerState)}</span>
-            <span className="text-white/40 text-sm">{session.userName}</span>
-          </div>
+    <div className="card rounded-xl px-4 py-3 flex items-center gap-3">
+      {thumbUrl && (
+        <img src={thumbUrl} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+      )}
+      <div className="flex-1 min-w-0">
+        <div
+          className="text-[10px] uppercase tracking-widest font-medium"
+          style={{ color: 'var(--accent-2)' }}
+        >
+          Now Playing
+        </div>
+        <div className="text-base font-medium truncate" style={{ color: 'var(--text)' }}>
+          {session.title}
+        </div>
+        <div className="text-xs font-light" style={{ color: 'var(--text-3)' }}>
+          {session.subtitle && <>{session.subtitle} · </>}
+          {session.userName}
+        </div>
+        <div
+          className="h-1 rounded-full mt-2 overflow-hidden"
+          style={{ backgroundColor: 'var(--progress-bg)' }}
+        >
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${pct}%`, backgroundColor: 'var(--progress-fill)' }}
+          />
         </div>
       </div>
-      {/* Progress */}
-      <div className="mt-2">
-        <div className="w-full bg-white/20 rounded-full h-1.5">
-          <div className="bg-yellow-400 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-    </GlassPanel>
+    </div>
   )
 }
 
 export function PlexWidget({ sessions, loading }: PlexWidgetProps) {
   if (loading) {
-    return (
-      <GlassPanel className="p-3 animate-pulse">
-        <div className="h-10 bg-white/10 rounded" />
-      </GlassPanel>
-    )
+    return <div className="card rounded-xl animate-pulse p-3" style={{ minHeight: 48 }} />
   }
 
-  if (!sessions.length) {
-    return
-  }
-
-  const compact = sessions.length >= 2
+  if (!sessions.length) return null
 
   return (
-    <div className={`flex flex-col ${compact ? 'gap-1.5' : 'gap-2'}`}>
+    <div className="flex flex-col gap-2">
       {sessions.map((session, idx) => (
-        <SessionCard
-          key={`${session.userName}-${session.title}-${idx}`}
-          session={session}
-          compact={compact}
-        />
+        <SessionCard key={`${session.userName}-${session.title}-${idx}`} session={session} />
       ))}
     </div>
   )

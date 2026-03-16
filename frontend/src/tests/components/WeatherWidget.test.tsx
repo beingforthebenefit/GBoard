@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { WeatherWidget } from '../../components/WeatherWidget.js'
+import { WeatherHeader, ForecastStrip } from '../../components/WeatherWidget.js'
 import { WeatherData } from '../../types/index.js'
 
 const weatherData: WeatherData = {
@@ -27,45 +27,44 @@ const weatherData: WeatherData = {
   hourly: [],
 }
 
-describe('WeatherWidget', () => {
-  it('centers the details row', () => {
-    render(<WeatherWidget data={weatherData} loading={false} />)
-    const feelsText = screen.getByText(/Feels 59°/)
-    const detailsRow = feelsText.closest('div')
-    expect(detailsRow).toHaveClass('justify-center')
-    expect(detailsRow).toHaveClass('text-center')
+describe('WeatherHeader', () => {
+  it('renders temperature', () => {
+    render(<WeatherHeader data={weatherData} loading={false} />)
+    expect(screen.getByText('60')).toBeDefined()
   })
 
-  it('renders sunrise and sunset times', () => {
-    render(<WeatherWidget data={weatherData} loading={false} />)
-    expect(screen.getByText(/☀/)).toBeDefined()
-    expect(screen.getByText(/☾/)).toBeDefined()
+  it('renders description', () => {
+    render(<WeatherHeader data={weatherData} loading={false} />)
+    expect(screen.getByText('broken clouds')).toBeDefined()
   })
 
-  it('renders a stable fallback message when data is unavailable', () => {
-    render(<WeatherWidget data={null} loading={false} />)
-    expect(screen.getByText('Weather temporarily unavailable')).toBeDefined()
-    expect(screen.getByText('Retrying automatically...')).toBeDefined()
+  it('renders feels-like detail', () => {
+    render(<WeatherHeader data={weatherData} loading={false} />)
+    expect(screen.getByText(/Feels 59°/)).toBeDefined()
   })
 
-  it('renders loading skeleton with animate-pulse when loading is true', () => {
-    const { container } = render(<WeatherWidget data={null} loading={true} />)
-    const pulseEl = container.querySelector('.animate-pulse')
-    expect(pulseEl).toBeTruthy()
-    const skeleton = container.querySelector('.bg-white\\/10')
-    expect(skeleton).toBeTruthy()
-    expect(skeleton?.classList.contains('rounded')).toBe(true)
+  it('renders dash when loading', () => {
+    render(<WeatherHeader data={null} loading={true} />)
+    expect(screen.getByText('—°')).toBeDefined()
   })
+})
 
-  it('renders forecast row with Today label and day names', () => {
-    render(<WeatherWidget data={weatherData} loading={false} />)
+describe('ForecastStrip', () => {
+  it('renders forecast cards with Today label', () => {
+    render(<ForecastStrip data={weatherData} loading={false} />)
     expect(screen.getByText('Today')).toBeDefined()
-    // The remaining forecast entries should render as short day names
+  })
+
+  it('renders high and low temperatures', () => {
+    render(<ForecastStrip data={weatherData} loading={false} />)
     const allText = document.body.textContent ?? ''
     expect(allText).toContain('63°')
     expect(allText).toContain('54°')
-    expect(allText).toContain('59°')
-    expect(allText).toContain('52°')
-    expect(allText).toContain('62°')
+  })
+
+  it('renders loading placeholders when loading', () => {
+    const { container } = render(<ForecastStrip data={null} loading={true} />)
+    const cards = container.querySelectorAll('.animate-pulse')
+    expect(cards.length).toBe(6)
   })
 })

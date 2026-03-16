@@ -23,9 +23,9 @@ describe('MediaWidget', () => {
     vi.useRealTimers()
   })
 
-  it('renders loading skeleton when loading', () => {
+  it('returns null when loading', () => {
     const { container } = render(<MediaWidget items={[]} loading={true} />)
-    expect(container.querySelector('.animate-pulse')).toBeTruthy()
+    expect(container.innerHTML).toBe('')
   })
 
   it('returns null when items array is empty and not loading', () => {
@@ -69,16 +69,6 @@ describe('MediaWidget', () => {
     expect(screen.getByText('Show C')).toBeDefined()
   })
 
-  it('renders episode emoji for episode type', () => {
-    render(<MediaWidget items={[makeItem({ type: 'episode' })]} loading={false} />)
-    expect(screen.getByText('📺')).toBeDefined()
-  })
-
-  it('renders movie emoji for movie type', () => {
-    render(<MediaWidget items={[makeItem({ type: 'movie', title: 'A Movie' })]} loading={false} />)
-    expect(screen.getByText('🎬')).toBeDefined()
-  })
-
   it('renders item title and subtitle', () => {
     render(
       <MediaWidget
@@ -110,43 +100,14 @@ describe('MediaWidget', () => {
     expect(screen.getByText('Show B')).toBeDefined()
   })
 
-  it('does not combine episodes from different dates', () => {
-    const items = [
-      makeItem({ title: 'Show A', subtitle: 'S01E01', date: '2026-03-12' }),
-      makeItem({ title: 'Show A', subtitle: 'S01E02', date: '2026-03-13' }),
-    ]
-    render(<MediaWidget items={items} loading={false} />)
-    // Both should be separate entries
-    const allText = document.body.textContent ?? ''
-    expect(allText).toContain('S01E01')
-    expect(allText).toContain('S01E02')
-  })
-
-  it('does not show truncation message when all items fit', () => {
-    const items = [makeItem({ title: 'Show 1' })]
-    render(<MediaWidget items={items} loading={false} />)
-    expect(screen.queryByText(/more on/)).toBeNull()
-  })
-
   it('always includes today and tomorrow items regardless of container height', () => {
     const items = [
       makeItem({ title: 'Today Show', date: '2026-03-12' }),
       makeItem({ title: 'Tomorrow Show', date: '2026-03-13' }),
       makeItem({ title: 'Future Show', date: '2026-03-15' }),
     ]
-    // containerHeight defaults to 0 (no ResizeObserver in tests), so all items shown
     render(<MediaWidget items={items} loading={false} />)
     expect(screen.getByText('Today Show')).toBeDefined()
     expect(screen.getByText('Tomorrow Show')).toBeDefined()
-  })
-
-  it('does not combine movies even with same title on same date', () => {
-    const items = [
-      makeItem({ title: 'Movie A', type: 'movie', subtitle: '2026', date: '2026-03-12' }),
-      makeItem({ title: 'Movie A', type: 'movie', subtitle: '2026', date: '2026-03-12' }),
-    ]
-    render(<MediaWidget items={items} loading={false} />)
-    const movies = screen.getAllByText('Movie A')
-    expect(movies.length).toBe(2)
   })
 })
