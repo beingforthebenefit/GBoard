@@ -69,7 +69,7 @@ function PhotoImage({
       src={retrySrc}
       onError={onError}
       onLoad={onLoad}
-      className="absolute inset-0 w-full h-full object-cover"
+      className="absolute inset-0 w-full h-full object-cover object-center"
       alt=""
       style={{
         opacity,
