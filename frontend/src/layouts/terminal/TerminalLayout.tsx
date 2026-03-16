@@ -220,7 +220,7 @@ function TermMedia({
   return (
     <div className="space-y-0.5 font-mono text-xs">
       {items.slice(0, 7).map((item, i) => {
-        const d = new Date(item.date)
+        const d = new Date(item.date + 'T00:00:00')
         const isToday = new Date().toDateString() === d.toDateString()
         const label = isToday
           ? 'TODAY'
