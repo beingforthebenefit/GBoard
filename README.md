@@ -4,10 +4,10 @@
 ![Backend Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/beingforthebenefit/f09ac0dc7044ab52260ca7b473253927/raw/backend-coverage.json)
 ![Frontend Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/beingforthebenefit/f09ac0dc7044ab52260ca7b473253927/raw/frontend-coverage.json)
 
-A self-hosted dashboard — a Dakboard replacement. Runs in Docker, accessible via browser on your local network.
+A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessible via browser on your local network.
 
 <p align="center">
-  <img src="screenshot.png" width="55%" alt="GBoard dashboard screenshot" />
+  <img src="docs/screenshots/classic.png" width="55%" alt="GBoard Classic theme" />
 </p>
 
 ## Features
@@ -22,6 +22,34 @@ A self-hosted dashboard — a Dakboard replacement. Runs in Docker, accessible v
 - **Plex Now Playing** — Active streams with progress animation, hidden when idle
 - **Calendar** — 7-day rolling view from iCloud shared CalDAV/ICS calendars
 - **Photo Background** — Rotating iCloud shared album photos with blurred fill backdrop
+- **Admin Panel** — Web-based settings management with layout/theme picker
+
+## Themes
+
+Four built-in layouts, switchable live from the admin panel. Zen and Newspaper support light/dark color modes (auto, manual, or based on sunrise/sunset).
+
+<table>
+  <tr>
+    <td align="center"><strong>Zen (Light)</strong><br/><img src="docs/screenshots/zen-light.png" width="300" /></td>
+    <td align="center"><strong>Zen (Dark)</strong><br/><img src="docs/screenshots/zen-dark.png" width="300" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Classic</strong><br/><img src="docs/screenshots/classic.png" width="300" /></td>
+    <td align="center"><strong>Terminal</strong><br/><img src="docs/screenshots/terminal.png" width="300" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Newspaper (Light)</strong><br/><img src="docs/screenshots/newspaper-light.png" width="300" /></td>
+    <td align="center"><strong>Newspaper (Dark)</strong><br/><img src="docs/screenshots/newspaper-dark.png" width="300" /></td>
+  </tr>
+</table>
+
+### Admin Panel
+
+Manage layouts, color modes, and all settings from your phone or any browser at `/api/admin`.
+
+<p align="center">
+  <img src="docs/screenshots/admin-panel.png" width="300" alt="GBoard Admin Panel" />
+</p>
 
 ## Quick Start
 
@@ -32,7 +60,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Access the dashboard at `http://<your-machine-ip>:3000`
+Access the dashboard at `http://<your-machine-ip>:3000` and the admin panel at `http://<your-machine-ip>:3000/api/admin`.
 
 ## Environment Variables
 
@@ -49,7 +77,11 @@ Access the dashboard at `http://<your-machine-ip>:3000`
 | `ICLOUD_ALBUM_URL` | iCloud shared album URL |
 | `PIHOLE_URL` | Pi-hole base URL (e.g. `http://192.168.1.100`) |
 | `PIHOLE_PASSWORD` | Pi-hole web/API password |
-| `PIHOLE_CLIENT_ALIASES` | Optional comma-separated alias map for client labels (example: `192.168.1.22=Gerald's iPhone,192.168.1.23=Gerald's iPad`) |
+| `PIHOLE_CLIENT_ALIASES` | Optional comma-separated alias map (e.g. `192.168.1.22=iPhone,192.168.1.23=iPad`) |
+| `SONARR_URL` | Sonarr base URL |
+| `SONARR_API_KEY` | Sonarr API key |
+| `RADARR_URL` | Radarr base URL |
+| `RADARR_API_KEY` | Radarr API key |
 | `PORT` | Frontend port (default: `3000`) |
 | `BACKEND_PORT` | Backend API port (default: `3001`) |
 
@@ -67,39 +99,53 @@ In Photos app on iPhone/Mac: select a Shared Album → share → copy link. Past
 
 ## Development
 
-```bash
-# Backend (runs on :3001)
-cd backend && npm install && npm run dev
+All building and testing runs inside Docker containers:
 
-# Frontend (runs on :5173, proxies /api to :3001)
-cd frontend && npm install && npm run dev
+```bash
+# Run tests
+npm test
+
+# Lint & format check
+npm run lint
+
+# TypeScript check
+npm run typecheck
+
+# Deploy (rebuilds containers)
+npm run deploy
 ```
+
+Or target frontend/backend individually: `npm run test:frontend`, `npm run lint:backend`, etc.
 
 ## Deploying Changes
 
 ```bash
-docker compose up --build -d
+# Frontend code changes: rebuild frontend first, then backend to trigger reload
+npm run deploy:frontend
+
+# Backend-only changes: just rebuild backend
+npm run deploy:backend
 ```
 
-- Rebuilds and restarts backend/frontend containers with the latest code.
-- Connected dashboards auto-refresh after deploy when backend startup time changes (`/api/version` poll every 10 seconds, no-cache).
+Connected dashboards auto-refresh after deploy when backend startup time changes (`/api/version` poll every 10s).
 
 ## Architecture
 
 ```
-Raspberry Pi Browser
-       │
-       ▼
+Browser
+   │
+   ▼
 Nginx  (port 3000)
   ├─ Serves React SPA
-  └─ Proxies /api/* ──▶ Node.js API (port 3001)
-                             ├─ /api/weather  ──▶ OpenWeatherMap
-                             ├─ /api/calendar ──▶ iCloud CalDAV ICS
-                             ├─ /api/pihole   ──▶ Pi-hole
-                             ├─ /api/plex     ──▶ Plex (local LAN)
-                             ├─ /api/media    ──▶ Sonarr / Radarr
-                             ├─ /api/weather/radar ──▶ RainViewer
-                             └─ /api/photos   ──▶ iCloud shared album
+  ├─ /api/admin  ──▶ Admin panel (layout, theme, settings)
+  └─ /api/*      ──▶ Node.js API (port 3001)
+                        ├─ /api/weather       ──▶ OpenWeatherMap
+                        ├─ /api/weather/radar  ──▶ RainViewer
+                        ├─ /api/calendar      ──▶ iCloud CalDAV ICS
+                        ├─ /api/pihole        ──▶ Pi-hole v6
+                        ├─ /api/plex          ──▶ Plex (local LAN)
+                        ├─ /api/media         ──▶ Sonarr / Radarr
+                        └─ /api/photos        ──▶ iCloud shared album
 ```
 
 API keys and tokens are **never** exposed to the browser — all external API calls go through the backend.
