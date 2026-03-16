@@ -415,7 +415,7 @@ export function NewspaperLayout({
 }: LayoutProps) {
   const dark = useIsDark()
 
-  const bgColor = dark ? 'bg-neutral-950' : 'bg-white'
+  const bgColor = dark ? 'bg-neutral-950' : 'bg-[#f5f0e8]'
   const textColor = dark ? 'text-neutral-100' : 'text-black'
   const borderColor = dark ? 'border-neutral-700' : 'border-neutral-200'
 

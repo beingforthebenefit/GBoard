@@ -54,7 +54,12 @@ function WeatherIcon({
   className?: string
 }) {
   return (
-    <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt={alt} className={className} />
+    <img
+      src={`https://openweathermap.org/img/wn/${icon}@2x.png`}
+      alt={alt}
+      className={className}
+      style={{ filter: 'var(--weather-icon-filter, none)' }}
+    />
   )
 }
 

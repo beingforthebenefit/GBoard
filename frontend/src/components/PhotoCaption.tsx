@@ -16,9 +16,18 @@ function formatDate(iso: string): string {
   })
 }
 
+/** Check if a string is mostly Latin/common characters (not CJK, Arabic, etc.) */
+function isLatinText(str: string): boolean {
+  // Match Latin letters, digits, spaces, punctuation, accented chars
+  const latin = str.replace(/[\p{Script=Latin}\p{N}\s.,'''\-()]/gu, '')
+  return latin.length < str.length * 0.3
+}
+
 function formatLocation(loc: { city?: string; state?: string }): string | null {
-  if (loc.city && loc.state) return `${loc.city}, ${loc.state}`
-  return loc.city || loc.state || null
+  const city = loc.city && isLatinText(loc.city) ? loc.city : undefined
+  const state = loc.state && isLatinText(loc.state) ? loc.state : undefined
+  if (city && state) return `${city}, ${state}`
+  return city || state || null
 }
 
 export function PhotoCaption({ photo, className = '', style }: PhotoCaptionProps) {

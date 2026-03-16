@@ -235,6 +235,7 @@ const ADMIN_HTML = /* html */ `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>GBoard Admin</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%236b8afd'/><text x='16' y='23' font-family='system-ui,sans-serif' font-size='20' font-weight='700' fill='white' text-anchor='middle'>G</text></svg>">
 <style>
   :root {
     --bg: #111113; --surface: #1a1a1e; --surface-2: #222228;

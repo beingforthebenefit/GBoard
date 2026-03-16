@@ -1,4 +1,5 @@
 import { PhotoBackground } from '../components/PhotoBackground.js'
+import { PhotoCaption } from '../components/PhotoCaption.js'
 import { WeatherHeader, ForecastStrip } from '../components/WeatherWidget.js'
 import { ClockWidget } from '../components/ClockWidget.js'
 import { AstroWidget } from '../components/AstroWidget.js'
@@ -8,6 +9,8 @@ import { PlexWidget } from '../components/PlexWidget.js'
 import { CalendarGrid } from '../components/CalendarGrid.js'
 import { PiholeWidget } from '../components/PiholeWidget.js'
 import { LayoutProps } from './index.js'
+import { useState } from 'react'
+import { PhotoInfo } from '../types/index.js'
 
 export function ZenLayout({
   weatherData,
@@ -23,6 +26,8 @@ export function ZenLayout({
   mediaLoading,
   sobrietyDate,
 }: LayoutProps) {
+  const [currentPhoto, setCurrentPhoto] = useState<PhotoInfo | null>(null)
+
   return (
     <div className="h-screen w-full overflow-hidden flex flex-col p-5 gap-4">
       {/* Top bar: Clock left, Weather right */}
@@ -43,8 +48,19 @@ export function ZenLayout({
       </div>
 
       {/* Photo — takes all remaining space */}
-      <div className="flex-1 min-h-0">
-        <PhotoBackground photos={photos} />
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0">
+          <PhotoBackground
+            photos={photos}
+            renderCaption={() => null}
+            onPhotoChange={setCurrentPhoto}
+          />
+        </div>
+        <PhotoCaption
+          photo={currentPhoto}
+          className="flex-shrink-0 text-xs font-light pt-1.5 px-1"
+          style={{ color: 'var(--text-3)' }}
+        />
       </div>
 
       {/* Plex now playing */}
@@ -53,18 +69,18 @@ export function ZenLayout({
       </div>
 
       {/* Upcoming + Calendar side by side */}
-      <div className="flex-shrink-0 grid grid-cols-2 gap-4">
+      <div className="flex-shrink-0 grid grid-cols-2 gap-4 max-h-[260px]">
         <MediaWidget
           items={mediaItems}
           loading={mediaLoading}
-          className="card rounded-xl px-4 py-3"
+          className="card rounded-xl px-4 py-2 overflow-hidden"
         />
         <CalendarGrid
           events={events}
           loading={calendarLoading}
           numDays={4}
-          hourHeight={28}
-          className="card rounded-xl px-4 py-3"
+          hourHeight={18}
+          className="card rounded-xl px-4 py-2 overflow-hidden"
         />
       </div>
 

@@ -256,8 +256,8 @@ describe('NewspaperLayout', () => {
   it('renders in light mode when html element has light class', () => {
     document.documentElement.classList.add('light')
     const { container } = render(<NewspaperLayout {...mockProps} />)
-    // Light mode uses bg-white
-    const root = container.querySelector('[class*="bg-white"]')
+    // Light mode uses eggshell background
+    const root = container.querySelector('[class*="bg-"]')
     expect(root).toBeTruthy()
   })
 

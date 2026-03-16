@@ -16,6 +16,7 @@ interface PhotoBackgroundProps {
   intervalMs?: number
   transitionMs?: number
   renderCaption?: (photo: PhotoInfo) => ReactNode
+  onPhotoChange?: (photo: PhotoInfo) => void
 }
 
 const IMAGE_RETRY_MS = 5 * 1000
@@ -83,6 +84,7 @@ export function PhotoBackground({
   intervalMs = 5 * 60 * 1000,
   transitionMs = 2000,
   renderCaption,
+  onPhotoChange,
 }: PhotoBackgroundProps) {
   const shuffled = useMemo(() => shuffle(photos), [photos])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -108,18 +110,25 @@ export function PhotoBackground({
     return () => clearInterval(timer)
   }, [shuffled, intervalMs, transitionMs, advance])
 
+  const currentPhoto =
+    shuffled.length > 0
+      ? isTransitioning
+        ? shuffled[nextIndex % shuffled.length]
+        : shuffled[currentIndex]
+      : null
+
+  useEffect(() => {
+    if (currentPhoto && onPhotoChange) onPhotoChange(currentPhoto)
+  }, [currentPhoto, onPhotoChange])
+
   if (shuffled.length === 0) {
     return (
       <div className="w-full h-full rounded-2xl" style={{ backgroundColor: 'var(--photo-bg)' }} />
     )
   }
 
-  const currentPhoto = isTransitioning
-    ? shuffled[nextIndex % shuffled.length]
-    : shuffled[currentIndex]
-
   const caption = renderCaption ? (
-    renderCaption(currentPhoto)
+    renderCaption(currentPhoto!)
   ) : (
     <PhotoCaption
       photo={currentPhoto}
