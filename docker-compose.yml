@@ -12,6 +12,7 @@ services:
       - "${BACKEND_PORT:-3001}:3001"
     volumes:
       - photos-cache:/data/photos
+      - ./.env:/app/.env
     networks:
       - gboard
 
@@ -29,6 +30,25 @@ services:
       - backend
     networks:
       - gboard
+
+  # ── Test runners (docker compose run --rm --build backend-test npm test) ──
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: test
+    profiles: [test]
+    environment:
+      - NODE_ENV=test
+
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: test
+    profiles: [test]
+    environment:
+      - NODE_ENV=test
 
 volumes:
   photos-cache:

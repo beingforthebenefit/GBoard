@@ -108,12 +108,18 @@ jobs:
       - name: Build backend image
         run: docker build ./backend -t gboard-backend:ci
 
+      - name: Build backend test image
+        run: docker build ./backend --target test -t gboard-backend-test:ci
+
       - name: Build frontend image
         run: |
           docker build ./frontend \
             --build-arg VITE_SOBRIETY_DATE=2025-07-07T00:00:00 \
             --build-arg VITE_BACKEND_URL=http://localhost:3001 \
             -t gboard-frontend:ci
+
+      - name: Build frontend test image
+        run: docker build ./frontend --target test -t gboard-frontend-test:ci
 
       - name: Docker Compose build
         run: |

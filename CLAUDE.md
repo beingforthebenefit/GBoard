@@ -8,16 +8,16 @@ All building and testing must be done inside Docker containers — do not run np
 
 ```bash
 # Run tests (always do this before committing)
-docker compose run --rm --build backend npm test
-docker compose run --rm --build frontend npm test
+docker compose run --rm --build backend-test npm test
+docker compose run --rm --build frontend-test npm test
 
 # Lint & format check
-docker compose run --rm --build backend sh -c "npm run lint && npm run format:check"
-docker compose run --rm --build frontend sh -c "npm run lint && npm run format:check"
+docker compose run --rm --build backend-test sh -c "npm run lint && npm run format:check"
+docker compose run --rm --build frontend-test sh -c "npm run lint && npm run format:check"
 
 # TypeScript check
-docker compose run --rm --build backend npm run typecheck
-docker compose run --rm --build frontend npm run typecheck
+docker compose run --rm --build backend-test npm run typecheck
+docker compose run --rm --build frontend-test npm run typecheck
 
 # Deploy
 # Backend-only changes: rebuild backend (triggers frontend auto-reload via /api/version polling)
