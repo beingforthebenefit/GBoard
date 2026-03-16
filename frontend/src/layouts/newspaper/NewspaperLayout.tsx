@@ -255,13 +255,7 @@ function NewsPhoto({ photos, dark }: { photos: string[]; dark: boolean }) {
 
 // ── Plex ──
 
-function NewsPlex({
-  sessions,
-  dark,
-}: {
-  sessions: LayoutProps['sessions']
-  dark: boolean
-}) {
+function NewsPlex({ sessions, dark }: { sessions: LayoutProps['sessions']; dark: boolean }) {
   if (sessions.length === 0) return null
 
   const textColor = dark ? 'text-neutral-100' : 'text-black'
@@ -343,8 +337,7 @@ function NewsCalendar({
   const textColor = dark ? 'text-neutral-100' : 'text-black'
   const subtleColor = dark ? 'text-neutral-500' : 'text-neutral-400'
 
-  if (upcoming.length === 0)
-    return <div className={`${subtleColor} text-xs italic`}>No events</div>
+  if (upcoming.length === 0) return <div className={`${subtleColor} text-xs italic`}>No events</div>
 
   const grouped = new Map<string, typeof events>()
   for (const ev of upcoming) {
