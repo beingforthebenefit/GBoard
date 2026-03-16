@@ -73,7 +73,7 @@ export function ZenLayout({
         <MediaWidget
           items={mediaItems}
           loading={mediaLoading}
-          className="card rounded-xl px-4 py-2 overflow-hidden max-h-[300px]"
+          className="card rounded-xl px-4 py-2"
         />
         <CalendarGrid
           events={events}
