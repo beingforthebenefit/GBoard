@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import fs from 'fs/promises'
 import path from 'path'
 import { getImages } from 'icloud-shared-album'
+import exifr from 'exifr'
 
 const SYNC_INTERVAL_MS = 60 * 60 * 1000 // re-sync with iCloud every 60 min
 
@@ -14,9 +15,25 @@ function manifestFile(): string {
 }
 const DOWNLOAD_CONCURRENCY = 5
 
+export interface PhotoLocation {
+  lat: number
+  lon: number
+  city?: string
+  state?: string
+}
+
+export interface PhotoInfo {
+  url: string
+  dateTaken?: string
+  location?: PhotoLocation
+}
+
 interface ManifestEntry {
   hash: string
   filename: string
+  dateTaken?: string
+  location?: PhotoLocation
+  metadataExtracted?: boolean
 }
 
 interface Manifest {
@@ -25,8 +42,8 @@ interface Manifest {
 }
 
 // In-memory state
-let cachedUrls: string[] | null = null
-let syncing: Promise<string[]> | null = null
+let cachedPhotos: PhotoInfo[] | null = null
+let syncing: Promise<PhotoInfo[]> | null = null
 let syncTimer: ReturnType<typeof setInterval> | null = null
 
 /** Stable hash from iCloud CDN URL path (query params change on each API call) */
@@ -37,6 +54,103 @@ function urlHash(url: string): string {
 
 function localUrl(filename: string): string {
   return `/api/photos/image/${filename}`
+}
+
+function entryToPhotoInfo(entry: ManifestEntry): PhotoInfo {
+  return {
+    url: localUrl(entry.filename),
+    dateTaken: entry.dateTaken,
+    location: entry.location,
+  }
+}
+
+// --- EXIF extraction ---
+
+async function extractMetadata(
+  filepath: string
+): Promise<{ dateTaken?: string; lat?: number; lon?: number }> {
+  try {
+    const data = await exifr.parse(filepath, {
+      pick: ['DateTimeOriginal', 'CreateDate', 'GPSLatitude', 'GPSLongitude'],
+      gps: true,
+    })
+    if (!data) return {}
+
+    const date = data.DateTimeOriginal ?? data.CreateDate
+    const dateTaken = date instanceof Date ? date.toISOString() : undefined
+
+    const lat = typeof data.latitude === 'number' ? data.latitude : undefined
+    const lon = typeof data.longitude === 'number' ? data.longitude : undefined
+
+    return { dateTaken, lat, lon }
+  } catch {
+    return {}
+  }
+}
+
+// --- Reverse geocoding (Nominatim / OpenStreetMap) ---
+
+async function reverseGeocode(
+  lat: number,
+  lon: number
+): Promise<{ city?: string; state?: string }> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'GBoard-Dashboard/1.0' },
+    })
+    if (!res.ok) return {}
+    const data = (await res.json()) as {
+      address?: { city?: string; town?: string; village?: string; state?: string; county?: string }
+    }
+    const addr = data.address
+    if (!addr) return {}
+    return {
+      city: addr.city || addr.town || addr.village || undefined,
+      state: addr.state || addr.county || undefined,
+    }
+  } catch {
+    return {}
+  }
+}
+
+/** Extract EXIF + geocode for a single manifest entry */
+async function enrichEntry(entry: ManifestEntry): Promise<ManifestEntry> {
+  if (entry.metadataExtracted) return entry
+
+  const filepath = path.join(cacheDir(), entry.filename)
+  const meta = await extractMetadata(filepath)
+
+  let location: PhotoLocation | undefined
+  if (meta.lat != null && meta.lon != null) {
+    const geo = await reverseGeocode(meta.lat, meta.lon)
+    location = { lat: meta.lat, lon: meta.lon, ...geo }
+  }
+
+  return {
+    ...entry,
+    dateTaken: meta.dateTaken,
+    location,
+    metadataExtracted: true,
+  }
+}
+
+/** Enrich all entries missing metadata (with rate limiting for geocoding) */
+async function enrichManifest(entries: ManifestEntry[]): Promise<ManifestEntry[]> {
+  const results: ManifestEntry[] = []
+  for (const entry of entries) {
+    if (entry.metadataExtracted) {
+      results.push(entry)
+    } else {
+      const enriched = await enrichEntry(entry)
+      results.push(enriched)
+      // Rate limit Nominatim: 1 req/sec
+      if (enriched.location) {
+        await new Promise((r) => setTimeout(r, 1100))
+      }
+    }
+  }
+  return results
 }
 
 // --- Manifest I/O ---
@@ -128,16 +242,16 @@ function extractCdnUrls(
 // --- Core logic ---
 
 /** Load cached photos from disk (instant) */
-export async function loadFromDisk(): Promise<string[]> {
+export async function loadFromDisk(): Promise<PhotoInfo[]> {
   const manifest = await loadManifest()
   if (!manifest || manifest.photos.length === 0) return []
-  const urls = manifest.photos.map((p) => localUrl(p.filename))
-  cachedUrls = urls
-  return urls
+  const photos = manifest.photos.map(entryToPhotoInfo)
+  cachedPhotos = photos
+  return photos
 }
 
 /** Sync with iCloud: download new photos, remove stale ones */
-async function doSync(): Promise<string[]> {
+async function doSync(): Promise<PhotoInfo[]> {
   await ensureCacheDir()
   const token = extractToken()
   console.log('[photos] syncing with iCloud...')
@@ -173,8 +287,17 @@ async function doSync(): Promise<string[]> {
 
   // Build updated manifest: keep existing that are still in album + add new
   const kept = manifest?.photos.filter((p) => allHashes.has(p.hash)) ?? []
+  let allEntries = [...kept, ...newEntries]
+
+  // Enrich entries missing metadata (EXIF + geocode)
+  const needsEnrich = allEntries.some((e) => !e.metadataExtracted)
+  if (needsEnrich) {
+    console.log('[photos] extracting metadata...')
+    allEntries = await enrichManifest(allEntries)
+  }
+
   const updatedManifest: Manifest = {
-    photos: [...kept, ...newEntries],
+    photos: allEntries,
     syncedAt: Date.now(),
   }
 
@@ -189,14 +312,14 @@ async function doSync(): Promise<string[]> {
 
   await saveManifest(updatedManifest)
 
-  const urls = updatedManifest.photos.map((p) => localUrl(p.filename))
-  cachedUrls = urls
-  console.log(`[photos] sync complete: ${urls.length} photos cached`)
-  return urls
+  const photos = updatedManifest.photos.map(entryToPhotoInfo)
+  cachedPhotos = photos
+  console.log(`[photos] sync complete: ${photos.length} photos cached`)
+  return photos
 }
 
 /** Start a sync, deduplicating concurrent calls */
-export function startSync(): Promise<string[]> {
+export function startSync(): Promise<PhotoInfo[]> {
   if (syncing) return syncing
   syncing = doSync().finally(() => {
     syncing = null
@@ -213,8 +336,8 @@ export function startPeriodicSync(): void {
 }
 
 /** Main entry point: return photos (from disk cache or iCloud) */
-export async function fetchPhotos(): Promise<string[]> {
-  if (cachedUrls && cachedUrls.length > 0) return cachedUrls
+export async function fetchPhotos(): Promise<PhotoInfo[]> {
+  if (cachedPhotos && cachedPhotos.length > 0) return cachedPhotos
   // Nothing in memory — try disk
   const disk = await loadFromDisk()
   if (disk.length > 0) return disk
@@ -228,5 +351,5 @@ export function getCacheDir(): string {
 }
 
 export function _resetCache() {
-  cachedUrls = null
+  cachedPhotos = null
 }

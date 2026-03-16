@@ -70,6 +70,19 @@ export interface SoberDuration {
   hours: number
 }
 
+export interface PhotoLocation {
+  lat: number
+  lon: number
+  city?: string
+  state?: string
+}
+
+export interface PhotoInfo {
+  url: string
+  dateTaken?: string
+  location?: PhotoLocation
+}
+
 export interface RadarData {
   zoom: number
   centerX: number

@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, fireEvent, act } from '@testing-library/react'
 import { PhotoBackground } from '../../components/PhotoBackground.js'
+import { PhotoInfo } from '../../types/index.js'
+
+function p(url: string): PhotoInfo {
+  return { url }
+}
 
 describe('PhotoBackground', () => {
   beforeEach(() => {
@@ -18,7 +23,7 @@ describe('PhotoBackground', () => {
   })
 
   it('renders images when photos provided', () => {
-    const { container } = render(<PhotoBackground photos={['https://example.com/photo1.jpg']} />)
+    const { container } = render(<PhotoBackground photos={[p('https://example.com/photo1.jpg')]} />)
     const imgs = container.querySelectorAll('img')
     expect(imgs.length).toBe(2)
     for (const img of imgs) {
@@ -28,9 +33,9 @@ describe('PhotoBackground', () => {
 
   it('renders two photo images for crossfade when given multiple photos', () => {
     const photos = [
-      'https://example.com/photo1.jpg',
-      'https://example.com/photo2.jpg',
-      'https://example.com/photo3.jpg',
+      p('https://example.com/photo1.jpg'),
+      p('https://example.com/photo2.jpg'),
+      p('https://example.com/photo3.jpg'),
     ]
     const { container } = render(<PhotoBackground photos={photos} />)
     const imgs = container.querySelectorAll('img')
@@ -38,16 +43,17 @@ describe('PhotoBackground', () => {
   })
 
   it('uses all provided photos (shuffle does not lose any)', () => {
-    const photos = Array.from({ length: 10 }, (_, i) => `https://example.com/p${i}.jpg`)
+    const urls = Array.from({ length: 10 }, (_, i) => `https://example.com/p${i}.jpg`)
+    const photos = urls.map(p)
     const { container } = render(<PhotoBackground photos={photos} />)
     const imgs = container.querySelectorAll('img')
     for (const img of imgs) {
-      expect(photos.some((photo) => img.src.startsWith(photo))).toBe(true)
+      expect(urls.some((url) => img.src.startsWith(url))).toBe(true)
     }
   })
 
   it('retries failed image loads every 5 seconds', () => {
-    const { container } = render(<PhotoBackground photos={['https://example.com/photo1.jpg']} />)
+    const { container } = render(<PhotoBackground photos={[p('https://example.com/photo1.jpg')]} />)
     const img = container.querySelector('img') as HTMLImageElement
 
     expect(img.getAttribute('src')).toContain('bgRetry=0')
@@ -66,9 +72,9 @@ describe('PhotoBackground', () => {
 
   it('advances to next photo after max retries exhausted', () => {
     const photos = [
-      'https://example.com/photo1.jpg',
-      'https://example.com/photo2.jpg',
-      'https://example.com/photo3.jpg',
+      p('https://example.com/photo1.jpg'),
+      p('https://example.com/photo2.jpg'),
+      p('https://example.com/photo3.jpg'),
     ]
     const { container } = render(<PhotoBackground photos={photos} />)
     const getImgSrcs = () =>
@@ -94,9 +100,9 @@ describe('PhotoBackground', () => {
     const intervalMs = 10_000
     const transitionMs = 2000
     const photos = [
-      'https://example.com/photo1.jpg',
-      'https://example.com/photo2.jpg',
-      'https://example.com/photo3.jpg',
+      p('https://example.com/photo1.jpg'),
+      p('https://example.com/photo2.jpg'),
+      p('https://example.com/photo3.jpg'),
     ]
     const { container } = render(
       <PhotoBackground photos={photos} intervalMs={intervalMs} transitionMs={transitionMs} />

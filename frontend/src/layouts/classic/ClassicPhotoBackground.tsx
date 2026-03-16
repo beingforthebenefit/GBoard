@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { PhotoInfo } from '../../types/index.js'
+import { PhotoCaption } from '../../components/PhotoCaption.js'
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -82,7 +84,7 @@ export function ClassicPhotoBackground({
   intervalMs = 5 * 60 * 1000,
   transitionMs = 2000,
 }: {
-  photos: string[]
+  photos: PhotoInfo[]
   intervalMs?: number
   transitionMs?: number
 }) {
@@ -112,21 +114,29 @@ export function ClassicPhotoBackground({
     return <div className="fixed inset-0 -z-10 bg-gray-900" />
   }
 
+  const currentPhoto = isTransitioning
+    ? shuffled[nextIndex % shuffled.length]
+    : shuffled[currentIndex]
+
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
       <LayeredPhoto
-        src={shuffled[currentIndex]}
+        src={shuffled[currentIndex].url}
         opacity={isTransitioning ? 0 : 1}
         transitionMs={transitionMs}
         onFailed={advance}
       />
       <LayeredPhoto
-        src={shuffled[nextIndex % shuffled.length]}
+        src={shuffled[nextIndex % shuffled.length].url}
         opacity={isTransitioning ? 1 : 0}
         transitionMs={transitionMs}
         onFailed={advance}
       />
       <div className="absolute inset-0 bg-black/10" />
+      <PhotoCaption
+        photo={currentPhoto}
+        className="absolute bottom-3 left-4 text-xs font-light z-10 pointer-events-none text-white/60 drop-shadow-lg"
+      />
     </div>
   )
 }

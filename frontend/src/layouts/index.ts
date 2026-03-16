@@ -1,5 +1,12 @@
 import { ComponentType } from 'react'
-import { WeatherData, CalendarEvent, PlexSession, UpcomingItem, RadarData } from '../types/index.js'
+import {
+  WeatherData,
+  CalendarEvent,
+  PlexSession,
+  UpcomingItem,
+  RadarData,
+  PhotoInfo,
+} from '../types/index.js'
 import { PiholeStats } from '../hooks/usePihole.js'
 import { ClassicLayout } from './classic/ClassicLayout.js'
 import { ZenLayout } from './ZenLayout.js'
@@ -16,7 +23,7 @@ export interface LayoutProps {
   plexLoading: boolean
   piholeData: PiholeStats | null
   piholeLoading: boolean
-  photos: string[]
+  photos: PhotoInfo[]
   mediaItems: UpcomingItem[]
   mediaLoading: boolean
   radarData: RadarData | null

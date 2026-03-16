@@ -16,6 +16,11 @@ vi.mock('icloud-shared-album', () => ({
   getImages: vi.fn(),
 }))
 
+// Mock exifr so it doesn't try to parse fake image data
+vi.mock('exifr', () => ({
+  default: { parse: vi.fn().mockResolvedValue(null) },
+}))
+
 import { getImages } from 'icloud-shared-album'
 const mockGetImages = vi.mocked(getImages)
 
@@ -70,8 +75,8 @@ describe('photosService', () => {
 
     const result = await startSync()
     expect(result).toHaveLength(2)
-    expect(result[0]).toMatch(/^\/api\/photos\/image\//)
-    expect(result[1]).toMatch(/^\/api\/photos\/image\//)
+    expect(result[0].url).toMatch(/^\/api\/photos\/image\//)
+    expect(result[1].url).toMatch(/^\/api\/photos\/image\//)
   })
 
   it('writes a manifest file to disk', async () => {
@@ -96,7 +101,7 @@ describe('photosService', () => {
 
     const urls = await loadFromDisk()
     expect(urls).toHaveLength(1)
-    expect(urls[0]).toMatch(/^\/api\/photos\/image\//)
+    expect(urls[0].url).toMatch(/^\/api\/photos\/image\//)
     expect(mockGetImages).not.toHaveBeenCalled()
   })
 
@@ -207,7 +212,7 @@ describe('photosService', () => {
 
     const result = await fetchPhotos()
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatch(/^\/api\/photos\/image\//)
+    expect(result[0].url).toMatch(/^\/api\/photos\/image\//)
     // Should not have called iCloud again
     expect(mockGetImages).not.toHaveBeenCalled()
   })
@@ -220,7 +225,7 @@ describe('photosService', () => {
 
     const result = await fetchPhotos()
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatch(/^\/api\/photos\/image\//)
+    expect(result[0].url).toMatch(/^\/api\/photos\/image\//)
     // Should have called iCloud to do a full sync
     expect(mockGetImages).toHaveBeenCalledTimes(1)
   })

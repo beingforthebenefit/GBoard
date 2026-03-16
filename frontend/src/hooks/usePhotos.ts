@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
+import { PhotoInfo } from '../types/index.js'
 
 const REFRESH_MS = 60 * 60 * 1000 // 60 minutes
 
 export function usePhotos() {
-  const [photos, setPhotos] = useState<string[]>([])
+  const [photos, setPhotos] = useState<PhotoInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,7 +17,12 @@ export function usePhotos() {
         if (!res.ok) throw new Error(`Photos API error: ${res.status}`)
         const json = await res.json()
         if (!cancelled) {
-          setPhotos(json.photos ?? [])
+          // Support both old format (string[]) and new format (PhotoInfo[])
+          const raw = json.photos ?? []
+          const photos: PhotoInfo[] = raw.map((p: string | PhotoInfo) =>
+            typeof p === 'string' ? { url: p } : p
+          )
+          setPhotos(photos)
           setError(null)
         }
       } catch (e) {

@@ -207,7 +207,7 @@ function TickerBar({
 
 // ── Photo ──
 
-function NewsPhoto({ photos, dark }: { photos: string[]; dark: boolean }) {
+function NewsPhoto({ photos, dark }: { photos: LayoutProps['photos']; dark: boolean }) {
   const shuffled = useMemo(() => {
     const a = [...photos]
     for (let i = a.length - 1; i > 0; i--) {
@@ -243,14 +243,38 @@ function NewsPhoto({ photos, dark }: { photos: string[]; dark: boolean }) {
     )
   }
 
+  const current = shuffled[idx % shuffled.length]
+  const captionParts: string[] = []
+  if (current.location?.city) {
+    const loc = current.location
+    captionParts.push(loc.city + (loc.state ? `, ${loc.state}` : ''))
+  }
+  if (current.dateTaken) {
+    const d = new Date(current.dateTaken)
+    captionParts.push(
+      d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    )
+  }
+
   return (
-    <div className="h-full relative overflow-hidden">
-      <img
-        src={shuffled[idx % shuffled.length]}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-        style={{ opacity: fade ? 0 : 1 }}
-      />
+    <div className="flex flex-col h-full">
+      <div className="flex-1 min-h-0 relative overflow-hidden">
+        <img
+          src={current.url}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          style={{ opacity: fade ? 0 : 1 }}
+        />
+      </div>
+      {captionParts.length > 0 && (
+        <div
+          className={`text-xs italic font-serif mt-1 leading-tight ${
+            dark ? 'text-neutral-500' : 'text-neutral-400'
+          }`}
+        >
+          {captionParts.join(' — ')}
+        </div>
+      )}
     </div>
   )
 }

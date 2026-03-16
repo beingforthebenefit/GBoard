@@ -272,7 +272,7 @@ function TermAstro() {
   )
 }
 
-function TermPhoto({ photos }: { photos: string[] }) {
+function TermPhoto({ photos }: Pick<LayoutProps, 'photos'>) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [nextIdx, setNextIdx] = useState(1)
   const [fading, setFading] = useState(false)
@@ -313,10 +313,23 @@ function TermPhoto({ photos }: { photos: string[] }) {
     )
   }
 
+  const currentPhoto = fading ? shuffled[nextIdx] : shuffled[currentIdx]
+  const captionParts = []
+  if (currentPhoto.location?.city) {
+    const loc = currentPhoto.location
+    captionParts.push(loc.city + (loc.state ? `, ${loc.state}` : ''))
+  }
+  if (currentPhoto.dateTaken) {
+    const d = new Date(currentPhoto.dateTaken)
+    captionParts.push(
+      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    )
+  }
+
   return (
     <div className="h-full relative overflow-hidden rounded-sm border border-green-500/20">
       <img
-        src={shuffled[currentIdx]}
+        src={shuffled[currentIdx].url}
         alt=""
         className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
         style={{
@@ -326,13 +339,18 @@ function TermPhoto({ photos }: { photos: string[] }) {
       />
       {shuffled.length > 1 && (
         <img
-          src={shuffled[nextIdx]}
+          src={shuffled[nextIdx].url}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: 'saturate(0) brightness(0.7) contrast(1.1)' }}
         />
       )}
       <div className="absolute inset-0 bg-green-900/20 mix-blend-overlay pointer-events-none" />
+      {captionParts.length > 0 && (
+        <div className="absolute bottom-1 left-2 text-green-500/40 text-[10px] font-mono z-10 pointer-events-none">
+          [{captionParts.join(' | ')}]
+        </div>
+      )}
     </div>
   )
 }

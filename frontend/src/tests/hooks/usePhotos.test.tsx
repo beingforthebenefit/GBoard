@@ -25,7 +25,7 @@ describe('usePhotos', () => {
   })
 
   it('fetches photos on mount', async () => {
-    const photos = ['photo1.jpg', 'photo2.jpg']
+    const photos = [{ url: 'photo1.jpg', dateTaken: '2024-01-01T00:00:00Z' }, { url: 'photo2.jpg' }]
     fetchMock.mockResolvedValue({
       ok: true,
       json: async () => ({ photos }),

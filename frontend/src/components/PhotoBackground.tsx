@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, ReactNode } from 'react'
+import { PhotoInfo } from '../types/index.js'
+import { PhotoCaption } from './PhotoCaption.js'
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -10,9 +12,10 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 interface PhotoBackgroundProps {
-  photos: string[]
+  photos: PhotoInfo[]
   intervalMs?: number
   transitionMs?: number
+  renderCaption?: (photo: PhotoInfo) => ReactNode
 }
 
 const IMAGE_RETRY_MS = 5 * 1000
@@ -79,6 +82,7 @@ export function PhotoBackground({
   photos,
   intervalMs = 5 * 60 * 1000,
   transitionMs = 2000,
+  renderCaption,
 }: PhotoBackgroundProps) {
   const shuffled = useMemo(() => shuffle(photos), [photos])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -110,19 +114,33 @@ export function PhotoBackground({
     )
   }
 
+  const currentPhoto = isTransitioning
+    ? shuffled[nextIndex % shuffled.length]
+    : shuffled[currentIndex]
+
+  const caption = renderCaption ? (
+    renderCaption(currentPhoto)
+  ) : (
+    <PhotoCaption
+      photo={currentPhoto}
+      className="absolute bottom-2 left-3 right-3 text-xs font-light z-10 pointer-events-none"
+      style={{ color: 'var(--text-3)' }}
+    />
+  )
+
   return (
     <div
       className="w-full h-full rounded-2xl overflow-hidden relative"
       style={{ backgroundColor: 'var(--photo-bg)' }}
     >
       <PhotoImage
-        src={shuffled[currentIndex]}
+        src={shuffled[currentIndex].url}
         opacity={isTransitioning ? 0 : 1}
         transitionMs={transitionMs}
         onFailed={advance}
       />
       <PhotoImage
-        src={shuffled[nextIndex % shuffled.length]}
+        src={shuffled[nextIndex % shuffled.length].url}
         opacity={isTransitioning ? 1 : 0}
         transitionMs={transitionMs}
         onFailed={advance}
@@ -134,6 +152,7 @@ export function PhotoBackground({
           background: `linear-gradient(to top, var(--photo-fade), transparent)`,
         }}
       />
+      {caption}
     </div>
   )
 }
