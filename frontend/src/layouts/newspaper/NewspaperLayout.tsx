@@ -2,20 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useClock } from '../../hooks/useClock.js'
 import { useSoberCounter } from '../../hooks/useSoberCounter.js'
 import { getAstrologySnapshot } from '../../utils/astrology.js'
+import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { LayoutProps } from '../index.js'
 
 // ── Helpers ──
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
-}
-
-function fmtEventTime(iso: string) {
-  const d = new Date(iso)
-  const h = d.getHours()
-  const m = pad(d.getMinutes())
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  return `${h % 12 || 12}:${m} ${ampm}`
 }
 
 function fmtUnix(unix: number) {
@@ -331,66 +324,6 @@ function NewsMedia({
   )
 }
 
-// ── Calendar ──
-
-function NewsCalendar({
-  events,
-  calendarLoading: loading,
-  dark,
-}: Pick<LayoutProps, 'events' | 'calendarLoading'> & { dark: boolean }) {
-  if (loading) return null
-
-  const now = new Date()
-  const upcoming = events.filter((e) => new Date(e.end) >= now).slice(0, 8)
-
-  const textColor = dark ? 'text-neutral-100' : 'text-black'
-  const subtleColor = dark ? 'text-neutral-500' : 'text-neutral-400'
-
-  if (upcoming.length === 0) return <div className={`${subtleColor} text-xs italic`}>No events</div>
-
-  const grouped = new Map<string, typeof events>()
-  for (const ev of upcoming) {
-    const key = new Date(ev.start).toDateString()
-    if (!grouped.has(key)) grouped.set(key, [])
-    grouped.get(key)!.push(ev)
-  }
-
-  const colors = dark
-    ? ['#e5e5e5', '#a0a0a8', '#e8a87c', '#6b8afd', '#6bcb77']
-    : ['#000', '#6b7280', '#d97706', '#2563eb', '#059669']
-
-  return (
-    <div className="space-y-1.5">
-      {[...grouped.entries()].map(([dayKey, dayEvents]) => {
-        const d = new Date(dayKey)
-        const isToday = d.toDateString() === now.toDateString()
-        const label = isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })
-        return (
-          <div key={dayKey}>
-            <div className={`text-[10px] font-bold ${subtleColor} uppercase tracking-wider`}>
-              {label}
-            </div>
-            {dayEvents.map((e) => (
-              <div key={e.id} className="flex items-center gap-2 text-sm py-0.5 leading-snug">
-                <div
-                  className="w-0.5 h-3.5 rounded-full shrink-0"
-                  style={{ backgroundColor: colors[(e.calendarIndex ?? 0) % colors.length] }}
-                />
-                <span className={`font-serif ${textColor} truncate flex-1`}>{e.title}</span>
-                {!e.allDay && (
-                  <span className={`text-[11px] ${subtleColor} shrink-0`}>
-                    {fmtEventTime(e.start)}&ndash;{fmtEventTime(e.end)}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 // ── Astrology ──
 
 function NewsAstro({ dark }: { dark: boolean }) {
@@ -501,7 +434,26 @@ export function NewspaperLayout({
           </div>
           <div>
             <SectionHead dark={dark}>This Week</SectionHead>
-            <NewsCalendar events={events} calendarLoading={calendarLoading} dark={dark} />
+            <CalendarGrid
+              events={events}
+              loading={calendarLoading}
+              numDays={4}
+              hourHeight={28}
+              eventColors={dark ? ['#a0a0a8'] : ['#6b7280']}
+              style={
+                {
+                  '--cal-accent': dark ? '#e8a87c' : '#b8553a',
+                  '--cal-day': dark ? 'rgba(160,160,168,0.5)' : 'rgba(0,0,0,0.4)',
+                  '--cal-gutter': dark ? 'rgba(160,160,168,0.35)' : 'rgba(0,0,0,0.25)',
+                  '--cal-grid': dark ? 'rgba(160,160,168,0.1)' : 'rgba(0,0,0,0.06)',
+                  '--cal-grid-strong': dark ? 'rgba(160,160,168,0.2)' : 'rgba(0,0,0,0.12)',
+                  '--cal-today-bg': dark ? 'rgba(160,160,168,0.04)' : 'rgba(0,0,0,0.02)',
+                  '--cal-event-text': dark ? '#000' : '#fff',
+                  '--cal-event-time': dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)',
+                } as React.CSSProperties
+              }
+              className="font-serif"
+            />
           </div>
         </div>
 

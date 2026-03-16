@@ -65,24 +65,30 @@ const mockProps = {
     hourly: [],
   },
   weatherLoading: false,
-  events: [
-    {
-      id: '1',
-      title: 'Meeting',
-      start: '2025-01-01T10:00:00',
-      end: '2099-01-01T11:00:00',
-      allDay: false,
-      calendarIndex: 0,
-    },
-    {
-      id: '2',
-      title: 'Lunch',
-      start: '2025-01-01T12:00:00',
-      end: '2099-01-01T13:00:00',
-      allDay: false,
-      calendarIndex: 1,
-    },
-  ],
+  events: (() => {
+    const today = new Date()
+    const y = today.getFullYear()
+    const m = String(today.getMonth() + 1).padStart(2, '0')
+    const d = String(today.getDate()).padStart(2, '0')
+    return [
+      {
+        id: '1',
+        title: 'Meeting',
+        start: `${y}-${m}-${d}T10:00:00`,
+        end: `${y}-${m}-${d}T11:00:00`,
+        allDay: false,
+        calendarIndex: 0,
+      },
+      {
+        id: '2',
+        title: 'Lunch',
+        start: `${y}-${m}-${d}T12:00:00`,
+        end: `${y}-${m}-${d}T13:00:00`,
+        allDay: false,
+        calendarIndex: 1,
+      },
+    ]
+  })(),
   calendarLoading: false,
   sessions: [],
   plexLoading: false,

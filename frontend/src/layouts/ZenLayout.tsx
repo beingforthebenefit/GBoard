@@ -5,7 +5,7 @@ import { AstroWidget } from '../components/AstroWidget.js'
 import { SoberCounter } from '../components/SoberCounter.js'
 import { MediaWidget } from '../components/MediaWidget.js'
 import { PlexWidget } from '../components/PlexWidget.js'
-import { CalendarWidget } from '../components/CalendarWidget.js'
+import { CalendarGrid } from '../components/CalendarGrid.js'
 import { PiholeWidget } from '../components/PiholeWidget.js'
 import { LayoutProps } from './index.js'
 
@@ -59,9 +59,11 @@ export function ZenLayout({
           loading={mediaLoading}
           className="card rounded-xl px-4 py-3"
         />
-        <CalendarWidget
+        <CalendarGrid
           events={events}
           loading={calendarLoading}
+          numDays={4}
+          hourHeight={28}
           className="card rounded-xl px-4 py-3"
         />
       </div>

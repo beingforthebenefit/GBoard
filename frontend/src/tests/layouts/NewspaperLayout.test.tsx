@@ -71,24 +71,30 @@ const mockProps = {
     hourly: [],
   },
   weatherLoading: false,
-  events: [
-    {
-      id: '1',
-      title: 'Meeting',
-      start: '2025-01-01T10:00:00',
-      end: '2099-01-01T11:00:00',
-      allDay: false,
-      calendarIndex: 0,
-    },
-    {
-      id: '2',
-      title: 'Lunch',
-      start: '2025-01-01T12:00:00',
-      end: '2099-01-01T13:00:00',
-      allDay: false,
-      calendarIndex: 1,
-    },
-  ],
+  events: (() => {
+    const today = new Date()
+    const y = today.getFullYear()
+    const m = String(today.getMonth() + 1).padStart(2, '0')
+    const d = String(today.getDate()).padStart(2, '0')
+    return [
+      {
+        id: '1',
+        title: 'Meeting',
+        start: `${y}-${m}-${d}T10:00:00`,
+        end: `${y}-${m}-${d}T11:00:00`,
+        allDay: false,
+        calendarIndex: 0,
+      },
+      {
+        id: '2',
+        title: 'Lunch',
+        start: `${y}-${m}-${d}T12:00:00`,
+        end: `${y}-${m}-${d}T13:00:00`,
+        allDay: false,
+        calendarIndex: 1,
+      },
+    ]
+  })(),
   calendarLoading: false,
   sessions: [],
   plexLoading: false,
@@ -177,11 +183,9 @@ describe('NewspaperLayout', () => {
 
   it('shows event end times with en-dash separator', () => {
     const { container } = render(<NewspaperLayout {...mockProps} />)
-    // Events have start and end times formatted as "H:MM AM–H:MM AM"
-    // Look for time range pattern in the output
     const textContent = container.textContent ?? ''
-    // Should contain AM or PM times since events are not allDay
-    expect(textContent).toMatch(/AM|PM/)
+    // CalendarGrid formats times as "10:00am – 11:00am"
+    expect(textContent).toMatch(/am|pm/)
   })
 
   it('shows photo placeholder when no photos provided', () => {
@@ -234,8 +238,9 @@ describe('NewspaperLayout', () => {
   })
 
   it('shows forecast days in weather section', () => {
-    const { getByText } = render(<NewspaperLayout {...mockProps} />)
-    expect(getByText('Today')).toBeTruthy()
+    const { getAllByText } = render(<NewspaperLayout {...mockProps} />)
+    // "Today" appears in both forecast strip and calendar grid
+    expect(getAllByText('Today').length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders in dark mode when html element has dark class', () => {

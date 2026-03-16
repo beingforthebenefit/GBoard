@@ -114,16 +114,22 @@ const fullProps = {
     ],
     hourly: [],
   },
-  events: [
-    {
-      id: '1',
-      title: 'Team Meeting',
-      start: '2025-01-01T10:00:00',
-      end: '2025-01-01T11:00:00',
-      allDay: false,
-      calendarIndex: 0,
-    },
-  ],
+  events: (() => {
+    const today = new Date()
+    const y = today.getFullYear()
+    const m = String(today.getMonth() + 1).padStart(2, '0')
+    const d = String(today.getDate()).padStart(2, '0')
+    return [
+      {
+        id: '1',
+        title: 'Team Meeting',
+        start: `${y}-${m}-${d}T10:00:00`,
+        end: `${y}-${m}-${d}T11:00:00`,
+        allDay: false,
+        calendarIndex: 0,
+      },
+    ]
+  })(),
   piholeData: {
     status: 'enabled' as const,
     totalQueries: 50000,

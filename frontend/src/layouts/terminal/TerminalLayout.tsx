@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useClock } from '../../hooks/useClock.js'
 import { useSoberCounter } from '../../hooks/useSoberCounter.js'
 import { getAstrologySnapshot } from '../../utils/astrology.js'
+import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { LayoutProps } from '../index.js'
 
 // ── Helpers ──
@@ -25,14 +26,6 @@ function fmtDate(d: Date) {
     day: 'numeric',
     year: 'numeric',
   })
-}
-
-function fmtEventTime(iso: string) {
-  const d = new Date(iso)
-  const h = d.getHours()
-  const m = pad(d.getMinutes())
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  return `${h % 12 || 12}:${m}${ampm}`
 }
 
 function fmtUnix(unix: number) {
@@ -241,55 +234,6 @@ function TermMedia({
             {item.subtitle && (
               <span className="text-green-500/40 truncate hidden sm:inline">{item.subtitle}</span>
             )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function TermCalendar({
-  events,
-  calendarLoading: loading,
-}: Pick<LayoutProps, 'events' | 'calendarLoading'>) {
-  if (loading) return <span className="text-green-500/40">loading...</span>
-  if (events.length === 0) return <span className="text-green-500/30 text-xs">no events</span>
-
-  // Group by day
-  const grouped = new Map<string, typeof events>()
-  const now = new Date()
-  const upcoming = events.filter((e) => new Date(e.end) >= now).slice(0, 10)
-
-  for (const ev of upcoming) {
-    const key = new Date(ev.start).toDateString()
-    if (!grouped.has(key)) grouped.set(key, [])
-    grouped.get(key)!.push(ev)
-  }
-
-  return (
-    <div className="space-y-1.5 font-mono text-xs">
-      {[...grouped.entries()].map(([dayKey, dayEvents]) => {
-        const d = new Date(dayKey)
-        const isToday = d.toDateString() === now.toDateString()
-        const label = isToday
-          ? 'TODAY'
-          : d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() +
-            ' ' +
-            d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })
-        return (
-          <div key={dayKey}>
-            <div className="text-green-500/40 mb-0.5">{label}</div>
-            {dayEvents.map((e) => (
-              <div key={e.id} className="flex gap-2 pl-2">
-                {!e.allDay && (
-                  <span className="text-green-500/50 shrink-0">
-                    {fmtEventTime(e.start)}-{fmtEventTime(e.end)}
-                  </span>
-                )}
-                {e.allDay && <span className="text-green-500/50 shrink-0">all day</span>}
-                <span className="text-green-400 truncate">{e.title}</span>
-              </div>
-            ))}
           </div>
         )
       })}
@@ -515,7 +459,26 @@ export function TerminalLayout({
             <TermMedia mediaItems={mediaItems} mediaLoading={mediaLoading} />
           </Box>
           <Box title="CALENDAR">
-            <TermCalendar events={events} calendarLoading={calendarLoading} />
+            <CalendarGrid
+              events={events}
+              loading={calendarLoading}
+              numDays={4}
+              hourHeight={28}
+              eventColors={['#22c55e']}
+              className="font-mono"
+              style={
+                {
+                  '--cal-accent': '#22c55e',
+                  '--cal-day': 'rgba(34,197,94,0.4)',
+                  '--cal-gutter': 'rgba(34,197,94,0.3)',
+                  '--cal-grid': 'rgba(34,197,94,0.08)',
+                  '--cal-grid-strong': 'rgba(34,197,94,0.2)',
+                  '--cal-today-bg': 'rgba(34,197,94,0.04)',
+                  '--cal-event-text': '#000',
+                  '--cal-event-time': 'rgba(0,0,0,0.6)',
+                } as React.CSSProperties
+              }
+            />
           </Box>
         </div>
 

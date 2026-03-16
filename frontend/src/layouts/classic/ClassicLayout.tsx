@@ -1,17 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  WeatherData,
-  CalendarEvent,
-  PlexSession,
-  UpcomingItem,
-  WeatherForecastHour,
-} from '../../types/index.js'
+import { WeatherData, PlexSession, UpcomingItem, WeatherForecastHour } from '../../types/index.js'
 import { PiholeStats } from '../../hooks/usePihole.js'
 import { useSoberCounter } from '../../hooks/useSoberCounter.js'
 import { useClock } from '../../hooks/useClock.js'
 import { useAvailableHeight } from '../../hooks/useAvailableHeight.js'
 import { getAstrologySnapshot } from '../../utils/astrology.js'
 import { GlassPanel } from './GlassPanel.js'
+import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { LayoutProps } from '../index.js'
 import { ClassicPhotoBackground } from './ClassicPhotoBackground.js'
 import { ClassicRadarWidget } from './ClassicRadarWidget.js'
@@ -652,182 +647,6 @@ function ClassicMedia({
 
 // ── Calendar ──
 
-const CAL_COLORS = ['#60a5fa', '#6366f1', '#a78bfa', '#f472b6', '#fb923c', '#94a3b8']
-const HOUR_START = 9
-const HOUR_END = 22
-const TOTAL_HOURS = HOUR_END - HOUR_START
-const HOUR_PX = 32
-const GUTTER_W = 44
-const NUM_DAYS = 5
-
-function calDayKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function getCalDays(): Date[] {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return Array.from({ length: NUM_DAYS }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(d.getDate() + i)
-    return d
-  })
-}
-
-function formatDayHeader(d: Date, _isToday: boolean): string {
-  if (_isToday) return 'Today'
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })
-}
-
-function formatHour(h: number): string {
-  if (h === 12) return '12p'
-  return h < 12 ? `${h}a` : `${h - 12}p`
-}
-
-function eventLayout(start: Date, end: Date): { top: number; height: number } | null {
-  const startH = start.getHours() + start.getMinutes() / 60
-  const endH = end.getHours() + end.getMinutes() / 60
-  if (endH <= HOUR_START || startH >= HOUR_END) return null
-  const clampedStart = Math.max(startH, HOUR_START)
-  const clampedEnd = Math.min(endH, HOUR_END)
-  return {
-    top: (clampedStart - HOUR_START) * HOUR_PX,
-    height: Math.max((clampedEnd - clampedStart) * HOUR_PX, 20),
-  }
-}
-
-function ClassicCalendar({ events, loading }: { events: CalendarEvent[]; loading: boolean }) {
-  if (loading) {
-    return (
-      <GlassPanel className="p-4 animate-pulse">
-        <div className="h-40 bg-white/10 rounded" />
-      </GlassPanel>
-    )
-  }
-
-  const days = getCalDays()
-  const todayKey = calDayKey(days[0])
-  const now = new Date()
-  const nowH = now.getHours() + now.getMinutes() / 60
-  const nowPct =
-    nowH >= HOUR_START && nowH < HOUR_END ? ((nowH - HOUR_START) / TOTAL_HOURS) * 100 : null
-  const gridHeight = TOTAL_HOURS * HOUR_PX
-
-  return (
-    <GlassPanel className="flex flex-col h-full p-3 overflow-hidden">
-      <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
-        {days.map((d) => {
-          const key = calDayKey(d)
-          return (
-            <div
-              key={key}
-              className="flex-1 text-center text-sm font-semibold truncate px-0.5"
-              style={{ color: key === todayKey ? '#fde047' : 'rgba(255,255,255,0.6)' }}
-            >
-              {formatDayHeader(d, key === todayKey)}
-            </div>
-          )
-        })}
-      </div>
-      <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
-        {days.map((d) => {
-          const key = calDayKey(d)
-          const allDay = events.filter((e) => e.allDay && calDayKey(new Date(e.start)) === key)
-          return (
-            <div key={key} className="flex-1 px-0.5 min-h-[16px]">
-              {allDay.map((e) => (
-                <div
-                  key={e.id}
-                  className="text-white rounded-md px-1 text-xs truncate mb-0.5"
-                  style={{
-                    backgroundColor: CAL_COLORS[(e.calendarIndex ?? 0) % CAL_COLORS.length],
-                  }}
-                >
-                  {e.title}
-                </div>
-              ))}
-            </div>
-          )
-        })}
-      </div>
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex relative" style={{ height: gridHeight }}>
-          <div className="flex-shrink-0 relative" style={{ width: GUTTER_W }}>
-            {Array.from({ length: TOTAL_HOURS }, (_, i) => (
-              <div
-                key={i}
-                className="absolute right-1 text-sm leading-none"
-                style={{ top: i * HOUR_PX - 6, color: 'rgba(255,255,255,0.28)' }}
-              >
-                {formatHour(HOUR_START + i)}
-              </div>
-            ))}
-          </div>
-          {days.map((d) => {
-            const key = calDayKey(d)
-            const _isToday = key === todayKey
-            const timed = events.filter((e) => !e.allDay && calDayKey(new Date(e.start)) === key)
-            return (
-              <div
-                key={key}
-                className="flex-1 relative border-l"
-                style={{
-                  borderColor: 'rgba(255,255,255,0.1)',
-                  backgroundColor: _isToday ? 'rgba(255,255,255,0.03)' : undefined,
-                }}
-              >
-                {Array.from({ length: TOTAL_HOURS }, (_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-full border-t"
-                    style={{
-                      top: i * HOUR_PX,
-                      borderColor: i === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
-                    }}
-                  />
-                ))}
-                {_isToday && nowPct !== null && (
-                  <div
-                    className="absolute w-full z-10"
-                    style={{ top: `${nowPct}%`, height: 2, backgroundColor: '#fbbf24' }}
-                  />
-                )}
-                {timed.map((e) => {
-                  const layout = eventLayout(new Date(e.start), new Date(e.end))
-                  if (!layout) return null
-                  const color = CAL_COLORS[(e.calendarIndex ?? 0) % CAL_COLORS.length]
-                  return (
-                    <div
-                      key={e.id}
-                      className="absolute left-0.5 right-0.5 rounded-xl px-1.5 py-0.5 overflow-hidden z-20"
-                      style={{
-                        top: layout.top + 1,
-                        height: layout.height - 2,
-                        backgroundColor: color + 'b3',
-                        borderLeft: `3px solid ${color}`,
-                      }}
-                    >
-                      <div className="text-white text-sm leading-tight font-medium truncate">
-                        {e.title}
-                      </div>
-                      {layout.height > 28 && (
-                        <div className="text-white/60 text-xs leading-tight truncate">
-                          {formatTime(new Date(e.start).getTime() / 1000)} &ndash;{' '}
-                          {formatTime(new Date(e.end).getTime() / 1000)}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </GlassPanel>
-  )
-}
-
 // ── Astro ──
 
 function ClassicAstro() {
@@ -991,7 +810,25 @@ export function ClassicLayout({
           style={{ animationDelay: '160ms' }}
         >
           <div className="flex-1 min-w-0">
-            <ClassicCalendar events={events} loading={calendarLoading} />
+            <GlassPanel className="h-full p-3">
+              <CalendarGrid
+                events={events}
+                loading={calendarLoading}
+                className="h-full"
+                style={
+                  {
+                    '--cal-accent': '#fde047',
+                    '--cal-day': 'rgba(255,255,255,0.6)',
+                    '--cal-gutter': 'rgba(255,255,255,0.28)',
+                    '--cal-grid': 'rgba(255,255,255,0.06)',
+                    '--cal-grid-strong': 'rgba(255,255,255,0.15)',
+                    '--cal-today-bg': 'rgba(255,255,255,0.03)',
+                    '--cal-event-text': '#fff',
+                    '--cal-event-time': 'rgba(255,255,255,0.6)',
+                  } as React.CSSProperties
+                }
+              />
+            </GlassPanel>
           </div>
           <div className="w-72 flex-shrink-0">
             <ClassicAstro />

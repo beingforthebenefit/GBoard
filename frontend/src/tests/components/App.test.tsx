@@ -62,8 +62,8 @@ vi.mock('../../components/PlexWidget.js', () => ({
   PlexWidget: () => <div data-testid="plex-widget" />,
 }))
 
-vi.mock('../../components/CalendarWidget.js', () => ({
-  CalendarWidget: () => <div data-testid="calendar-widget" />,
+vi.mock('../../components/CalendarGrid.js', () => ({
+  CalendarGrid: () => <div data-testid="calendar-grid" />,
 }))
 
 vi.mock('../../components/PiholeWidget.js', () => ({
@@ -88,7 +88,7 @@ describe('App', () => {
     expect(getByTestId('sober-counter')).toBeTruthy()
     expect(getByTestId('media-widget')).toBeTruthy()
     expect(getByTestId('plex-widget')).toBeTruthy()
-    expect(getByTestId('calendar-widget')).toBeTruthy()
+    expect(getByTestId('calendar-grid')).toBeTruthy()
     expect(getByTestId('pihole-widget')).toBeTruthy()
   })
 })
