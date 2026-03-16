@@ -18,8 +18,8 @@ body,
 
 :root,
 html.light {
-  --bg: #e8e2d6;
-  --surface: #efe9de;
+  --bg: #f5f1ea;
+  --surface: #faf8f5;
   --border: #d8d0c4;
   --text: #1a1a1a;
   --text-2: #555550;
@@ -28,19 +28,19 @@ html.light {
   --accent: #b8553a;
   --accent-2: #b8553a;
   --green: #6a8a62;
-  --photo-bg: #ddd7cb;
-  --forecast-bg: #efe9de;
-  --sober-bg: #efe9de;
+  --photo-bg: #ede7dd;
+  --forecast-bg: #faf8f5;
+  --sober-bg: #faf8f5;
   --sober-text: #b8553a;
-  --pihole-bg: #efe9de;
-  --plex-bg: #efe9de;
+  --pihole-bg: #faf8f5;
+  --plex-bg: #faf8f5;
   --cal-accent: #b8553a;
   --cal-border: #e8e2d8;
-  --astro-bg: #efe9de;
+  --astro-bg: #faf8f5;
   --astro-accent: #4a6d8c;
   --progress-bg: #e8e2d8;
   --progress-fill: #b8553a;
-  --photo-fade: #e8e2d6;
+  --photo-fade: #f5f1ea;
   --event-opacity: 0.85;
   --weather-icon-filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))
     drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
