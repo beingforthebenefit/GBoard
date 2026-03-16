@@ -301,6 +301,7 @@ function NewsPlex({ sessions, dark }: { sessions: LayoutProps['sessions']; dark:
                 {s.title}
               </span>
               <span className={`text-xs ${subtleColor} truncate`}>{s.subtitle}</span>
+              <span className={`text-xs ${subtleColor} truncate`}>&mdash; {s.userName}</span>
               <span className={`text-xs ${subtleColor} ml-auto shrink-0`}>{pct}%</span>
             </div>
             <div className={`w-full h-1 ${barBg} rounded-full overflow-hidden`}>
