@@ -6,12 +6,18 @@ import plexRouter from './routes/plex.js'
 import photosRouter from './routes/photos.js'
 import piholeRouter from './routes/pihole.js'
 import mediaRouter from './routes/media.js'
+import adminRouter from './routes/admin.js'
 import { loadFromDisk, startSync, startPeriodicSync } from './services/photosService.js'
 import { loadSession, deletePiholeSession } from './services/piholeService.js'
 
 const app = express()
 const PORT = 3001 // internal container port — BACKEND_PORT in .env only controls the host-side mapping
-const STARTED_AT = Date.now()
+let STARTED_AT = Date.now()
+
+/** Bump to trigger frontend reload via /api/version polling */
+export function bumpVersion() {
+  STARTED_AT = Date.now()
+}
 
 app.use(express.json())
 
@@ -19,6 +25,8 @@ app.use(express.json())
 app.use((_req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
+  if (_req.method === 'OPTIONS') return res.sendStatus(204)
   next()
 })
 
@@ -42,6 +50,8 @@ app.use('/api/plex', plexRouter)
 app.use('/api/photos', photosRouter)
 app.use('/api/pihole', piholeRouter)
 app.use('/api/media', mediaRouter)
+app.use('/admin', adminRouter)
+app.use('/api/admin', adminRouter)
 
 app.use(errorHandler)
 
