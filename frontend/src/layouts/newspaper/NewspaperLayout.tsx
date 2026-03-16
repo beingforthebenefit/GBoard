@@ -262,7 +262,7 @@ function NewsPhoto({ photos, dark }: { photos: LayoutProps['photos']; dark: bool
         <img
           src={current.url}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
           style={{ opacity: fade ? 0 : 1 }}
         />
       </div>
