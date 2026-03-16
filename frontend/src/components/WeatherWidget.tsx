@@ -71,12 +71,13 @@ export function ForecastStrip({ data, loading }: ForecastStripProps) {
   }
 
   const cols = data.forecast.length || 4
+  const todayStr = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local tz
 
   return (
     <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-      {data.forecast.map((day, i) => {
+      {data.forecast.map((day) => {
         const label =
-          i === 0
+          day.date === todayStr
             ? 'Today'
             : new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', {
                 weekday: 'short',

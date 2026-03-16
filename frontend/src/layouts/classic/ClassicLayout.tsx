@@ -142,9 +142,10 @@ function ClassicWeather({
         <span>&moon; {formatTime(current.sunset)}</span>
       </div>
       <div className="flex justify-between pt-1 border-t border-white/10">
-        {forecast.slice(0, 5).map((day, i) => {
+        {forecast.slice(0, 5).map((day) => {
+          const todayStr = new Date().toLocaleDateString('en-CA')
           const label =
-            i === 0
+            day.date === todayStr
               ? 'Today'
               : new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', {
                   weekday: 'short',

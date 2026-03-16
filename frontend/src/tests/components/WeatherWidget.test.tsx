@@ -20,7 +20,13 @@ const weatherData: WeatherData = {
     sunset: 1772914500,
   },
   forecast: [
-    { date: '2026-03-08', high: 63, low: 54, description: 'cloudy', icon: '03d' },
+    {
+      date: new Date().toLocaleDateString('en-CA'),
+      high: 63,
+      low: 54,
+      description: 'cloudy',
+      icon: '03d',
+    },
     { date: '2026-03-09', high: 59, low: 52, description: 'cloudy', icon: '03d' },
     { date: '2026-03-10', high: 62, low: 54, description: 'cloudy', icon: '03d' },
   ],

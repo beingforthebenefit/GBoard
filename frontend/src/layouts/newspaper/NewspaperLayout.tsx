@@ -113,9 +113,10 @@ function WeatherHeadline({
         </div>
       </div>
       <div className={`flex gap-1.5 border-t ${borderColor} pt-2`}>
-        {forecast.slice(0, 5).map((day, i) => {
+        {forecast.slice(0, 5).map((day) => {
+          const todayStr = new Date().toLocaleDateString('en-CA')
           const label =
-            i === 0
+            day.date === todayStr
               ? 'Today'
               : new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', {
                   weekday: 'short',
@@ -214,22 +215,30 @@ function TickerBar({
 // ── Photo ──
 
 function NewsPhoto({ photos, dark }: { photos: string[]; dark: boolean }) {
+  const shuffled = useMemo(() => {
+    const a = [...photos]
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[a[i], a[j]] = [a[j], a[i]]
+    }
+    return a
+  }, [photos])
   const [idx, setIdx] = useState(0)
   const [fade, setFade] = useState(false)
 
   useEffect(() => {
-    if (photos.length === 0) return
+    if (shuffled.length === 0) return
     const id = setInterval(() => {
       setFade(true)
       setTimeout(() => {
-        setIdx((i) => (i + 1) % photos.length)
+        setIdx((i) => (i + 1) % shuffled.length)
         setFade(false)
       }, 500)
     }, 300_000)
     return () => clearInterval(id)
-  }, [photos.length])
+  }, [shuffled.length])
 
-  if (photos.length === 0) {
+  if (shuffled.length === 0) {
     return (
       <div
         className={`h-full flex items-center justify-center text-sm italic font-serif ${
@@ -244,7 +253,7 @@ function NewsPhoto({ photos, dark }: { photos: string[]; dark: boolean }) {
   return (
     <div className="h-full relative overflow-hidden">
       <img
-        src={photos[idx % photos.length]}
+        src={shuffled[idx % shuffled.length]}
         alt=""
         className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
         style={{ opacity: fade ? 0 : 1 }}

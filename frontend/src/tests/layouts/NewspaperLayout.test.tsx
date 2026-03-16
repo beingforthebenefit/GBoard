@@ -56,7 +56,13 @@ const mockProps = {
       visibility: 10,
     },
     forecast: [
-      { date: '2025-01-01', high: 75, low: 55, description: 'sunny', icon: '01d' },
+      {
+        date: new Date().toLocaleDateString('en-CA'),
+        high: 75,
+        low: 55,
+        description: 'sunny',
+        icon: '01d',
+      },
       { date: '2025-01-02', high: 70, low: 50, description: 'cloudy', icon: '02d' },
       { date: '2025-01-03', high: 68, low: 48, description: 'rain', icon: '10d' },
       { date: '2025-01-04', high: 72, low: 52, description: 'sunny', icon: '01d' },
