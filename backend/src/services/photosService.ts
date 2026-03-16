@@ -36,6 +36,7 @@ interface ManifestEntry {
   location?: PhotoLocation
   metadataExtracted?: boolean
   optimized?: boolean
+  geocodeLang?: string
 }
 
 interface Manifest {
@@ -73,7 +74,14 @@ async function extractMetadata(
 ): Promise<{ dateTaken?: string; lat?: number; lon?: number }> {
   try {
     const data = await exifr.parse(filepath, {
-      pick: ['DateTimeOriginal', 'CreateDate', 'GPSLatitude', 'GPSLongitude'],
+      pick: [
+        'DateTimeOriginal',
+        'CreateDate',
+        'GPSLatitude',
+        'GPSLongitude',
+        'GPSLatitudeRef',
+        'GPSLongitudeRef',
+      ],
       gps: true,
     })
     if (!data) return {}
@@ -97,7 +105,7 @@ async function reverseGeocode(
   lon: number
 ): Promise<{ city?: string; state?: string }> {
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10&accept-language=en`
     const res = await fetch(url, {
       headers: { 'User-Agent': 'GBoard-Dashboard/1.0' },
     })
@@ -118,7 +126,17 @@ async function reverseGeocode(
 
 /** Extract EXIF + geocode for a single manifest entry */
 async function enrichEntry(entry: ManifestEntry): Promise<ManifestEntry> {
-  if (entry.metadataExtracted) return entry
+  if (entry.metadataExtracted && entry.geocodeLang === 'en') return entry
+
+  // If EXIF already extracted, just re-geocode
+  if (entry.metadataExtracted && entry.location) {
+    const geo = await reverseGeocode(entry.location.lat, entry.location.lon)
+    return {
+      ...entry,
+      location: { ...entry.location, ...geo },
+      geocodeLang: 'en',
+    }
+  }
 
   const filepath = path.join(cacheDir(), entry.filename)
   const meta = await extractMetadata(filepath)
@@ -134,6 +152,7 @@ async function enrichEntry(entry: ManifestEntry): Promise<ManifestEntry> {
     dateTaken: meta.dateTaken,
     location,
     metadataExtracted: true,
+    geocodeLang: 'en',
   }
 }
 
@@ -323,28 +342,59 @@ export async function loadFromDisk(): Promise<PhotoInfo[]> {
     console.log('[photos] fixed manifest filenames to match .webp files on disk')
   }
 
-  // Serve immediately, optimize in background if needed
+  // One-time migration: reset metadata for entries with wrong GPS (missing ref signs)
+  const needsRegeocode = manifest.photos.some((e) => e.metadataExtracted && e.geocodeLang !== 'en')
+  if (needsRegeocode) {
+    console.log('[photos] resetting metadata for re-geocoding with English + fixed GPS...')
+    for (let i = 0; i < manifest.photos.length; i++) {
+      manifest.photos[i] = {
+        ...manifest.photos[i],
+        metadataExtracted: false,
+        geocodeLang: undefined,
+        location: undefined,
+        dateTaken: undefined,
+      }
+    }
+    manifestDirty = true
+    await saveManifest(manifest)
+  }
+
+  // Serve immediately, optimize/enrich in background if needed
   const photos = manifest.photos.map(entryToPhotoInfo)
   cachedPhotos = photos
 
   const needsOptimize = manifest.photos.some((e) => !e.optimized)
-  if (needsOptimize) {
-    optimizeInBackground(manifest).catch((err) =>
-      console.error('[photos] background optimize failed:', err)
+  const needsEnrich = manifest.photos.some((e) => !e.metadataExtracted)
+  if (needsOptimize || needsEnrich) {
+    processInBackground(manifest).catch((err) =>
+      console.error('[photos] background processing failed:', err)
     )
   }
 
   return photos
 }
 
-/** Optimize existing photos in background without blocking serving */
-async function optimizeInBackground(manifest: Manifest): Promise<void> {
-  console.log('[photos] optimizing existing photos in background...')
-  const optimized = await optimizeManifest(manifest.photos)
-  const updated: Manifest = { photos: optimized, syncedAt: manifest.syncedAt }
-  await saveManifest(updated)
-  cachedPhotos = updated.photos.map(entryToPhotoInfo)
-  console.log('[photos] background optimization complete')
+/** Enrich and optimize existing photos in background without blocking serving */
+async function processInBackground(manifest: Manifest): Promise<void> {
+  let entries = manifest.photos
+
+  const needsEnrich = entries.some((e) => !e.metadataExtracted)
+  if (needsEnrich) {
+    console.log('[photos] enriching metadata in background...')
+    entries = await enrichManifest(entries)
+    await saveManifest({ photos: entries, syncedAt: manifest.syncedAt })
+    cachedPhotos = entries.map(entryToPhotoInfo)
+    console.log('[photos] background enrichment complete')
+  }
+
+  const needsOptimize = entries.some((e) => !e.optimized)
+  if (needsOptimize) {
+    console.log('[photos] optimizing images in background...')
+    entries = await optimizeManifest(entries)
+    await saveManifest({ photos: entries, syncedAt: manifest.syncedAt })
+    cachedPhotos = entries.map(entryToPhotoInfo)
+    console.log('[photos] background optimization complete')
+  }
 }
 
 /** Sync with iCloud: download new photos, remove stale ones */
