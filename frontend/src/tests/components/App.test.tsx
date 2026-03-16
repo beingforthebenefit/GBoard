@@ -29,8 +29,8 @@ vi.mock('../../hooks/useMedia.js', () => ({
   useMedia: () => ({ items: [], lastDayRemaining: 0, loading: true }),
 }))
 
-vi.mock('../../hooks/useRadar.js', () => ({
-  useRadar: () => ({ data: null, loading: true }),
+vi.mock('../../hooks/useDayNight.js', () => ({
+  useDayNight: () => 'day',
 }))
 
 vi.mock('../../components/PhotoBackground.js', () => ({
@@ -38,7 +38,8 @@ vi.mock('../../components/PhotoBackground.js', () => ({
 }))
 
 vi.mock('../../components/WeatherWidget.js', () => ({
-  WeatherWidget: () => <div data-testid="weather-widget" />,
+  WeatherHeader: () => <div data-testid="weather-header" />,
+  ForecastStrip: () => <div data-testid="forecast-strip" />,
 }))
 
 vi.mock('../../components/ClockWidget.js', () => ({
@@ -69,10 +70,6 @@ vi.mock('../../components/PiholeWidget.js', () => ({
   PiholeWidget: () => <div data-testid="pihole-widget" />,
 }))
 
-vi.mock('../../components/RadarWidget.js', () => ({
-  RadarWidget: () => <div data-testid="radar-widget" />,
-}))
-
 import { App } from '../../App.js'
 
 describe('App', () => {
@@ -84,7 +81,8 @@ describe('App', () => {
   it('renders all major widget sections', () => {
     const { getByTestId } = render(<App />)
     expect(getByTestId('photo-background')).toBeTruthy()
-    expect(getByTestId('weather-widget')).toBeTruthy()
+    expect(getByTestId('weather-header')).toBeTruthy()
+    expect(getByTestId('forecast-strip')).toBeTruthy()
     expect(getByTestId('clock-widget')).toBeTruthy()
     expect(getByTestId('astro-widget')).toBeTruthy()
     expect(getByTestId('sober-counter')).toBeTruthy()
@@ -92,6 +90,5 @@ describe('App', () => {
     expect(getByTestId('plex-widget')).toBeTruthy()
     expect(getByTestId('calendar-widget')).toBeTruthy()
     expect(getByTestId('pihole-widget')).toBeTruthy()
-    // RadarWidget is conditionally rendered (only when precipitation detected)
   })
 })
