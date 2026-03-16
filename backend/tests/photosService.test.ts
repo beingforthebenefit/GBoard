@@ -21,6 +21,20 @@ vi.mock('exifr', () => ({
   default: { parse: vi.fn().mockResolvedValue(null) },
 }))
 
+// Mock sharp — create the .webp output file so filesystem checks work
+vi.mock('sharp', async () => {
+  const fsPromises = await import('fs/promises')
+  const chain = {
+    rotate: vi.fn().mockReturnThis(),
+    sharpen: vi.fn().mockReturnThis(),
+    webp: vi.fn().mockReturnThis(),
+    toFile: vi.fn().mockImplementation(async (outPath: string) => {
+      await fsPromises.writeFile(outPath, Buffer.alloc(8))
+    }),
+  }
+  return { default: vi.fn(() => chain) }
+})
+
 import { getImages } from 'icloud-shared-album'
 const mockGetImages = vi.mocked(getImages)
 
