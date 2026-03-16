@@ -731,7 +731,7 @@ function ClassicCalendar({ events, loading }: { events: CalendarEvent[]; loading
       <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
         {days.map((d) => {
           const key = calDayKey(d)
-          const allDay = events.filter((e) => e.allDay && e.start.slice(0, 10) === key)
+          const allDay = events.filter((e) => e.allDay && calDayKey(new Date(e.start)) === key)
           return (
             <div key={key} className="flex-1 px-0.5 min-h-[16px]">
               {allDay.map((e) => (

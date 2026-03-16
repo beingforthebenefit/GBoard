@@ -66,10 +66,7 @@ export function CalendarWidget({ events, loading, className = '' }: CalendarWidg
         {days.map((d) => {
           const key = dayKey(d)
           const isToday = key === todayStr
-          const dayEvents = events.filter((e) => {
-            const eKey = e.start.slice(0, 10)
-            return eKey === key
-          })
+          const dayEvents = events.filter((e) => dayKey(new Date(e.start)) === key)
 
           return (
             <div key={key} className="flex gap-2.5 items-baseline text-sm">
