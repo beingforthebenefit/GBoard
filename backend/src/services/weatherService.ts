@@ -82,7 +82,11 @@ export async function fetchWeather(): Promise<WeatherResponse> {
       sunrise: current.sys.sunrise,
       sunset: current.sys.sunset,
     },
-    forecast: buildForecast(forecast.list, tz),
+    forecast: buildForecast(forecast.list, tz, {
+      temp: Math.round(current.main.temp),
+      icon: current.weather[0]?.icon ?? '',
+      description: current.weather[0]?.description ?? '',
+    }),
     hourly: buildHourlyForecast(forecast.list, tz),
   }
 
@@ -104,7 +108,8 @@ function localHour(unixSeconds: number, timezoneOffsetSeconds: number): number {
 
 export function buildForecast(
   items: OWMForecastItem[],
-  timezoneOffsetSeconds = 0
+  timezoneOffsetSeconds = 0,
+  currentConditions?: { temp: number; icon: string; description: string }
 ): WeatherForecastDay[] {
   // Group 3-hour slots by local forecast date (location timezone)
   const byDate = new Map<string, OWMForecastItem[]>()
@@ -116,6 +121,20 @@ export function buildForecast(
   }
 
   const days: WeatherForecastDay[] = []
+
+  // Ensure today is always the first entry, even if OWM has no forecast slots
+  // left for today (e.g. late at night)
+  const todayKey = formatDateKey(Date.now() / 1000, timezoneOffsetSeconds)
+
+  if (!byDate.has(todayKey) && currentConditions) {
+    days.push({
+      date: todayKey,
+      high: currentConditions.temp,
+      low: currentConditions.temp,
+      icon: currentConditions.icon,
+      description: currentConditions.description,
+    })
+  }
 
   for (const date of [...byDate.keys()].sort()) {
     const slots = byDate.get(date)!
