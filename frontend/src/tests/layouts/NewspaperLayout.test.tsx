@@ -141,7 +141,7 @@ describe('NewspaperLayout', () => {
 
   it('renders the masthead title', () => {
     const { container } = render(<NewspaperLayout {...mockProps} />)
-    expect(container.textContent).toContain('Dashboard')
+    expect(container.textContent).toContain('Gerald Herald')
   })
 
   it('shows weather temperature in headline', () => {

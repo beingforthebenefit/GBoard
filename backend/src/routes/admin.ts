@@ -443,7 +443,7 @@ const ADMIN_HTML = /* html */ `<!DOCTYPE html>
 <div id="toast"></div>
 
 <script>
-const API = '/api/admin';
+const API = '/admin';
 const LAYOUTS = [
   { name: 'zen', label: 'Zen', icon: '&#9752;', desc: 'Vertical, day/night theming' },
   { name: 'classic', label: 'Classic', icon: '&#9733;', desc: 'Three-column, glassmorphism' },

@@ -196,7 +196,7 @@ describe('useDayNight', () => {
     renderHook(() => useDayNight(null))
     await flush()
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/admin/theme', { cache: 'no-store' })
+    expect(fetchMock).toHaveBeenCalledWith('/admin/theme', { cache: 'no-store' })
   })
 
   it('handles admin endpoint failure gracefully (stays on guessed theme)', async () => {

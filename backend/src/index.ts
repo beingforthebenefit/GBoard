@@ -51,7 +51,6 @@ app.use('/api/photos', photosRouter)
 app.use('/api/pihole', piholeRouter)
 app.use('/api/media', mediaRouter)
 app.use('/admin', adminRouter)
-app.use('/api/admin', adminRouter)
 
 app.use(errorHandler)
 

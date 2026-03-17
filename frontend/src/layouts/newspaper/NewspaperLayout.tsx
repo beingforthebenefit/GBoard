@@ -59,7 +59,7 @@ function Masthead({ dark }: { dark: boolean }) {
     <div className={`text-center border-b-2 ${ruleColor} pb-3 mb-3`}>
       <div className={`text-[10px] tracking-[0.3em] uppercase ${subtleColor} mb-1`}>{dateStr}</div>
       <div className={`font-serif text-5xl font-bold tracking-tight ${textColor} leading-none`}>
-        Gerald&rsquo;s Dashboard
+        The Gerald Herald
       </div>
       <div className="flex items-center justify-center gap-3 mt-2">
         <div className={`h-px flex-1 ${dividerColor}`} />

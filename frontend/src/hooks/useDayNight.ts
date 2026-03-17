@@ -13,7 +13,7 @@ export function useDayNight(weather: WeatherData | null): Theme {
   useEffect(() => {
     const fetchTheme = async () => {
       try {
-        const res = await fetch('/api/admin/theme', { cache: 'no-store' })
+        const res = await fetch('/admin/theme', { cache: 'no-store' })
         if (!res.ok) return
         const data = (await res.json()) as { theme: AdminTheme }
         if (['auto', 'light', 'dark'].includes(data.theme)) {

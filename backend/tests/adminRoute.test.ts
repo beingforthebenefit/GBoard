@@ -274,7 +274,7 @@ describe('admin routes', () => {
       const res = mockRes()
       getHandler(router, 'get', '/')(mockReq(), res, vi.fn())
       const html = res.send.mock.calls[0][0] as string
-      expect(html).toContain('/api/admin')
+      expect(html).toContain('/admin')
     })
   })
 })

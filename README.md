@@ -45,7 +45,7 @@ Four built-in layouts, switchable live from the admin panel. Zen and Newspaper s
 
 ### Admin Panel
 
-Manage layouts, color modes, and all settings from your phone or any browser at `/api/admin`.
+Manage layouts, color modes, and all settings from your phone or any browser at `/admin`.
 
 <p align="center">
   <img src="docs/screenshots/admin-panel.png" width="300" alt="GBoard Admin Panel" />
@@ -60,7 +60,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Access the dashboard at `http://<your-machine-ip>:3000` and the admin panel at `http://<your-machine-ip>:3000/api/admin`.
+Access the dashboard at `http://<your-machine-ip>:3000` and the admin panel at `http://<your-machine-ip>:3000/admin`.
 
 ## Environment Variables
 
@@ -137,7 +137,7 @@ Browser
    ▼
 Nginx  (port 3000)
   ├─ Serves React SPA
-  ├─ /api/admin  ──▶ Admin panel (layout, theme, settings)
+  ├─ /admin  ──▶ Admin panel (layout, theme, settings)
   └─ /api/*      ──▶ Node.js API (port 3001)
                         ├─ /api/weather       ──▶ OpenWeatherMap
                         ├─ /api/weather/radar  ──▶ RainViewer

@@ -81,19 +81,19 @@ GBoard/
 | `GET /api/media` | Next 10 upcoming TV/movies (Sonarr/Radarr, 14-day window) | 30 min |
 | `GET /api/pihole` | Pi-hole query stats + top clients (v6 API) | None (polled 1 min) |
 | `GET /api/version` | `{ startedAt }` timestamp for deploy detection | None (polled 10s) |
-| `GET /api/admin` | Admin panel (layout, theme, settings) | - |
-| `GET /api/admin/theme` | Current theme + layout preferences | - |
-| `PUT /api/admin/theme` | Update theme or layout | - |
-| `GET /api/admin/env` | Read .env settings (grouped) | - |
-| `PUT /api/admin/env` | Update .env settings | - |
-| `POST /api/admin/refresh` | Trigger dashboard reload | - |
+| `GET /admin` | Admin panel (layout, theme, settings) | - |
+| `GET /admin/theme` | Current theme + layout preferences | - |
+| `PUT /admin/theme` | Update theme or layout | - |
+| `GET /admin/env` | Read .env settings (grouped) | - |
+| `PUT /admin/env` | Update .env settings | - |
+| `POST /admin/refresh` | Trigger dashboard reload | - |
 | `GET /health` | Health check (200 OK) | - |
 
 ## Architecture Notes
 
 - **No database** — all data comes from external APIs or disk cache (photos in Docker volume)
 - **No frontend routing** — single-page dashboard with swappable layout themes
-- **Admin panel** — self-contained HTML served by Express at `/api/admin`; stores preferences in `admin-prefs.json`
+- **Admin panel** — self-contained HTML served by Express at `/admin`; stores preferences in `admin-prefs.json`
 - **Layout system** — layout registry in `layouts/index.ts`; all themes receive the same `LayoutProps` interface
 - **Day/night theming** — `useDayNight` hook applies `html.dark`/`html.light` CSS classes; Zen and Newspaper respond to them
 - **No state management library** — plain React hooks (useState/useEffect) with polling

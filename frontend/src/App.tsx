@@ -18,7 +18,7 @@ function useLayoutPreference() {
   useEffect(() => {
     const fetchLayout = async () => {
       try {
-        const res = await fetch('/api/admin/theme', { cache: 'no-store' })
+        const res = await fetch('/admin/theme', { cache: 'no-store' })
         if (!res.ok) return
         const data = (await res.json()) as { layout?: string }
         if (data.layout) setLayout(data.layout)

@@ -16,9 +16,13 @@ function formatDate(iso: string): string {
   })
 }
 
-function formatLocation(loc: { city?: string; state?: string }): string | null {
-  if (loc.city && loc.state) return `${loc.city}, ${loc.state}`
-  return loc.city || loc.state || null
+function formatLocation(loc: { city?: string; state?: string; country?: string }): string | null {
+  const isUS = loc.country === 'United States'
+  const parts: string[] = []
+  if (loc.city) parts.push(loc.city)
+  if (loc.state) parts.push(loc.state)
+  if (!isUS && loc.country) parts.push(loc.country)
+  return parts.length > 0 ? parts.join(', ') : null
 }
 
 export function PhotoCaption({ photo, className = '', style }: PhotoCaptionProps) {

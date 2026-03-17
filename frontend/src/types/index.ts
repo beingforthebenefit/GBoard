@@ -75,6 +75,7 @@ export interface PhotoLocation {
   lon: number
   city?: string
   state?: string
+  country?: string
 }
 
 export interface PhotoInfo {

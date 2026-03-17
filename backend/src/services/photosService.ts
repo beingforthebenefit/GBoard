@@ -21,6 +21,7 @@ export interface PhotoLocation {
   lon: number
   city?: string
   state?: string
+  country?: string
 }
 
 export interface PhotoInfo {
@@ -36,7 +37,6 @@ interface ManifestEntry {
   location?: PhotoLocation
   metadataExtracted?: boolean
   optimized?: boolean
-  geocodeLang?: string
 }
 
 interface Manifest {
@@ -103,7 +103,7 @@ async function extractMetadata(
 async function reverseGeocode(
   lat: number,
   lon: number
-): Promise<{ city?: string; state?: string }> {
+): Promise<{ city?: string; state?: string; country?: string }> {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10&accept-language=en`
     const res = await fetch(url, {
@@ -111,13 +111,22 @@ async function reverseGeocode(
     })
     if (!res.ok) return {}
     const data = (await res.json()) as {
-      address?: { city?: string; town?: string; village?: string; state?: string; county?: string }
+      address?: {
+        city?: string
+        town?: string
+        village?: string
+        state?: string
+        county?: string
+        country?: string
+        country_code?: string
+      }
     }
     const addr = data.address
     if (!addr) return {}
     return {
       city: addr.city || addr.town || addr.village || undefined,
       state: addr.state || addr.county || undefined,
+      country: addr.country || undefined,
     }
   } catch {
     return {}
@@ -126,17 +135,16 @@ async function reverseGeocode(
 
 /** Extract EXIF + geocode for a single manifest entry */
 async function enrichEntry(entry: ManifestEntry): Promise<ManifestEntry> {
-  if (entry.metadataExtracted && entry.geocodeLang === 'en') return entry
-
-  // If EXIF already extracted, just re-geocode
-  if (entry.metadataExtracted && entry.location) {
+  // Re-geocode if location exists but missing country
+  if (entry.metadataExtracted && entry.location && entry.location.country === undefined) {
     const geo = await reverseGeocode(entry.location.lat, entry.location.lon)
     return {
       ...entry,
       location: { ...entry.location, ...geo },
-      geocodeLang: 'en',
     }
   }
+
+  if (entry.metadataExtracted) return entry
 
   const filepath = path.join(cacheDir(), entry.filename)
   const meta = await extractMetadata(filepath)
@@ -152,7 +160,6 @@ async function enrichEntry(entry: ManifestEntry): Promise<ManifestEntry> {
     dateTaken: meta.dateTaken,
     location,
     metadataExtracted: true,
-    geocodeLang: 'en',
   }
 }
 
@@ -160,7 +167,9 @@ async function enrichEntry(entry: ManifestEntry): Promise<ManifestEntry> {
 async function enrichManifest(entries: ManifestEntry[]): Promise<ManifestEntry[]> {
   const results: ManifestEntry[] = []
   for (const entry of entries) {
-    if (entry.metadataExtracted) {
+    const needsWork =
+      !entry.metadataExtracted || (entry.location && entry.location.country === undefined)
+    if (!needsWork) {
       results.push(entry)
     } else {
       const enriched = await enrichEntry(entry)
@@ -342,29 +351,14 @@ export async function loadFromDisk(): Promise<PhotoInfo[]> {
     console.log('[photos] fixed manifest filenames to match .webp files on disk')
   }
 
-  // One-time migration: reset metadata for entries with wrong GPS (missing ref signs)
-  const needsRegeocode = manifest.photos.some((e) => e.metadataExtracted && e.geocodeLang !== 'en')
-  if (needsRegeocode) {
-    console.log('[photos] resetting metadata for re-geocoding with English + fixed GPS...')
-    for (let i = 0; i < manifest.photos.length; i++) {
-      manifest.photos[i] = {
-        ...manifest.photos[i],
-        metadataExtracted: false,
-        geocodeLang: undefined,
-        location: undefined,
-        dateTaken: undefined,
-      }
-    }
-    manifestDirty = true
-    await saveManifest(manifest)
-  }
-
   // Serve immediately, optimize/enrich in background if needed
   const photos = manifest.photos.map(entryToPhotoInfo)
   cachedPhotos = photos
 
   const needsOptimize = manifest.photos.some((e) => !e.optimized)
-  const needsEnrich = manifest.photos.some((e) => !e.metadataExtracted)
+  const needsEnrich = manifest.photos.some(
+    (e) => !e.metadataExtracted || (e.location && e.location.country === undefined)
+  )
   if (needsOptimize || needsEnrich) {
     processInBackground(manifest).catch((err) =>
       console.error('[photos] background processing failed:', err)
@@ -378,7 +372,9 @@ export async function loadFromDisk(): Promise<PhotoInfo[]> {
 async function processInBackground(manifest: Manifest): Promise<void> {
   let entries = manifest.photos
 
-  const needsEnrich = entries.some((e) => !e.metadataExtracted)
+  const needsEnrich = entries.some(
+    (e) => !e.metadataExtracted || (e.location && e.location.country === undefined)
+  )
   if (needsEnrich) {
     console.log('[photos] enriching metadata in background...')
     entries = await enrichManifest(entries)
