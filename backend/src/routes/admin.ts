@@ -15,7 +15,7 @@ interface Prefs {
   calendarLabels: Record<string, string> // url → label
 }
 
-const PREFS_FILE = resolve(process.cwd(), 'admin-prefs.json')
+const PREFS_FILE = resolve(process.env.DATA_DIR || '/data', 'admin-prefs.json')
 const prefs: Prefs = { theme: 'auto', layout: 'zen', calendarLabels: {} }
 
 async function loadPrefs() {
