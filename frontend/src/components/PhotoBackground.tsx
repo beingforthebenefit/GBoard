@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, ReactNode } from 'react'
+import { useState, useEffect, useMemo, ReactNode } from 'react'
 import { PhotoInfo } from '../types/index.js'
 import { PhotoCaption } from './PhotoCaption.js'
 
@@ -88,34 +88,49 @@ export function PhotoBackground({
   onPhotoChange,
 }: PhotoBackgroundProps) {
   const shuffled = useMemo(() => shuffle(photos), [photos])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [nextIndex, setNextIndex] = useState(1)
-  const [isTransitioning, setIsTransitioning] = useState(false)
 
-  const advance = useCallback(() => {
-    if (shuffled.length < 2) return
-    setCurrentIndex((prev) => (prev + 1) % shuffled.length)
-    setNextIndex((prev) => (prev + 1) % shuffled.length)
-    setIsTransitioning(false)
-  }, [shuffled.length])
+  // Double-buffer crossfade: slot A is always behind at opacity 1,
+  // slot B fades in/out on top. We never change a visible image's src,
+  // so there's no flash and no background bleedthrough during transitions.
+  const [state, setState] = useState({
+    a: 0,
+    b: 1 % Math.max(shuffled.length, 1),
+    bVisible: false,
+    nextIndex: 2,
+  })
 
   useEffect(() => {
     if (shuffled.length < 2) return
+    let timeoutId: ReturnType<typeof setTimeout>
 
     const timer = setInterval(() => {
-      setIsTransitioning(true)
-      const timeout = setTimeout(advance, transitionMs)
-      return () => clearTimeout(timeout)
+      // Start fade: toggle B visibility
+      setState((prev) => ({ ...prev, bVisible: !prev.bVisible }))
+
+      // After fade completes, load next photo into the now-hidden slot
+      timeoutId = setTimeout(() => {
+        setState((prev) => {
+          const next = prev.nextIndex % shuffled.length
+          if (prev.bVisible) {
+            // B is visible → A is hidden behind it → update A
+            return { ...prev, a: next, nextIndex: prev.nextIndex + 1 }
+          } else {
+            // B is hidden → update B
+            return { ...prev, b: next, nextIndex: prev.nextIndex + 1 }
+          }
+        })
+      }, transitionMs)
     }, intervalMs)
 
-    return () => clearInterval(timer)
-  }, [shuffled, intervalMs, transitionMs, advance])
+    return () => {
+      clearInterval(timer)
+      clearTimeout(timeoutId)
+    }
+  }, [shuffled, intervalMs, transitionMs])
 
   const currentPhoto =
     shuffled.length > 0
-      ? isTransitioning
-        ? shuffled[nextIndex % shuffled.length]
-        : shuffled[currentIndex]
+      ? shuffled[state.bVisible ? state.b % shuffled.length : state.a % shuffled.length]
       : null
 
   useEffect(() => {
@@ -143,24 +158,31 @@ export function PhotoBackground({
       className="w-full h-full rounded-2xl overflow-hidden relative"
       style={{ backgroundColor: 'var(--photo-bg)' }}
     >
+      {/* Slot A: always opacity 1, behind B — no background bleedthrough */}
       <PhotoImage
-        src={shuffled[currentIndex].url}
-        opacity={isTransitioning ? 0 : 1}
-        transitionMs={transitionMs}
-        onFailed={advance}
+        src={shuffled[state.a % shuffled.length].url}
+        opacity={1}
+        transitionMs={0}
+        onFailed={() =>
+          setState((prev) => ({
+            ...prev,
+            a: prev.nextIndex % shuffled.length,
+            nextIndex: prev.nextIndex + 1,
+          }))
+        }
       />
+      {/* Slot B: fades in/out on top of A */}
       <PhotoImage
-        src={shuffled[nextIndex % shuffled.length].url}
-        opacity={isTransitioning ? 1 : 0}
+        src={shuffled[state.b % shuffled.length].url}
+        opacity={state.bVisible ? 1 : 0}
         transitionMs={transitionMs}
-        onFailed={advance}
-      />
-      {/* Bottom fade into dashboard bg */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
-        style={{
-          background: `linear-gradient(to top, var(--photo-fade), transparent)`,
-        }}
+        onFailed={() =>
+          setState((prev) => ({
+            ...prev,
+            b: prev.nextIndex % shuffled.length,
+            nextIndex: prev.nextIndex + 1,
+          }))
+        }
       />
       {caption}
     </div>

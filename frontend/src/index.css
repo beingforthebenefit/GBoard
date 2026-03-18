@@ -40,7 +40,6 @@ html.light {
   --astro-accent: #4a6d8c;
   --progress-bg: #e8e2d8;
   --progress-fill: #b8553a;
-  --photo-fade: #f5f1ea;
   --event-opacity: 0.85;
   --weather-icon-filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))
     drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
@@ -69,7 +68,6 @@ html.dark {
   --astro-accent: #6b8afd;
   --progress-bg: #2a2a30;
   --progress-fill: #6b8afd;
-  --photo-fade: #000000;
   --event-opacity: 0.9;
   --weather-icon-filter: none;
 }

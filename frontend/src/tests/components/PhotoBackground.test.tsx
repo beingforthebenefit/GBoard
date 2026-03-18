@@ -111,6 +111,7 @@ describe('PhotoBackground', () => {
     const getImgs = () => Array.from(container.querySelectorAll<HTMLImageElement>('img'))
     const imgs = getImgs()
     expect(imgs.length).toBe(2)
+    // Slot A always opacity 1, slot B starts hidden
     expect(imgs[0].style.opacity).toBe('1')
     expect(imgs[1].style.opacity).toBe('0')
 
@@ -118,16 +119,23 @@ describe('PhotoBackground', () => {
       vi.advanceTimersByTime(intervalMs)
     })
 
+    // B fades in on top of A (A stays at 1, no background bleedthrough)
     const imgsAfter = getImgs()
-    expect(imgsAfter[0].style.opacity).toBe('0')
+    expect(imgsAfter[0].style.opacity).toBe('1')
     expect(imgsAfter[1].style.opacity).toBe('1')
 
+    // After transition completes, hidden slot (A) loads next photo
     act(() => {
       vi.advanceTimersByTime(transitionMs)
     })
 
-    const imgsReset = getImgs()
-    expect(imgsReset[0].style.opacity).toBe('1')
-    expect(imgsReset[1].style.opacity).toBe('0')
+    // Next interval: B fades back out, revealing A with new photo
+    act(() => {
+      vi.advanceTimersByTime(intervalMs - transitionMs)
+    })
+
+    const imgsNext = getImgs()
+    expect(imgsNext[0].style.opacity).toBe('1')
+    expect(imgsNext[1].style.opacity).toBe('0')
   })
 })
