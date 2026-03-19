@@ -16,14 +16,22 @@ export function AstroWidget() {
       <div className="text-3xl flex-shrink-0" style={{ color: 'var(--astro-accent)' }}>
         {snapshot.sign.glyph}
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-base font-medium" style={{ color: 'var(--text)' }}>
-          {snapshot.sign.name}
+      <div className="flex-1 min-w-0 flex gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="text-base font-medium" style={{ color: 'var(--text)' }}>
+            {snapshot.sign.name}
+          </div>
+          <div className="text-[11px] font-light" style={{ color: 'var(--text-4)' }}>
+            {snapshot.signRange} · {snapshot.moon.emoji} {snapshot.moon.name}
+          </div>
+          <div
+            className="text-[11px] font-light leading-relaxed mt-1"
+            style={{ color: 'var(--text-3)' }}
+          >
+            {snapshot.message}
+          </div>
         </div>
-        <div className="text-[11px] font-light" style={{ color: 'var(--text-4)' }}>
-          {snapshot.signRange} · {snapshot.moon.emoji} {snapshot.moon.name}
-        </div>
-        <div className="flex gap-2 mt-2 flex-wrap">
+        <div className="flex flex-col gap-1.5 flex-shrink-0 items-end pt-0.5">
           {[
             snapshot.weekday.dayName,
             `${snapshot.sign.element} · ${snapshot.sign.modality}`,
@@ -41,12 +49,6 @@ export function AstroWidget() {
               {tag}
             </span>
           ))}
-        </div>
-        <div
-          className="text-[11px] font-light leading-relaxed mt-2"
-          style={{ color: 'var(--text-3)' }}
-        >
-          {snapshot.message}
         </div>
       </div>
     </div>
