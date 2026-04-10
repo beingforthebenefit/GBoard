@@ -87,7 +87,7 @@ describe('parseIcs', () => {
         'multi-day@test',
         'Multi-Day Conf',
         `${yesterdayStr}T090000Z`,
-        `${dayAfterTomorrowStr}T170000Z`,
+        `${dayAfterTomorrowStr}T170000Z`
       ),
     ])
     const events = parseIcs(ics)
