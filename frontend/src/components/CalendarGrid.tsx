@@ -54,7 +54,13 @@ function eventLayout(
   hourPx: number
 ): { top: number; height: number } | null {
   const startH = start.getHours() + start.getMinutes() / 60
-  const endH = end.getHours() + end.getMinutes() / 60
+  // Events crossing midnight have endH=0 from getHours(), which incorrectly fails
+  // the HOUR_START guard. Use 24 for any end that falls on a different calendar day.
+  const sameDay =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth() &&
+    start.getDate() === end.getDate()
+  const endH = sameDay ? end.getHours() + end.getMinutes() / 60 : 24
   if (endH <= HOUR_START || startH >= HOUR_END) return null
   const clampedStart = Math.max(startH, HOUR_START)
   const clampedEnd = Math.min(endH, HOUR_END)
@@ -108,7 +114,14 @@ export function CalendarGrid({
       <div className="flex flex-shrink-0 mb-1" style={{ paddingLeft: GUTTER_W }}>
         {days.map((d) => {
           const key = dayKey(d)
-          const allDay = events.filter((e) => e.allDay && dayKey(new Date(e.start)) === key)
+          // Include multi-day all-day events on every day they span.
+          // iCal DTEND is exclusive, so a 1-day event on Apr 10 has end=Apr 11.
+          const allDay = events.filter((e) => {
+            if (!e.allDay) return false
+            const startKey = dayKey(new Date(e.start))
+            const endKey = dayKey(new Date(e.end))
+            return startKey <= key && key < endKey
+          })
           return (
             <div key={key} className="flex-1 px-0.5 min-h-[16px]">
               {allDay.map((e) => (
@@ -148,7 +161,12 @@ export function CalendarGrid({
           {days.map((d) => {
             const key = dayKey(d)
             const isToday = key === todayStr
-            const timed = events.filter((e) => !e.allDay && dayKey(new Date(e.start)) === key)
+            // Include events that overlap this day, not just those that start on it.
+            // d is already midnight of this day; dayEnd is midnight of the next.
+            const dayEnd = new Date(d.getTime() + 24 * 60 * 60 * 1000)
+            const timed = events.filter(
+              (e) => !e.allDay && new Date(e.start) < dayEnd && new Date(e.end) > d
+            )
             return (
               <div
                 key={key}
@@ -189,7 +207,11 @@ export function CalendarGrid({
 
                 {/* Event blocks */}
                 {timed.map((e) => {
-                  const layout = eventLayout(new Date(e.start), new Date(e.end), hourHeight)
+                  const eventStart = new Date(e.start)
+                  // For events that started before this day, use midnight of this day as
+                  // the layout start so the block appears at the top of the visible grid.
+                  const layoutStart = eventStart < d ? d : eventStart
+                  const layout = eventLayout(layoutStart, new Date(e.end), hourHeight)
                   if (!layout) return null
                   const color = eventColors[(e.calendarIndex ?? 0) % eventColors.length]
                   return (

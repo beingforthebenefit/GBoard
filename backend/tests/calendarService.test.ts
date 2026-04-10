@@ -65,6 +65,46 @@ describe('parseIcs', () => {
     expect(events[0].title).toBe('Birthday')
   })
 
+  it('includes a timed event that started before today but ends within the window', () => {
+    // Event starts yesterday at 11 PM, ends today at 1 AM — overlaps with the window.
+    const yesterday = new Date(today.getTime() - 86400000)
+    const yesterdayStr = fmtDate(yesterday)
+    const ics = makeIcs([
+      makeEvent('cross-day@test', 'Late Night', `${yesterdayStr}T230000Z`, `${todayStr}T010000Z`),
+    ])
+    const events = parseIcs(ics)
+    expect(events).toHaveLength(1)
+    expect(events[0].title).toBe('Late Night')
+  })
+
+  it('includes a multi-day event that started before today and spans into the window', () => {
+    const yesterday = new Date(today.getTime() - 86400000)
+    const yesterdayStr = fmtDate(yesterday)
+    const dayAfterTomorrow = new Date(today.getTime() + 2 * 86400000)
+    const dayAfterTomorrowStr = fmtDate(dayAfterTomorrow)
+    const ics = makeIcs([
+      makeEvent(
+        'multi-day@test',
+        'Multi-Day Conf',
+        `${yesterdayStr}T090000Z`,
+        `${dayAfterTomorrowStr}T170000Z`,
+      ),
+    ])
+    const events = parseIcs(ics)
+    expect(events).toHaveLength(1)
+    expect(events[0].title).toBe('Multi-Day Conf')
+  })
+
+  it('includes a timed event ending at midnight (crosses into next day)', () => {
+    // Event starts today at 9 PM and ends at midnight (tomorrow 00:00:00)
+    const ics = makeIcs([
+      makeEvent('midnight@test', 'Late Show', `${todayStr}T210000Z`, `${tomorrowStr}T000000Z`),
+    ])
+    const events = parseIcs(ics)
+    expect(events).toHaveLength(1)
+    expect(events[0].title).toBe('Late Show')
+  })
+
   it('filters out events outside the 5-day window', () => {
     const pastDate = new Date(today.getTime() - 10 * 86400000)
     const pastStr = fmtDate(pastDate)
