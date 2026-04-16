@@ -21,7 +21,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 - **Upcoming Media** — Next 10 upcoming TV episodes (Sonarr) and movies (Radarr), grouped by day
 - **Plex Now Playing** — Active streams with progress animation, hidden when idle
 - **Calendar** — 7-day rolling view from iCloud shared CalDAV/ICS calendars
-- **Photo Background** — Rotating iCloud shared album photos with blurred fill backdrop
+- **Photo Background** — Rotating iCloud shared album photos with blurred fill backdrop, served through a self-hosted [Thumbor](https://www.thumbor.org/) instance for on-demand resizing, WebP conversion, and face-aware smart cropping
 - **Admin Panel** — Web-based settings management with layout/theme picker
 
 ## Themes
@@ -137,15 +137,17 @@ Browser
    ▼
 Nginx  (port 3000)
   ├─ Serves React SPA
-  ├─ /admin  ──▶ Admin panel (layout, theme, settings)
-  └─ /api/*      ──▶ Node.js API (port 3001)
+  ├─ /admin       ──▶ Admin panel (layout, theme, settings)
+  ├─ /thumbor/*   ──▶ Thumbor (smart-crop, resize, WebP) ──▶ shared photos volume
+  └─ /api/*       ──▶ Node.js API (port 3001)
                         ├─ /api/weather       ──▶ OpenWeatherMap
-                        ├─ /api/weather/radar  ──▶ RainViewer
+                        ├─ /api/weather/radar ──▶ RainViewer
                         ├─ /api/calendar      ──▶ iCloud CalDAV ICS
                         ├─ /api/pihole        ──▶ Pi-hole v6
                         ├─ /api/plex          ──▶ Plex (local LAN)
                         ├─ /api/media         ──▶ Sonarr / Radarr
-                        └─ /api/photos        ──▶ iCloud shared album
+                        └─ /api/photos        ──▶ iCloud shared album (downloads originals
+                                                  to a Docker volume that Thumbor reads)
 ```
 
 API keys and tokens are **never** exposed to the browser — all external API calls go through the backend.
