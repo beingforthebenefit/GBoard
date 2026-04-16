@@ -16,7 +16,6 @@ vi.mock('../src/services/mediaService.js', () => ({
 }))
 vi.mock('../src/services/photosService.js', () => ({
   fetchPhotos: vi.fn(),
-  getCacheDir: vi.fn(),
 }))
 vi.mock('../src/services/piholeService.js', () => ({
   fetchPiholeStats: vi.fn(),
@@ -29,7 +28,7 @@ import { fetchWeather } from '../src/services/weatherService.js'
 import { getRadarData, proxyTile } from '../src/services/radarService.js'
 import { fetchCalendarEvents } from '../src/services/calendarService.js'
 import { fetchUpcomingMedia } from '../src/services/mediaService.js'
-import { fetchPhotos, getCacheDir } from '../src/services/photosService.js'
+import { fetchPhotos } from '../src/services/photosService.js'
 import { fetchPiholeStats } from '../src/services/piholeService.js'
 import { fetchPlexSessions } from '../src/services/plexService.js'
 
@@ -320,66 +319,6 @@ describe('photos routes', () => {
       await getHandler(router, 'get', '/')(req, res, next)
 
       expect(next).toHaveBeenCalledWith(err)
-    })
-  })
-
-  describe('GET /image/:filename', () => {
-    it('serves the file from the cache directory', () => {
-      vi.mocked(getCacheDir).mockReturnValue('/data/photos')
-
-      const req = mockReq({ params: { filename: 'sunset.jpg' } })
-      const res = mockRes()
-
-      const handler = getHandler(router, 'get', '/image/:filename')
-      handler(req, res)
-
-      expect(res.sendFile).toHaveBeenCalledWith('/data/photos/sunset.jpg', expect.any(Function))
-    })
-
-    it('strips path traversal from filename', () => {
-      vi.mocked(getCacheDir).mockReturnValue('/data/photos')
-
-      const req = mockReq({ params: { filename: '../../etc/passwd' } })
-      const res = mockRes()
-
-      const handler = getHandler(router, 'get', '/image/:filename')
-      handler(req, res)
-
-      // path.basename('../../etc/passwd') => 'passwd'
-      expect(res.sendFile).toHaveBeenCalledWith('/data/photos/passwd', expect.any(Function))
-    })
-
-    it('returns 404 when sendFile fails', () => {
-      vi.mocked(getCacheDir).mockReturnValue('/data/photos')
-
-      const req = mockReq({ params: { filename: 'missing.jpg' } })
-      const res = mockRes()
-
-      const handler = getHandler(router, 'get', '/image/:filename')
-      handler(req, res)
-
-      // Invoke the sendFile callback with an error
-      const sendFileCallback = res.sendFile.mock.calls[0][1]
-      sendFileCallback(new Error('ENOENT'))
-
-      expect(res.status).toHaveBeenCalledWith(404)
-      expect(res.end).toHaveBeenCalled()
-    })
-
-    it('does not return 404 when sendFile succeeds', () => {
-      vi.mocked(getCacheDir).mockReturnValue('/data/photos')
-
-      const req = mockReq({ params: { filename: 'photo.jpg' } })
-      const res = mockRes()
-
-      const handler = getHandler(router, 'get', '/image/:filename')
-      handler(req, res)
-
-      // Invoke the sendFile callback with no error (success)
-      const sendFileCallback = res.sendFile.mock.calls[0][1]
-      sendFileCallback(null)
-
-      expect(res.status).not.toHaveBeenCalled()
     })
   })
 })

@@ -21,20 +21,6 @@ vi.mock('exifr', () => ({
   default: { parse: vi.fn().mockResolvedValue(null) },
 }))
 
-// Mock sharp — create the .webp output file so filesystem checks work
-vi.mock('sharp', async () => {
-  const fsPromises = await import('fs/promises')
-  const chain = {
-    rotate: vi.fn().mockReturnThis(),
-    sharpen: vi.fn().mockReturnThis(),
-    webp: vi.fn().mockReturnThis(),
-    toFile: vi.fn().mockImplementation(async (outPath: string) => {
-      await fsPromises.writeFile(outPath, Buffer.alloc(8))
-    }),
-  }
-  return { default: vi.fn(() => chain) }
-})
-
 import { getImages } from 'icloud-shared-album'
 const mockGetImages = vi.mocked(getImages)
 
@@ -79,7 +65,7 @@ describe('photosService', () => {
     expect(mockGetImages).toHaveBeenCalledWith('B2cJ0DiRHGKfEzI')
   })
 
-  it('downloads photos and returns local URLs', async () => {
+  it('downloads photos and returns Thumbor URLs', async () => {
     mockGetImages.mockResolvedValue({
       photos: [
         makePhoto('https://cdn.example.com/S/abc123/photo1.JPG', 1080),
@@ -89,8 +75,8 @@ describe('photosService', () => {
 
     const result = await startSync()
     expect(result).toHaveLength(2)
-    expect(result[0].url).toMatch(/^\/api\/photos\/image\//)
-    expect(result[1].url).toMatch(/^\/api\/photos\/image\//)
+    expect(result[0].url).toMatch(/^\/thumbor\/unsafe\/1920x1080\/smart\//)
+    expect(result[1].url).toMatch(/^\/thumbor\/unsafe\/1920x1080\/smart\//)
   })
 
   it('writes a manifest file to disk', async () => {
@@ -115,7 +101,7 @@ describe('photosService', () => {
 
     const urls = await loadFromDisk()
     expect(urls).toHaveLength(1)
-    expect(urls[0].url).toMatch(/^\/api\/photos\/image\//)
+    expect(urls[0].url).toMatch(/^\/thumbor\/unsafe\/1920x1080\/smart\//)
     expect(mockGetImages).not.toHaveBeenCalled()
   })
 
@@ -213,7 +199,6 @@ describe('photosService', () => {
   })
 
   it('fetchPhotos falls back to disk when memory cache is empty', async () => {
-    // First sync to put photos on disk
     mockGetImages.mockResolvedValue({
       photos: [makePhoto('https://cdn.example.com/S/abc/disk-photo.JPG', 500)],
     })
@@ -226,25 +211,188 @@ describe('photosService', () => {
 
     const result = await fetchPhotos()
     expect(result).toHaveLength(1)
-    expect(result[0].url).toMatch(/^\/api\/photos\/image\//)
-    // Should not have called iCloud again
+    expect(result[0].url).toMatch(/^\/thumbor\/unsafe\/1920x1080\/smart\//)
     expect(mockGetImages).not.toHaveBeenCalled()
   })
 
   it('fetchPhotos falls back to sync when both memory and disk are empty', async () => {
-    // Memory is empty (fresh _resetCache), disk has no manifest
     mockGetImages.mockResolvedValue({
       photos: [makePhoto('https://cdn.example.com/S/abc/fresh.JPG', 500)],
     })
 
     const result = await fetchPhotos()
     expect(result).toHaveLength(1)
-    expect(result[0].url).toMatch(/^\/api\/photos\/image\//)
-    // Should have called iCloud to do a full sync
+    expect(result[0].url).toMatch(/^\/thumbor\/unsafe\/1920x1080\/smart\//)
     expect(mockGetImages).toHaveBeenCalledTimes(1)
   })
 
   it('startPeriodicSync can be called without error', () => {
     expect(() => startPeriodicSync()).not.toThrow()
+  })
+})
+
+describe('photosService Thumbor URL generation', () => {
+  it('builds URLs with /thumbor/unsafe/1920x1080/smart/ prefix', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc123/photo.JPG', 500)],
+    })
+
+    const result = await startSync()
+    expect(result[0].url).toMatch(/^\/thumbor\/unsafe\/1920x1080\/smart\/[a-f0-9]+\.jpg$/)
+  })
+
+  it('preserves the file extension in the URL', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [
+        makePhoto('https://cdn.example.com/S/aaa/a.JPG', 500),
+        makePhoto('https://cdn.example.com/S/bbb/b.PNG', 500),
+        makePhoto('https://cdn.example.com/S/ccc/c.HEIC', 500),
+      ],
+    })
+
+    const result = await startSync()
+    const urls = result.map((p) => p.url)
+    expect(urls.some((u) => u.endsWith('.jpg'))).toBe(true)
+    expect(urls.some((u) => u.endsWith('.png'))).toBe(true)
+    expect(urls.some((u) => u.endsWith('.heic'))).toBe(true)
+  })
+
+  it('falls back to .jpg extension when source URL has none', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/no-extension', 500)],
+    })
+
+    const result = await startSync()
+    expect(result[0].url).toMatch(/\.jpg$/)
+  })
+
+  it('produces stable URLs for the same photo across syncs', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG', 500)],
+    })
+
+    const first = await startSync()
+    _resetCache()
+
+    // Same path, different query params (iCloud rotates tokens)
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG?token=different', 500)],
+    })
+    const second = await startSync()
+
+    expect(first[0].url).toBe(second[0].url)
+  })
+
+  it('produces distinct URLs for distinct photos', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [
+        makePhoto('https://cdn.example.com/S/aaa/one.JPG', 500),
+        makePhoto('https://cdn.example.com/S/bbb/two.JPG', 500),
+      ],
+    })
+
+    const result = await startSync()
+    expect(result[0].url).not.toBe(result[1].url)
+  })
+
+  it('uses the same URL format when loading from disk as when syncing', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG', 500)],
+    })
+
+    const fromSync = await startSync()
+    _resetCache()
+    const fromDisk = await loadFromDisk()
+
+    expect(fromDisk[0].url).toBe(fromSync[0].url)
+  })
+
+  it('URL filename matches the manifest filename exactly', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG', 500)],
+    })
+
+    await startSync()
+    const manifest = JSON.parse(await fs.readFile(path.join(tmpDir, 'manifest.json'), 'utf-8'))
+    const entry = manifest.photos[0]
+
+    _resetCache()
+    const photos = await loadFromDisk()
+    expect(photos[0].url).toBe(`/thumbor/unsafe/1920x1080/smart/${entry.filename}`)
+  })
+
+  it('URL filename uses a 16-char hex hash', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG', 500)],
+    })
+
+    const result = await startSync()
+    const filename = result[0].url.split('/').pop() ?? ''
+    expect(filename).toMatch(/^[a-f0-9]{16}\.[a-z]+$/)
+  })
+
+  it('URL does not contain query strings or fragments', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG?token=secret#frag', 500)],
+    })
+
+    const result = await startSync()
+    expect(result[0].url).not.toContain('?')
+    expect(result[0].url).not.toContain('#')
+    expect(result[0].url).not.toContain('token=')
+  })
+
+  it('URL includes the smart flag for face detection', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG', 500)],
+    })
+
+    const result = await startSync()
+    expect(result[0].url).toContain('/smart/')
+  })
+
+  it('URL includes 1920x1080 dimensions for widescreen smart crop', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG', 500)],
+    })
+
+    const result = await startSync()
+    expect(result[0].url).toContain('/1920x1080/')
+  })
+
+  it('URL is relative (no host) so it routes through the same nginx as the app', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/photo.JPG', 500)],
+    })
+
+    const result = await startSync()
+    expect(result[0].url.startsWith('/')).toBe(true)
+    expect(result[0].url).not.toMatch(/^https?:/)
+  })
+
+  it('URL filename does not leak directory traversal chars', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [makePhoto('https://cdn.example.com/S/abc/../../etc/passwd', 500)],
+    })
+
+    const result = await startSync()
+    expect(result[0].url).not.toContain('..')
+    expect(result[0].url).not.toContain('/etc/')
+  })
+
+  it('all returned photos have well-formed Thumbor URLs', async () => {
+    mockGetImages.mockResolvedValue({
+      photos: [
+        makePhoto('https://cdn.example.com/S/a/one.JPG', 500),
+        makePhoto('https://cdn.example.com/S/b/two.JPG', 500),
+        makePhoto('https://cdn.example.com/S/c/three.JPG', 500),
+      ],
+    })
+
+    const result = await startSync()
+    expect(result).toHaveLength(3)
+    for (const p of result) {
+      expect(p.url).toMatch(/^\/thumbor\/unsafe\/1920x1080\/smart\/[a-f0-9]{16}\.[a-z]+$/)
+    }
   })
 })

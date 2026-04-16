@@ -3,7 +3,6 @@ import fs from 'fs/promises'
 import path from 'path'
 import { getImages } from 'icloud-shared-album'
 import exifr from 'exifr'
-import sharp from 'sharp'
 
 const SYNC_INTERVAL_MS = 60 * 60 * 1000 // re-sync with iCloud every 60 min
 
@@ -36,7 +35,6 @@ interface ManifestEntry {
   dateTaken?: string
   location?: PhotoLocation
   metadataExtracted?: boolean
-  optimized?: boolean
 }
 
 interface Manifest {
@@ -55,13 +53,13 @@ function urlHash(url: string): string {
   return crypto.createHash('sha256').update(parsed.pathname).digest('hex').slice(0, 16)
 }
 
-function localUrl(filename: string): string {
-  return `/api/photos/image/${filename}`
+function thumborUrl(filename: string): string {
+  return `/thumbor/unsafe/1920x1080/smart/${filename}`
 }
 
 function entryToPhotoInfo(entry: ManifestEntry): PhotoInfo {
   return {
-    url: localUrl(entry.filename),
+    url: thumborUrl(entry.filename),
     dateTaken: entry.dateTaken,
     location: entry.location,
   }
@@ -183,60 +181,6 @@ async function enrichManifest(entries: ManifestEntry[]): Promise<ManifestEntry[]
   return results
 }
 
-// --- Image optimization (sharp) ---
-
-/** Convert image to high-quality WebP with sharpening */
-async function optimizeImage(filepath: string): Promise<string> {
-  const webpPath = filepath.replace(/\.[^.]+$/, '.webp')
-
-  // If already converted (e.g. interrupted previous run), just return
-  if (webpPath !== filepath) {
-    try {
-      await fs.access(webpPath)
-      await fs.unlink(filepath).catch(() => {})
-      return path.basename(webpPath)
-    } catch {
-      // .webp doesn't exist yet, proceed with conversion
-    }
-  }
-
-  await sharp(filepath)
-    .rotate() // auto-rotate based on EXIF orientation
-    .sharpen({ sigma: 0.8, m1: 0.8, m2: 0.4 }) // mild sharpen to counteract upscale softness
-    .webp({ quality: 90, effort: 4 })
-    .toFile(webpPath)
-
-  // Remove original if different from output
-  if (webpPath !== filepath) {
-    await fs.unlink(filepath).catch(() => {})
-  }
-  return path.basename(webpPath)
-}
-
-/** Optimize all entries that haven't been processed yet, saving progress periodically */
-async function optimizeManifest(entries: ManifestEntry[]): Promise<ManifestEntry[]> {
-  const results: ManifestEntry[] = [...entries]
-  let count = 0
-  for (let i = 0; i < results.length; i++) {
-    if (results[i].optimized) continue
-    try {
-      const filepath = path.join(cacheDir(), results[i].filename)
-      const newFilename = await optimizeImage(filepath)
-      results[i] = { ...results[i], filename: newFilename, optimized: true }
-      count++
-      // Save progress every 20 photos to survive restarts
-      if (count % 20 === 0) {
-        await saveManifest({ photos: results, syncedAt: Date.now() })
-      }
-    } catch (err) {
-      console.error(`[photos] optimize failed for ${results[i].filename}:`, err)
-      results[i] = { ...results[i], optimized: true }
-    }
-  }
-  if (count > 0) console.log(`[photos] optimized ${count} photos to WebP`)
-  return results
-}
-
 // --- Manifest I/O ---
 
 async function ensureCacheDir(): Promise<void> {
@@ -285,7 +229,6 @@ async function downloadBatch(
         if (ok) results.push({ hash: item.hash, filename: item.filename })
       })
     )
-    // Log any failures
     for (const r of settled) {
       if (r.status === 'rejected') {
         console.error('[photos] download failed:', r.reason)
@@ -327,70 +270,32 @@ function extractCdnUrls(
 
 // --- Core logic ---
 
-/** Load cached photos from disk (instant), fix filenames and optimize if needed */
+/** Load cached photos from disk (instant), enrich in background if needed */
 export async function loadFromDisk(): Promise<PhotoInfo[]> {
   const manifest = await loadManifest()
   if (!manifest || manifest.photos.length === 0) return []
 
-  // Fix manifest entries that reference .jpg but .webp exists on disk
-  let manifestDirty = false
-  for (let i = 0; i < manifest.photos.length; i++) {
-    const entry = manifest.photos[i]
-    if (entry.filename.endsWith('.webp')) continue
-    const webpName = entry.filename.replace(/\.[^.]+$/, '.webp')
-    try {
-      await fs.access(path.join(cacheDir(), webpName))
-      manifest.photos[i] = { ...entry, filename: webpName, optimized: true }
-      manifestDirty = true
-    } catch {
-      // original file still exists, will be optimized later
-    }
-  }
-  if (manifestDirty) {
-    await saveManifest(manifest)
-    console.log('[photos] fixed manifest filenames to match .webp files on disk')
-  }
-
-  // Serve immediately, optimize/enrich in background if needed
   const photos = manifest.photos.map(entryToPhotoInfo)
   cachedPhotos = photos
 
-  const needsOptimize = manifest.photos.some((e) => !e.optimized)
   const needsEnrich = manifest.photos.some(
     (e) => !e.metadataExtracted || (e.location && e.location.country === undefined)
   )
-  if (needsOptimize || needsEnrich) {
-    processInBackground(manifest).catch((err) =>
-      console.error('[photos] background processing failed:', err)
+  if (needsEnrich) {
+    enrichInBackground(manifest).catch((err) =>
+      console.error('[photos] background enrichment failed:', err)
     )
   }
 
   return photos
 }
 
-/** Enrich and optimize existing photos in background without blocking serving */
-async function processInBackground(manifest: Manifest): Promise<void> {
-  let entries = manifest.photos
-
-  const needsEnrich = entries.some(
-    (e) => !e.metadataExtracted || (e.location && e.location.country === undefined)
-  )
-  if (needsEnrich) {
-    console.log('[photos] enriching metadata in background...')
-    entries = await enrichManifest(entries)
-    await saveManifest({ photos: entries, syncedAt: manifest.syncedAt })
-    cachedPhotos = entries.map(entryToPhotoInfo)
-    console.log('[photos] background enrichment complete')
-  }
-
-  const needsOptimize = entries.some((e) => !e.optimized)
-  if (needsOptimize) {
-    console.log('[photos] optimizing images in background...')
-    entries = await optimizeManifest(entries)
-    await saveManifest({ photos: entries, syncedAt: manifest.syncedAt })
-    cachedPhotos = entries.map(entryToPhotoInfo)
-    console.log('[photos] background optimization complete')
-  }
+async function enrichInBackground(manifest: Manifest): Promise<void> {
+  console.log('[photos] enriching metadata in background...')
+  const entries = await enrichManifest(manifest.photos)
+  await saveManifest({ photos: entries, syncedAt: manifest.syncedAt })
+  cachedPhotos = entries.map(entryToPhotoInfo)
+  console.log('[photos] background enrichment complete')
 }
 
 /** Sync with iCloud: download new photos, remove stale ones */
@@ -432,19 +337,11 @@ async function doSync(): Promise<PhotoInfo[]> {
   const kept = manifest?.photos.filter((p) => allHashes.has(p.hash)) ?? []
   let allEntries = [...kept, ...newEntries]
 
-  // Enrich entries missing metadata (EXIF + geocode) — must run BEFORE optimization
-  // because sharp conversion strips EXIF data
+  // Enrich entries missing metadata (EXIF + geocode)
   const needsEnrich = allEntries.some((e) => !e.metadataExtracted)
   if (needsEnrich) {
     console.log('[photos] extracting metadata...')
     allEntries = await enrichManifest(allEntries)
-  }
-
-  // Optimize images to WebP with sharpening
-  const needsOptimize = allEntries.some((e) => !e.optimized)
-  if (needsOptimize) {
-    console.log('[photos] optimizing images...')
-    allEntries = await optimizeManifest(allEntries)
   }
 
   const updatedManifest: Manifest = {
@@ -496,7 +393,7 @@ export async function fetchPhotos(): Promise<PhotoInfo[]> {
   return startSync()
 }
 
-/** Get the cache directory path (for serving images) */
+/** Get the cache directory path */
 export function getCacheDir(): string {
   return cacheDir()
 }
