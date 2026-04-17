@@ -260,9 +260,7 @@ function NewsPhoto({ photos, dark }: { photos: LayoutProps['photos']; dark: bool
     )
   }
 
-  const src = size
-    ? buildThumborUrl(current.filename, size.width, size.height, 'contain')
-    : null
+  const src = size ? buildThumborUrl(current.filename, size.width, size.height, 'contain') : null
 
   return (
     <div className="flex flex-col h-full">

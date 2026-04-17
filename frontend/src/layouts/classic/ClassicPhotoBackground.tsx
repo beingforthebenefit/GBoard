@@ -126,7 +126,12 @@ export function ClassicPhotoBackground({
     ? buildThumborUrl(shuffled[currentIndex].filename, size.width, size.height, 'contain')
     : null
   const srcNext = size
-    ? buildThumborUrl(shuffled[nextIndex % shuffled.length].filename, size.width, size.height, 'contain')
+    ? buildThumborUrl(
+        shuffled[nextIndex % shuffled.length].filename,
+        size.width,
+        size.height,
+        'contain'
+      )
     : null
 
   return (

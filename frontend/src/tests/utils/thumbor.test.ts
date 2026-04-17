@@ -30,9 +30,7 @@ describe('buildThumborUrl', () => {
 
   it('always includes the sharpen filter', () => {
     expect(buildThumborUrl('a.jpg', 100, 100, 'cover')).toContain('filters:sharpen(0.6,0.5,true)')
-    expect(buildThumborUrl('a.jpg', 100, 100, 'contain')).toContain(
-      'filters:sharpen(0.6,0.5,true)'
-    )
+    expect(buildThumborUrl('a.jpg', 100, 100, 'contain')).toContain('filters:sharpen(0.6,0.5,true)')
   })
 
   it('produces relative URLs starting with /thumbor/unsafe/', () => {
