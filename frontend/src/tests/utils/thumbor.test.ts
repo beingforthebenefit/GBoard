@@ -2,15 +2,15 @@ import { describe, it, expect } from 'vitest'
 import { buildThumborUrl } from '../../utils/thumbor.js'
 
 describe('buildThumborUrl', () => {
-  it('builds a smart-crop cover URL with the requested dimensions', () => {
+  it('builds a center-crop cover URL with the requested dimensions', () => {
     const url = buildThumborUrl('photo.jpg', 800, 600, 'cover')
-    expect(url).toBe('/thumbor/unsafe/800x600/smart/filters:sharpen(0.6,0.5,true)/photo.jpg')
+    expect(url).toBe('/thumbor/unsafe/800x600/filters:sharpen(0.6,0.5,true)/photo.jpg')
   })
 
   it('defaults to cover fit when fit not specified', () => {
     const url = buildThumborUrl('photo.jpg', 800, 600)
-    expect(url).toContain('/smart/')
     expect(url).not.toContain('/fit-in/')
+    expect(url).not.toContain('/smart/')
   })
 
   it('builds a fit-in URL for contain fit', () => {

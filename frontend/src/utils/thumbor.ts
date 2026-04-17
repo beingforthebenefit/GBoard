@@ -13,5 +13,5 @@ export function buildThumborUrl(
   if (fit === 'contain') {
     return `/thumbor/unsafe/fit-in/${w}x${h}/${SHARPEN}/${filename}`
   }
-  return `/thumbor/unsafe/${w}x${h}/smart/${SHARPEN}/${filename}`
+  return `/thumbor/unsafe/${w}x${h}/${SHARPEN}/${filename}`
 }
