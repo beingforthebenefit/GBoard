@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useClock } from '../../hooks/useClock.js'
 import { useSoberCounter } from '../../hooks/useSoberCounter.js'
+import { useElementSize } from '../../hooks/useElementSize.js'
 import { getAstrologySnapshot } from '../../utils/astrology.js'
+import { buildThumborUrl } from '../../utils/thumbor.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { LayoutProps } from '../index.js'
 
@@ -276,6 +278,8 @@ function TermPhoto({ photos }: Pick<LayoutProps, 'photos'>) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [nextIdx, setNextIdx] = useState(1)
   const [fading, setFading] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const size = useElementSize(containerRef)
   const shuffled = useMemo(() => {
     if (photos.length === 0) return []
     const arr = [...photos]
@@ -303,7 +307,10 @@ function TermPhoto({ photos }: Pick<LayoutProps, 'photos'>) {
 
   if (shuffled.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-green-500/20 font-mono text-xs text-center">
+      <div
+        ref={containerRef}
+        className="flex items-center justify-center h-full text-green-500/20 font-mono text-xs text-center"
+      >
         [ PHOTO FEED ]
         <br />
         ---- iCloud Album ----
@@ -326,20 +333,32 @@ function TermPhoto({ photos }: Pick<LayoutProps, 'photos'>) {
     )
   }
 
+  const srcCurrent = size
+    ? buildThumborUrl(shuffled[currentIdx].filename, size.width, size.height, 'cover')
+    : null
+  const srcNext = size
+    ? buildThumborUrl(shuffled[nextIdx].filename, size.width, size.height, 'cover')
+    : null
+
   return (
-    <div className="h-full relative overflow-hidden rounded-sm border border-green-500/20">
-      <img
-        src={shuffled[currentIdx].url}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-        style={{
-          filter: 'saturate(0) brightness(0.7) contrast(1.1)',
-          opacity: fading ? 0 : 1,
-        }}
-      />
-      {shuffled.length > 1 && (
+    <div
+      ref={containerRef}
+      className="h-full relative overflow-hidden rounded-sm border border-green-500/20"
+    >
+      {srcCurrent && (
         <img
-          src={shuffled[nextIdx].url}
+          src={srcCurrent}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          style={{
+            filter: 'saturate(0) brightness(0.7) contrast(1.1)',
+            opacity: fading ? 0 : 1,
+          }}
+        />
+      )}
+      {shuffled.length > 1 && srcNext && (
+        <img
+          src={srcNext}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: 'saturate(0) brightness(0.7) contrast(1.1)' }}

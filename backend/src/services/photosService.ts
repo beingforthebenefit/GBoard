@@ -24,7 +24,7 @@ export interface PhotoLocation {
 }
 
 export interface PhotoInfo {
-  url: string
+  filename: string
   dateTaken?: string
   location?: PhotoLocation
 }
@@ -53,13 +53,9 @@ function urlHash(url: string): string {
   return crypto.createHash('sha256').update(parsed.pathname).digest('hex').slice(0, 16)
 }
 
-function thumborUrl(filename: string): string {
-  return `/thumbor/unsafe/1920x1080/smart/${filename}`
-}
-
 function entryToPhotoInfo(entry: ManifestEntry): PhotoInfo {
   return {
-    url: thumborUrl(entry.filename),
+    filename: entry.filename,
     dateTaken: entry.dateTaken,
     location: entry.location,
   }

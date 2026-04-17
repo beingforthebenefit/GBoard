@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { PhotoInfo } from '../../types/index.js'
 import { PhotoCaption } from '../../components/PhotoCaption.js'
+import { useElementSize } from '../../hooks/useElementSize.js'
+import { buildThumborUrl } from '../../utils/thumbor.js'
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -89,6 +91,8 @@ export function ClassicPhotoBackground({
   transitionMs?: number
 }) {
   const shuffled = useMemo(() => shuffle(photos), [photos])
+  const containerRef = useRef<HTMLDivElement>(null)
+  const size = useElementSize(containerRef)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [nextIndex, setNextIndex] = useState(1)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -111,27 +115,38 @@ export function ClassicPhotoBackground({
   }, [shuffled, intervalMs, transitionMs, advance])
 
   if (shuffled.length === 0) {
-    return <div className="fixed inset-0 -z-10 bg-gray-900" />
+    return <div ref={containerRef} className="fixed inset-0 -z-10 bg-gray-900" />
   }
 
   const currentPhoto = isTransitioning
     ? shuffled[nextIndex % shuffled.length]
     : shuffled[currentIndex]
 
+  const srcCurrent = size
+    ? buildThumborUrl(shuffled[currentIndex].filename, size.width, size.height, 'contain')
+    : null
+  const srcNext = size
+    ? buildThumborUrl(shuffled[nextIndex % shuffled.length].filename, size.width, size.height, 'contain')
+    : null
+
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
-      <LayeredPhoto
-        src={shuffled[currentIndex].url}
-        opacity={isTransitioning ? 0 : 1}
-        transitionMs={transitionMs}
-        onFailed={advance}
-      />
-      <LayeredPhoto
-        src={shuffled[nextIndex % shuffled.length].url}
-        opacity={isTransitioning ? 1 : 0}
-        transitionMs={transitionMs}
-        onFailed={advance}
-      />
+    <div ref={containerRef} className="fixed inset-0 -z-10 overflow-hidden bg-black">
+      {srcCurrent && (
+        <LayeredPhoto
+          src={srcCurrent}
+          opacity={isTransitioning ? 0 : 1}
+          transitionMs={transitionMs}
+          onFailed={advance}
+        />
+      )}
+      {srcNext && (
+        <LayeredPhoto
+          src={srcNext}
+          opacity={isTransitioning ? 1 : 0}
+          transitionMs={transitionMs}
+          onFailed={advance}
+        />
+      )}
       <div className="absolute inset-0 bg-black/10" />
       <PhotoCaption
         photo={currentPhoto}

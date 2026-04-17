@@ -29,7 +29,12 @@ services:
       - RESULT_STORAGE_FILE_STORAGE_ROOT_PATH=/data/thumbor-cache
       - RESULT_STORAGE_STORES_UNSAFE=True
       - AUTO_WEBP=True
-      - QUALITY=88
+      - QUALITY=90
+      - WEBP_QUALITY=90
+      - RESPECT_ORIENTATION=True
+      - PRESERVE_EXIF_INFO=False
+      - MAX_AGE=604800
+      - THUMBOR_NUM_PROCESSES=4
     volumes:
       - photos-cache:/data/photos:ro
       - thumbor-cache:/data/thumbor-cache

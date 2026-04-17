@@ -79,7 +79,7 @@ export interface PhotoLocation {
 }
 
 export interface PhotoInfo {
-  url: string
+  filename: string
   dateTaken?: string
   location?: PhotoLocation
 }

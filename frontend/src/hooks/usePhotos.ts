@@ -17,12 +17,7 @@ export function usePhotos() {
         if (!res.ok) throw new Error(`Photos API error: ${res.status}`)
         const json = await res.json()
         if (!cancelled) {
-          // Support both old format (string[]) and new format (PhotoInfo[])
-          const raw = json.photos ?? []
-          const photos: PhotoInfo[] = raw.map((p: string | PhotoInfo) =>
-            typeof p === 'string' ? { url: p } : p
-          )
-          setPhotos(photos)
+          setPhotos((json.photos ?? []) as PhotoInfo[])
           setError(null)
         }
       } catch (e) {

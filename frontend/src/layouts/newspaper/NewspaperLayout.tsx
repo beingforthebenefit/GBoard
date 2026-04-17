@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useClock } from '../../hooks/useClock.js'
 import { useSoberCounter } from '../../hooks/useSoberCounter.js'
+import { useElementSize } from '../../hooks/useElementSize.js'
 import { getAstrologySnapshot } from '../../utils/astrology.js'
+import { buildThumborUrl } from '../../utils/thumbor.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { LayoutProps } from '../index.js'
 
@@ -218,6 +220,8 @@ function NewsPhoto({ photos, dark }: { photos: LayoutProps['photos']; dark: bool
   }, [photos])
   const [idx, setIdx] = useState(0)
   const [fade, setFade] = useState(false)
+  const photoRef = useRef<HTMLDivElement>(null)
+  const size = useElementSize(photoRef)
 
   useEffect(() => {
     if (shuffled.length === 0) return
@@ -256,15 +260,21 @@ function NewsPhoto({ photos, dark }: { photos: LayoutProps['photos']; dark: bool
     )
   }
 
+  const src = size
+    ? buildThumborUrl(current.filename, size.width, size.height, 'contain')
+    : null
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 min-h-0 relative overflow-hidden">
-        <img
-          src={current.url}
-          alt=""
-          className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
-          style={{ opacity: fade ? 0 : 1 }}
-        />
+      <div ref={photoRef} className="flex-1 min-h-0 relative overflow-hidden">
+        {src && (
+          <img
+            src={src}
+            alt=""
+            className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
+            style={{ opacity: fade ? 0 : 1 }}
+          />
+        )}
       </div>
       {captionParts.length > 0 && (
         <div

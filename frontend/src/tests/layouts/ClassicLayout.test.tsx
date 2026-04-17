@@ -4,7 +4,7 @@ import { render } from '@testing-library/react'
 // ── Mock sub-components that rely on external resources or complex logic ──
 
 vi.mock('../../layouts/classic/ClassicPhotoBackground.js', () => ({
-  ClassicPhotoBackground: ({ photos }: { photos: { url: string }[] }) => (
+  ClassicPhotoBackground: ({ photos }: { photos: { filename: string }[] }) => (
     <div data-testid="photo-background" data-photo-count={photos.length} />
   ),
 }))
@@ -151,7 +151,7 @@ const fullProps = {
   mediaItems: [
     { title: 'Test Show', subtitle: 'S01E01', date: '2025-01-02', type: 'episode' as const },
   ],
-  photos: [{ url: 'photo1.jpg' }, { url: 'photo2.jpg' }],
+  photos: [{ filename: 'photo1.jpg' }, { filename: 'photo2.jpg' }],
 }
 
 describe('ClassicLayout', () => {
