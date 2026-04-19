@@ -46,10 +46,6 @@ vi.mock('../../components/ClockWidget.js', () => ({
   ClockWidget: () => <div data-testid="clock-widget" />,
 }))
 
-vi.mock('../../components/AstroWidget.js', () => ({
-  AstroWidget: () => <div data-testid="astro-widget" />,
-}))
-
 vi.mock('../../components/SoberCounter.js', () => ({
   SoberCounter: () => <div data-testid="sober-counter" />,
 }))
@@ -84,7 +80,6 @@ describe('App', () => {
     expect(getByTestId('weather-header')).toBeTruthy()
     expect(getByTestId('forecast-strip')).toBeTruthy()
     expect(getByTestId('clock-widget')).toBeTruthy()
-    expect(getByTestId('astro-widget')).toBeTruthy()
     expect(getByTestId('sober-counter')).toBeTruthy()
     expect(getByTestId('media-widget')).toBeTruthy()
     expect(getByTestId('plex-widget')).toBeTruthy()

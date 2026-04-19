@@ -36,8 +36,6 @@ html.light {
   --plex-bg: #faf8f5;
   --cal-accent: #b8553a;
   --cal-border: #e8e2d8;
-  --astro-bg: #faf8f5;
-  --astro-accent: #4a6d8c;
   --progress-bg: #e8e2d8;
   --progress-fill: #b8553a;
   --event-opacity: 0.85;
@@ -64,8 +62,6 @@ html.dark {
   --plex-bg: #1a1a1e;
   --cal-accent: #6b8afd;
   --cal-border: #333340;
-  --astro-bg: #1a1a1e;
-  --astro-accent: #6b8afd;
   --progress-bg: #2a2a30;
   --progress-fill: #6b8afd;
   --event-opacity: 0.9;
@@ -110,52 +106,6 @@ body {
 
 .media-marquee {
   animation: media-marquee 10s ease-in-out infinite alternate;
-}
-
-@keyframes astro-twinkle {
-  0%,
-  100% {
-    opacity: 0.72;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.astro-twinkle {
-  animation: astro-twinkle 3.4s ease-in-out infinite;
-}
-
-@keyframes astro-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.astro-spin-slow {
-  animation: astro-spin 120s linear infinite;
-  transform-origin: 50% 50%;
-}
-
-.astro-stars {
-  background-image:
-    radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.28) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 78% 28%, rgba(255, 255, 255, 0.22) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 24% 72%, rgba(255, 255, 255, 0.16) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 86% 74%, rgba(255, 255, 255, 0.24) 0 1px, transparent 1.2px),
-    radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.18) 0 0.8px, transparent 1px),
-    radial-gradient(circle at 38% 55%, rgba(255, 255, 255, 0.14) 0 0.8px, transparent 1px);
-  background-size:
-    137px 113px,
-    149px 127px,
-    163px 139px,
-    151px 109px,
-    173px 131px,
-    143px 151px;
-  backface-visibility: hidden;
 }
 
 @keyframes pulse-dot {

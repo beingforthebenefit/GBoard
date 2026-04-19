@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useClock } from '../../hooks/useClock.js'
 import { useSoberCounter } from '../../hooks/useSoberCounter.js'
 import { useElementSize } from '../../hooks/useElementSize.js'
-import { getAstrologySnapshot } from '../../utils/astrology.js'
 import { buildThumborUrl } from '../../utils/thumbor.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { LayoutProps } from '../index.js'
@@ -239,37 +238,6 @@ function TermMedia({
           </div>
         )
       })}
-    </div>
-  )
-}
-
-function TermAstro() {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000)
-    return () => clearInterval(id)
-  }, [])
-
-  const snap = useMemo(() => getAstrologySnapshot(now), [now])
-  return (
-    <div className="font-mono text-xs space-y-1">
-      <div className="flex items-baseline gap-2">
-        <span className="text-green-400 text-lg">{snap.sign.glyph}</span>
-        <span className="text-green-400 text-base font-semibold">{snap.sign.name}</span>
-        <span className="text-green-500/40">{snap.signRange}</span>
-      </div>
-      <div className="text-green-500/50 flex flex-wrap gap-x-3">
-        <span>
-          {snap.moon.emoji} {snap.moon.name}
-        </span>
-        <span>day: {snap.weekday.dayName}</span>
-        <span>ruler: {snap.weekday.ruler}</span>
-        <span>
-          elem: {snap.sign.element} · {snap.sign.modality}
-        </span>
-        <span>lucky: {snap.luckyWindow}</span>
-      </div>
-      <div className="text-green-500/30 italic">{snap.message}</div>
     </div>
   )
 }
@@ -516,13 +484,6 @@ export function TerminalLayout({
                 } as React.CSSProperties
               }
             />
-          </Box>
-        </div>
-
-        {/* Cosmic */}
-        <div className="flex-shrink-0">
-          <Box title="COSMIC">
-            <TermAstro />
           </Box>
         </div>
       </div>

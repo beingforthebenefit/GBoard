@@ -50,7 +50,7 @@ GBoard/
 │   │   │   ├── terminal/     # Green-on-black CRT terminal
 │   │   │   └── newspaper/    # Editorial broadsheet with serif typography
 │   │   ├── hooks/            # Data-fetching hooks with polling intervals
-│   │   ├── utils/            # Sobriety math, astrology calculations
+│   │   ├── utils/            # Sobriety math
 │   │   └── types/index.ts    # Shared interfaces (duplicated from backend)
 │   ├── tests/
 │   └── nginx/default.conf    # SPA fallback + /api proxy to backend

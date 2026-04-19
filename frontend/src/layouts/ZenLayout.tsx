@@ -2,7 +2,6 @@ import { PhotoBackground } from '../components/PhotoBackground.js'
 import { PhotoCaption } from '../components/PhotoCaption.js'
 import { WeatherHeader, ForecastStrip } from '../components/WeatherWidget.js'
 import { ClockWidget } from '../components/ClockWidget.js'
-import { AstroWidget } from '../components/AstroWidget.js'
 import { SoberCounter } from '../components/SoberCounter.js'
 import { MediaWidget } from '../components/MediaWidget.js'
 import { PlexWidget } from '../components/PlexWidget.js'
@@ -82,11 +81,6 @@ export function ZenLayout({
           hourHeight={22}
           className="card rounded-xl px-4 py-2"
         />
-      </div>
-
-      {/* Astrology */}
-      <div className="flex-shrink-0">
-        <AstroWidget />
       </div>
     </div>
   )

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useClock } from '../../hooks/useClock.js'
 import { useSoberCounter } from '../../hooks/useSoberCounter.js'
 import { useElementSize } from '../../hooks/useElementSize.js'
-import { getAstrologySnapshot } from '../../utils/astrology.js'
 import { buildThumborUrl } from '../../utils/thumbor.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { LayoutProps } from '../index.js'
@@ -357,43 +356,6 @@ function NewsMedia({
   )
 }
 
-// ── Astrology ──
-
-function NewsAstro({ dark }: { dark: boolean }) {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000)
-    return () => clearInterval(id)
-  }, [])
-
-  const textColor = dark ? 'text-neutral-100' : 'text-black'
-  const subtleColor = dark ? 'text-neutral-500' : 'text-neutral-400'
-
-  const snap = useMemo(() => getAstrologySnapshot(now), [now])
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{snap.sign.glyph}</span>
-        <span className={`font-serif text-lg font-bold ${textColor}`}>{snap.sign.name}</span>
-        <span className={`text-xs ${subtleColor}`}>{snap.signRange}</span>
-      </div>
-      <div className={`flex flex-wrap gap-x-2.5 text-[11px] ${subtleColor}`}>
-        <span>{snap.weekday.dayName}</span>
-        <span>
-          {snap.moon.emoji} {snap.moon.name}
-        </span>
-        <span>
-          {snap.sign.element} · {snap.sign.modality}
-        </span>
-        <span>Lucky {snap.luckyWindow}</span>
-      </div>
-      <div className={`text-xs ${subtleColor} italic mt-1 font-serif leading-snug`}>
-        {snap.message}
-      </div>
-    </div>
-  )
-}
-
 // ── Section header ──
 
 function SectionHead({ children, dark }: { children: React.ReactNode; dark: boolean }) {
@@ -426,7 +388,6 @@ export function NewspaperLayout({
 
   const bgColor = dark ? 'bg-neutral-950' : 'bg-[#f5f0e8]'
   const textColor = dark ? 'text-neutral-100' : 'text-black'
-  const borderColor = dark ? 'border-neutral-700' : 'border-neutral-200'
 
   return (
     <div className={`h-screen w-full overflow-hidden flex flex-col ${bgColor} ${textColor}`}>
@@ -488,11 +449,6 @@ export function NewspaperLayout({
               className="font-serif"
             />
           </div>
-        </div>
-
-        {/* Astrology — footer column */}
-        <div className={`flex-shrink-0 mt-3 border-t ${borderColor} pt-3`}>
-          <NewsAstro dark={dark} />
         </div>
       </div>
     </div>

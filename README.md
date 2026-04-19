@@ -15,7 +15,6 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 - **Weather** — Current conditions, 4-day forecast, sunrise/sunset (OpenWeatherMap)
 - **Radar Map** — Live precipitation radar overlay via RainViewer on CartoDB dark tiles
 - **Clock & Date** — Live 12-hour digital clock with seconds
-- **Astrology Snapshot** — Sun sign, moon phase, weekday ruler insights, constellation view
 - **Sober Counter** — Years / months / days / hours since your sobriety date
 - **Pi-hole Widget** — DNS blocking status and key stats
 - **Upcoming Media** — Next 10 upcoming TV episodes (Sonarr) and movies (Radarr), grouped by day

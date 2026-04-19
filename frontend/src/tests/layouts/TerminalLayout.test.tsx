@@ -11,29 +11,6 @@ vi.mock('../../hooks/useSoberCounter.js', () => ({
   useSoberCounter: () => ({ years: 1, months: 2, days: 3, hours: 4 }),
 }))
 
-vi.mock('../../utils/astrology.js', () => ({
-  getAstrologySnapshot: () => ({
-    sign: {
-      name: 'Capricorn',
-      glyph: '♑',
-      element: 'Earth',
-      modality: 'Cardinal',
-      traits: 'Ambitious',
-    },
-    signRange: 'Dec 22 – Jan 19',
-    moon: { name: 'Waxing Gibbous', emoji: '🌔', illumination: 72 },
-    weekday: { dayName: 'Wednesday', ruler: 'Mercury' },
-    luckyWindow: '2pm–4pm',
-    message: 'Stay grounded today.',
-    constellation: {
-      name: 'Capricornus',
-      notable: 'Deneb Algedi',
-      stars: [{ x: 50, y: 30, size: 2 }],
-      lines: [],
-    },
-  }),
-}))
-
 import { TerminalLayout } from '../../layouts/terminal/TerminalLayout.js'
 
 // ── Shared mock props ──

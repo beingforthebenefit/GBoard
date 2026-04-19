@@ -30,36 +30,6 @@ vi.mock('../../hooks/useSoberCounter.js', () => ({
   useSoberCounter: () => ({ years: 1, months: 2, days: 3, hours: 4 }),
 }))
 
-vi.mock('../../utils/astrology.js', () => ({
-  getAstrologySnapshot: () => ({
-    sign: {
-      name: 'Capricorn',
-      glyph: '♑',
-      element: 'Earth',
-      modality: 'Cardinal',
-      traits: 'Ambitious and disciplined.',
-    },
-    signRange: 'Dec 22 – Jan 19',
-    moon: { name: 'Waxing Gibbous', emoji: '🌔', illumination: 72 },
-    weekday: { dayName: 'Wednesday', ruler: 'Mercury' },
-    luckyWindow: '2pm–4pm',
-    message: 'Stay grounded today.',
-    constellation: {
-      name: 'Capricornus',
-      notable: 'Deneb Algedi',
-      stars: [
-        { x: 20, y: 40, size: 2 },
-        { x: 50, y: 20, size: 1.5 },
-        { x: 80, y: 50, size: 2 },
-      ],
-      lines: [
-        [0, 1],
-        [1, 2],
-      ],
-    },
-  }),
-}))
-
 import { ClassicLayout } from '../../layouts/classic/ClassicLayout.js'
 
 // ── Shared mock props ──
@@ -238,11 +208,6 @@ describe('ClassicLayout', () => {
     }
     const { getByTestId } = render(<ClassicLayout {...fullProps} radarData={radarData} />)
     expect(getByTestId('radar-widget')).toBeTruthy()
-  })
-
-  it('shows astrology section with sign name', () => {
-    const { getByText } = render(<ClassicLayout {...fullProps} />)
-    expect(getByText('Capricorn')).toBeTruthy()
   })
 
   it('shows "Upcoming" section label when media items are provided', () => {
