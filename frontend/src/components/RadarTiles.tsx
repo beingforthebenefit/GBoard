@@ -5,7 +5,7 @@ const GRID = 3
 const FRAME_INTERVAL_MS = 500
 const PAUSE_MS = 1500
 
-export function RadarTiles({ data }: { data: RadarData }) {
+export function RadarTiles({ data, fill = false }: { data: RadarData; fill?: boolean }) {
   const { zoom, centerX, centerY, locX, locY, frameCount } = data
   const offset = Math.floor(GRID / 2)
   const totalFrames = Math.max(1, frameCount)
@@ -44,7 +44,10 @@ export function RadarTiles({ data }: { data: RadarData }) {
   const isLatest = frameIdx === totalFrames - 1
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
+    <div
+      className={`relative w-full overflow-hidden ${fill ? 'h-full' : ''}`}
+      style={fill ? undefined : { aspectRatio: '16 / 9' }}
+    >
       <div
         className="absolute left-0 w-full"
         style={{

@@ -39,23 +39,31 @@ export function ZenLayout({
         <WeatherHeader data={weatherData} loading={weatherLoading} />
       </div>
 
-      {/* Forecast strip */}
-      <div className="flex-shrink-0">
-        <ForecastStrip data={weatherData} loading={weatherLoading} maxDays={4} />
-      </div>
-
-      {/* Sober + Pihole (left) + Radar (right) */}
-      <div className="flex-shrink-0 flex gap-3 items-stretch">
-        <div className="flex-1 flex gap-3 items-stretch">
-          <SoberCounter sobrietyDate={sobrietyDate} className="flex-1" />
-          <PiholeWidget data={piholeData} loading={piholeLoading} className="flex-1" />
-        </div>
-        {showRadar && radarData && (
-          <div className="flex-shrink-0 w-64 card rounded-xl overflow-hidden">
-            <RadarTiles data={radarData} />
+      {/* Forecast + sober/pihole — with radar on the right spanning both rows when shown */}
+      {showRadar && radarData ? (
+        <div className="flex-shrink-0 flex gap-3 items-stretch">
+          <div className="flex-1 flex flex-col gap-4 min-w-0">
+            <ForecastStrip data={weatherData} loading={weatherLoading} maxDays={4} />
+            <div className="flex gap-3 items-stretch">
+              <SoberCounter sobrietyDate={sobrietyDate} className="flex-1" />
+              <PiholeWidget data={piholeData} loading={piholeLoading} className="flex-1" />
+            </div>
           </div>
-        )}
-      </div>
+          <div className="flex-shrink-0 w-64 card rounded-xl overflow-hidden">
+            <RadarTiles data={radarData} fill />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex-shrink-0">
+            <ForecastStrip data={weatherData} loading={weatherLoading} />
+          </div>
+          <div className="flex-shrink-0 flex gap-3 items-stretch">
+            <SoberCounter sobrietyDate={sobrietyDate} className="flex-1" />
+            <PiholeWidget data={piholeData} loading={piholeLoading} className="flex-1" />
+          </div>
+        </>
+      )}
 
       {/* Photo — takes all remaining space */}
       <div className="flex-1 min-h-0 flex flex-col">
