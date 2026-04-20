@@ -42,6 +42,7 @@ export function WeatherHeader({ data, loading }: WeatherHeaderProps) {
 interface ForecastStripProps {
   data: WeatherData | null
   loading: boolean
+  maxDays?: number
 }
 
 function WeatherIcon({
@@ -64,23 +65,25 @@ function WeatherIcon({
 }
 
 /** Horizontal forecast strip as separate pill cards */
-export function ForecastStrip({ data, loading }: ForecastStripProps) {
+export function ForecastStrip({ data, loading, maxDays }: ForecastStripProps) {
   if (loading || !data) {
+    const skeletonCount = maxDays ?? 6
     return (
-      <div className="grid grid-cols-6 gap-2">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${skeletonCount}, 1fr)` }}>
+        {Array.from({ length: skeletonCount }).map((_, i) => (
           <div key={i} className="card animate-pulse rounded-xl p-3" style={{ minHeight: 80 }} />
         ))}
       </div>
     )
   }
 
-  const cols = data.forecast.length || 4
+  const days = maxDays != null ? data.forecast.slice(0, maxDays) : data.forecast
+  const cols = days.length || 4
   const todayStr = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local tz
 
   return (
     <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-      {data.forecast.map((day) => {
+      {days.map((day) => {
         const label =
           day.date === todayStr
             ? 'Today'

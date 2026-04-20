@@ -41,21 +41,21 @@ export function ZenLayout({
 
       {/* Forecast strip */}
       <div className="flex-shrink-0">
-        <ForecastStrip data={weatherData} loading={weatherLoading} />
+        <ForecastStrip data={weatherData} loading={weatherLoading} maxDays={4} />
       </div>
 
-      {/* Sober + Pihole row */}
+      {/* Sober + Pihole (left) + Radar (right) */}
       <div className="flex-shrink-0 flex gap-3 items-stretch">
-        <SoberCounter sobrietyDate={sobrietyDate} className="flex-1" />
-        <PiholeWidget data={piholeData} loading={piholeLoading} className="flex-1" />
-      </div>
-
-      {/* Radar — small widget */}
-      {showRadar && radarData && (
-        <div className="flex-shrink-0 self-end w-64 card rounded-xl overflow-hidden">
-          <RadarTiles data={radarData} />
+        <div className="flex-1 flex gap-3 items-stretch">
+          <SoberCounter sobrietyDate={sobrietyDate} className="flex-1" />
+          <PiholeWidget data={piholeData} loading={piholeLoading} className="flex-1" />
         </div>
-      )}
+        {showRadar && radarData && (
+          <div className="flex-shrink-0 w-64 card rounded-xl overflow-hidden">
+            <RadarTiles data={radarData} />
+          </div>
+        )}
+      </div>
 
       {/* Photo — takes all remaining space */}
       <div className="flex-1 min-h-0 flex flex-col">
