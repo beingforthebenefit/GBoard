@@ -4,7 +4,8 @@ import { useSoberCounter } from '../../hooks/useSoberCounter.js'
 import { useElementSize } from '../../hooks/useElementSize.js'
 import { buildThumborUrl } from '../../utils/thumbor.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
-import { LayoutProps } from '../index.js'
+import { RadarTiles } from '../../components/RadarTiles.js'
+import { LayoutProps, shouldShowRadar } from '../index.js'
 
 // ── Helpers ──
 
@@ -382,9 +383,13 @@ export function NewspaperLayout({
   photos,
   mediaItems,
   mediaLoading,
+  radarData,
+  radarMode,
   sobrietyDate,
 }: LayoutProps) {
   const dark = useIsDark()
+  const showRadar = shouldShowRadar(radarMode, radarData)
+  const radarBorder = dark ? 'border-neutral-700' : 'border-neutral-300'
 
   const bgColor = dark ? 'bg-neutral-950' : 'bg-[#f5f0e8]'
   const textColor = dark ? 'text-neutral-100' : 'text-black'
@@ -406,6 +411,13 @@ export function NewspaperLayout({
         <div className="flex-shrink-0 mt-3">
           <TickerBar sobrietyDate={sobrietyDate} piholeData={piholeData} dark={dark} />
         </div>
+
+        {/* Radar */}
+        {showRadar && radarData && (
+          <div className={`flex-shrink-0 mt-3 border ${radarBorder} overflow-hidden`}>
+            <RadarTiles data={radarData} />
+          </div>
+        )}
 
         {/* Photo — fills remaining space */}
         <div className="flex-1 min-h-[120px] mt-3">

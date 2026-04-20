@@ -12,26 +12,32 @@ import { getLayout, DEFAULT_LAYOUT } from './layouts/index.js'
 
 const SOBRIETY_DATE = import.meta.env.VITE_SOBRIETY_DATE as string
 
-function useLayoutPreference() {
+export type RadarMode = 'adaptive' | 'on' | 'off'
+
+function usePrefs() {
   const [layout, setLayout] = useState(DEFAULT_LAYOUT)
+  const [radarMode, setRadarMode] = useState<RadarMode>('adaptive')
 
   useEffect(() => {
-    const fetchLayout = async () => {
+    const fetchPrefs = async () => {
       try {
         const res = await fetch('/admin/theme', { cache: 'no-store' })
         if (!res.ok) return
-        const data = (await res.json()) as { layout?: string }
+        const data = (await res.json()) as { layout?: string; radarMode?: RadarMode }
         if (data.layout) setLayout(data.layout)
+        if (data.radarMode && ['adaptive', 'on', 'off'].includes(data.radarMode)) {
+          setRadarMode(data.radarMode)
+        }
       } catch {
         // Ignore — will retry
       }
     }
-    fetchLayout()
-    const id = setInterval(fetchLayout, 10_000)
+    fetchPrefs()
+    const id = setInterval(fetchPrefs, 10_000)
     return () => clearInterval(id)
   }, [])
 
-  return layout
+  return { layout, radarMode }
 }
 
 export function App() {
@@ -47,7 +53,7 @@ export function App() {
   // Day/night theme (zen layout uses this; classic ignores it)
   useDayNight(weatherData)
 
-  const layoutName = useLayoutPreference()
+  const { layout: layoutName, radarMode } = usePrefs()
   const { component: LayoutComponent } = getLayout(layoutName)
 
   return (
@@ -65,6 +71,7 @@ export function App() {
       mediaLoading={mediaLoading}
       radarData={radarData}
       radarLoading={radarLoading}
+      radarMode={radarMode}
       sobrietyDate={SOBRIETY_DATE}
     />
   )

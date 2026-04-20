@@ -55,10 +55,14 @@ describe('admin routes', () => {
   // ── GET /theme ──
 
   describe('GET /theme', () => {
-    it('returns default theme and layout when no prefs file exists', async () => {
+    it('returns default theme, layout, and radarMode when no prefs file exists', async () => {
       const res = mockRes()
       getHandler(router, 'get', '/theme')(mockReq(), res, vi.fn())
-      expect(res.json).toHaveBeenCalledWith({ theme: 'auto', layout: 'zen' })
+      expect(res.json).toHaveBeenCalledWith({
+        theme: 'auto',
+        layout: 'zen',
+        radarMode: 'adaptive',
+      })
     })
   })
 
@@ -100,6 +104,27 @@ describe('admin routes', () => {
         expect.stringContaining('"theme"'),
         'utf-8'
       )
+    })
+
+    it('updates radarMode and returns updated prefs', async () => {
+      const res = mockRes()
+      await getHandler(router, 'put', '/theme')(
+        mockReq({ body: { radarMode: 'on' } }),
+        res,
+        vi.fn()
+      )
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ radarMode: 'on' }))
+    })
+
+    it('ignores invalid radarMode values', async () => {
+      const res = mockRes()
+      await getHandler(router, 'put', '/theme')(
+        mockReq({ body: { radarMode: 'invalid' } }),
+        res,
+        vi.fn()
+      )
+      const result = res.json.mock.calls[0][0]
+      expect(['adaptive', 'on', 'off']).toContain(result.radarMode)
     })
   })
 

@@ -7,7 +7,8 @@ import { MediaWidget } from '../components/MediaWidget.js'
 import { PlexWidget } from '../components/PlexWidget.js'
 import { CalendarGrid } from '../components/CalendarGrid.js'
 import { PiholeWidget } from '../components/PiholeWidget.js'
-import { LayoutProps } from './index.js'
+import { RadarTiles } from '../components/RadarTiles.js'
+import { LayoutProps, shouldShowRadar } from './index.js'
 import { useState } from 'react'
 import { PhotoInfo } from '../types/index.js'
 
@@ -23,8 +24,11 @@ export function ZenLayout({
   photos,
   mediaItems,
   mediaLoading,
+  radarData,
+  radarMode,
   sobrietyDate,
 }: LayoutProps) {
+  const showRadar = shouldShowRadar(radarMode, radarData)
   const [currentPhoto, setCurrentPhoto] = useState<PhotoInfo | null>(null)
 
   return (
@@ -45,6 +49,13 @@ export function ZenLayout({
         <SoberCounter sobrietyDate={sobrietyDate} className="flex-1" />
         <PiholeWidget data={piholeData} loading={piholeLoading} className="flex-1" />
       </div>
+
+      {/* Radar */}
+      {showRadar && radarData && (
+        <div className="flex-shrink-0 card rounded-xl overflow-hidden">
+          <RadarTiles data={radarData} />
+        </div>
+      )}
 
       {/* Photo — takes all remaining space */}
       <div className="flex-1 min-h-0 flex flex-col">

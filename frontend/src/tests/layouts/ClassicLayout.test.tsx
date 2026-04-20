@@ -48,6 +48,7 @@ const minimalProps = {
   mediaLoading: false,
   radarData: null,
   radarLoading: false,
+  radarMode: 'adaptive' as const,
   sobrietyDate: '2024-01-01T00:00:00',
 }
 

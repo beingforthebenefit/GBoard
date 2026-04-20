@@ -6,7 +6,7 @@ import { useClock } from '../../hooks/useClock.js'
 import { useAvailableHeight } from '../../hooks/useAvailableHeight.js'
 import { GlassPanel } from './GlassPanel.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
-import { LayoutProps } from '../index.js'
+import { LayoutProps, shouldShowRadar } from '../index.js'
 import { ClassicPhotoBackground } from './ClassicPhotoBackground.js'
 import { ClassicRadarWidget } from './ClassicRadarWidget.js'
 
@@ -100,7 +100,7 @@ function ClassicWeather({
   if (!data) {
     return (
       <GlassPanel className="p-4 text-white/70 min-h-[170px] flex flex-col items-center justify-center gap-2 text-center">
-        <div className="text-3xl leading-none">&cloud;</div>
+        <div className="text-3xl leading-none">☁️</div>
         <p className="text-base font-medium">Weather temporarily unavailable</p>
         <p className="text-sm text-white/50">Retrying automatically...</p>
       </GlassPanel>
@@ -132,8 +132,8 @@ function ClassicWeather({
         <span>Vis {current.visibility} mi</span>
       </div>
       <div className="flex justify-center gap-x-4 text-sm text-white/50 tabular-nums">
-        <span>&sun; {formatTime(current.sunrise)}</span>
-        <span>&moon; {formatTime(current.sunset)}</span>
+        <span>☀️ {formatTime(current.sunrise)}</span>
+        <span>🌙 {formatTime(current.sunset)}</span>
       </div>
       <div className="flex justify-between pt-1 border-t border-white/10">
         {forecast.slice(0, 5).map((day) => {
@@ -661,11 +661,12 @@ export function ClassicLayout({
   mediaItems,
   mediaLoading,
   radarData,
+  radarMode,
   sobrietyDate,
 }: LayoutProps) {
   const { ref: leftColRef, height: leftColHeight } = useAvailableHeight<HTMLDivElement>()
 
-  const showRadar = radarData?.hasPrecipitation === true
+  const showRadar = shouldShowRadar(radarMode, radarData)
   const hourlyForecast = !showRadar ? weatherData?.hourly : undefined
   const colStyle = leftColHeight > 0 ? { height: leftColHeight } : undefined
 

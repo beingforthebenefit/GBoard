@@ -13,6 +13,8 @@ import { ZenLayout } from './ZenLayout.js'
 import { TerminalLayout } from './terminal/TerminalLayout.js'
 import { NewspaperLayout } from './newspaper/NewspaperLayout.js'
 
+export type RadarMode = 'adaptive' | 'on' | 'off'
+
 /** Props every layout receives — all hook data pre-fetched by App */
 export interface LayoutProps {
   weatherData: WeatherData | null
@@ -28,7 +30,17 @@ export interface LayoutProps {
   mediaLoading: boolean
   radarData: RadarData | null
   radarLoading: boolean
+  radarMode: RadarMode
   sobrietyDate: string
+}
+
+export function shouldShowRadar(
+  mode: RadarMode,
+  data: { hasPrecipitation?: boolean } | null
+): boolean {
+  if (mode === 'off') return false
+  if (mode === 'on') return data != null
+  return data?.hasPrecipitation === true
 }
 
 export interface LayoutDefinition {

@@ -8,15 +8,22 @@ const router = Router()
 // ── Preferences (theme + layout, persisted to disk) ──
 
 type ThemeMode = 'auto' | 'light' | 'dark'
+type RadarMode = 'adaptive' | 'on' | 'off'
 
 interface Prefs {
   theme: ThemeMode
   layout: string
+  radarMode: RadarMode
   calendarLabels: Record<string, string> // url → label
 }
 
 const PREFS_FILE = resolve(process.env.DATA_DIR || '/data', 'admin-prefs.json')
-const prefs: Prefs = { theme: 'auto', layout: 'zen', calendarLabels: {} }
+const prefs: Prefs = {
+  theme: 'auto',
+  layout: 'zen',
+  radarMode: 'adaptive',
+  calendarLabels: {},
+}
 
 async function loadPrefs() {
   try {
@@ -24,6 +31,7 @@ async function loadPrefs() {
     const parsed = JSON.parse(raw)
     if (['auto', 'light', 'dark'].includes(parsed.theme)) prefs.theme = parsed.theme
     if (typeof parsed.layout === 'string') prefs.layout = parsed.layout
+    if (['adaptive', 'on', 'off'].includes(parsed.radarMode)) prefs.radarMode = parsed.radarMode
     if (parsed.calendarLabels && typeof parsed.calendarLabels === 'object')
       prefs.calendarLabels = parsed.calendarLabels
   } catch {
@@ -170,19 +178,22 @@ async function writeEnvFile(updates: Record<string, string>) {
 // ── API endpoints ──
 
 router.get('/theme', (_req, res) => {
-  res.json({ theme: prefs.theme, layout: prefs.layout })
+  res.json({ theme: prefs.theme, layout: prefs.layout, radarMode: prefs.radarMode })
 })
 
 router.put('/theme', async (req, res) => {
-  const body = req.body as { theme?: string; layout?: string }
+  const body = req.body as { theme?: string; layout?: string; radarMode?: string }
   if (body.theme && ['auto', 'light', 'dark'].includes(body.theme)) {
     prefs.theme = body.theme as ThemeMode
   }
   if (body.layout && typeof body.layout === 'string') {
     prefs.layout = body.layout
   }
+  if (body.radarMode && ['adaptive', 'on', 'off'].includes(body.radarMode)) {
+    prefs.radarMode = body.radarMode as RadarMode
+  }
   await savePrefs()
-  res.json({ theme: prefs.theme, layout: prefs.layout })
+  res.json({ theme: prefs.theme, layout: prefs.layout, radarMode: prefs.radarMode })
 })
 
 router.post('/refresh', (_req, res) => {
@@ -418,6 +429,25 @@ const ADMIN_HTML = /* html */ `<!DOCTYPE html>
   </div>
 </div>
 
+<!-- Weather Map -->
+<div class="section">
+  <div class="section-title">Weather Map</div>
+  <div class="picker-group theme-picker">
+    <button class="picker-btn" data-radar="on" onclick="setRadarMode('on')">
+      <span class="icon">&#9673;</span>On
+      <div class="desc">Always show</div>
+    </button>
+    <button class="picker-btn" data-radar="adaptive" onclick="setRadarMode('adaptive')">
+      <span class="icon">&#9729;</span>Adaptive
+      <div class="desc">Show when weather is active</div>
+    </button>
+    <button class="picker-btn" data-radar="off" onclick="setRadarMode('off')">
+      <span class="icon">&#8856;</span>Off
+      <div class="desc">Never show</div>
+    </button>
+  </div>
+</div>
+
 <!-- Advanced Settings (collapsible) -->
 <button class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()">
   Advanced Settings
@@ -503,6 +533,7 @@ async function loadPrefs() {
     const res = await fetch(API + '/theme');
     const data = await res.json();
     highlightTheme(data.theme);
+    highlightRadar(data.radarMode || 'adaptive');
     currentLayout = data.layout || 'zen';
     renderLayoutPicker();
     document.getElementById('theme-section').style.display =
@@ -513,6 +544,12 @@ async function loadPrefs() {
 function highlightTheme(theme) {
   document.querySelectorAll('[data-theme]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.theme === theme);
+  });
+}
+
+function highlightRadar(mode) {
+  document.querySelectorAll('[data-radar]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.radar === mode);
   });
 }
 
@@ -527,6 +564,19 @@ async function setTheme(theme) {
     toast('Theme updated');
     setTimeout(() => refreshDashboard(), 500);
   } catch { toast('Failed to set theme', 'error'); }
+}
+
+async function setRadarMode(mode) {
+  highlightRadar(mode);
+  try {
+    await fetch(API + '/theme', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ radarMode: mode }),
+    });
+    toast('Weather map updated');
+    setTimeout(() => refreshDashboard(), 500);
+  } catch { toast('Failed to set weather map', 'error'); }
 }
 
 // ── Settings ──

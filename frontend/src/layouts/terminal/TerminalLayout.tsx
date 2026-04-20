@@ -4,7 +4,8 @@ import { useSoberCounter } from '../../hooks/useSoberCounter.js'
 import { useElementSize } from '../../hooks/useElementSize.js'
 import { buildThumborUrl } from '../../utils/thumbor.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
-import { LayoutProps } from '../index.js'
+import { RadarTiles } from '../../components/RadarTiles.js'
+import { LayoutProps, shouldShowRadar } from '../index.js'
 
 // ── Helpers ──
 
@@ -372,8 +373,11 @@ export function TerminalLayout({
   photos,
   mediaItems,
   mediaLoading,
+  radarData,
+  radarMode,
   sobrietyDate,
 }: LayoutProps) {
+  const showRadar = shouldShowRadar(radarMode, radarData)
   const now = useClock()
   const uptime = useMemo(() => {
     const startStr = import.meta.env.VITE_SOBRIETY_DATE as string
@@ -445,6 +449,17 @@ export function TerminalLayout({
             <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
           </Box>
         </div>
+
+        {/* Radar */}
+        {showRadar && radarData && (
+          <div className="flex-shrink-0">
+            <Box title="RADAR">
+              <div className="overflow-hidden rounded-sm">
+                <RadarTiles data={radarData} />
+              </div>
+            </Box>
+          </div>
+        )}
 
         {/* Plex */}
         <div className="flex-shrink-0">
