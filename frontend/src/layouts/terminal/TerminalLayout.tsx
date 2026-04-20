@@ -433,32 +433,40 @@ export function TerminalLayout({
           <TermClock />
         </div>
 
-        {/* Weather + Sober side by side */}
-        <div className="flex-shrink-0 grid grid-cols-[1fr_auto] gap-4">
-          <Box title="WEATHER">
-            <TermWeather weatherData={weatherData} weatherLoading={weatherLoading} />
-          </Box>
-          <Box title="SOBER TIME">
-            <TermSober sobrietyDate={sobrietyDate} />
-          </Box>
-        </div>
-
-        {/* Pi-hole */}
-        <div className="flex-shrink-0">
-          <Box title="PI-HOLE">
-            <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
-          </Box>
-        </div>
-
-        {/* Radar — small widget */}
-        {showRadar && radarData && (
-          <div className="flex-shrink-0 w-64 self-end">
+        {/* Weather / Sober / Pi-hole — with radar in the right column below sober when shown */}
+        {showRadar && radarData ? (
+          <div className="flex-shrink-0 grid grid-cols-[1fr_16rem] gap-4">
+            <Box title="WEATHER">
+              <TermWeather weatherData={weatherData} weatherLoading={weatherLoading} />
+            </Box>
+            <Box title="SOBER TIME">
+              <TermSober sobrietyDate={sobrietyDate} />
+            </Box>
+            <Box title="PI-HOLE">
+              <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
+            </Box>
             <Box title="RADAR">
               <div className="overflow-hidden rounded-sm">
                 <RadarTiles data={radarData} />
               </div>
             </Box>
           </div>
+        ) : (
+          <>
+            <div className="flex-shrink-0 grid grid-cols-[1fr_auto] gap-4">
+              <Box title="WEATHER">
+                <TermWeather weatherData={weatherData} weatherLoading={weatherLoading} />
+              </Box>
+              <Box title="SOBER TIME">
+                <TermSober sobrietyDate={sobrietyDate} />
+              </Box>
+            </div>
+            <div className="flex-shrink-0">
+              <Box title="PI-HOLE">
+                <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
+              </Box>
+            </div>
+          </>
         )}
 
         {/* Plex */}
