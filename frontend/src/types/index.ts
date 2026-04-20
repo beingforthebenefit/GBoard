@@ -93,4 +93,5 @@ export interface RadarData {
   host: string
   radarPath: string
   hasPrecipitation: boolean
+  frameCount: number
 }

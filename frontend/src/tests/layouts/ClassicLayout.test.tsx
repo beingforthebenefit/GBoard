@@ -206,6 +206,7 @@ describe('ClassicLayout', () => {
       host: 'tilecache.rainviewer.com',
       radarPath: '/v2/radar/12345/256/7/50/-100/2/1_1.png',
       hasPrecipitation: true,
+      frameCount: 6,
     }
     const { getByTestId } = render(<ClassicLayout {...fullProps} radarData={radarData} />)
     expect(getByTestId('radar-widget')).toBeTruthy()

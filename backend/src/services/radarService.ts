@@ -16,10 +16,19 @@ export interface RadarData {
   host: string
   radarPath: string
   hasPrecipitation: boolean
+  /** Number of past frames available for animation (index 0 = oldest, frameCount-1 = latest) */
+  frameCount: number
 }
 
-let radarCache: { data: RadarData; fetchedAt: number } | null = null
+interface RadarCache {
+  data: RadarData
+  framePaths: string[]
+  fetchedAt: number
+}
+
+let radarCache: RadarCache | null = null
 const CACHE_TTL = 5 * 60 * 1000
+const FRAME_COUNT = 6
 
 export function latLonToTile(lat: number, lon: number, zoom: number) {
   const n = Math.pow(2, zoom)
@@ -39,7 +48,8 @@ export async function getRadarData(): Promise<RadarData> {
   const rv = (await res.json()) as RainViewerResponse
 
   const { host, radar } = rv
-  const latest = radar.past[radar.past.length - 1]
+  const pastFrames = radar.past.slice(-FRAME_COUNT)
+  const latest = pastFrames[pastFrames.length - 1]
 
   const lat = parseFloat(process.env.WEATHER_LAT || '0')
   const lon = parseFloat(process.env.WEATHER_LON || '0')
@@ -56,17 +66,33 @@ export async function getRadarData(): Promise<RadarData> {
   const locX = (fracTileX - (x - offset)) / GRID
   const locY = (fracTileY - (y - offset)) / GRID
 
-  // Check center overlay tile size to detect precipitation.
-  // Fully transparent 256x256 PNGs compress to ~200-400 bytes;
-  // tiles with precipitation data are typically 2KB+.
-  const PRECIP_THRESHOLD = 3000
-  let hasPrecipitation = true
+  // Check all 9 overlay tiles for precipitation, not just center — a storm
+  // passing nearby may be on a neighboring tile. Fully transparent 256x256 PNGs
+  // compress to ~200-400 bytes; tiles with even light precipitation exceed 600.
+  const PRECIP_THRESHOLD = 600
+  let hasPrecipitation = false
   try {
-    const overlayUrl = `${host}${latest.path}/256/${zoom}/${x}/${y}/6/0_1.png`
-    const { buffer } = await proxyTile(overlayUrl)
-    hasPrecipitation = buffer.length > PRECIP_THRESHOLD
+    const tileCoords: { tx: number; ty: number }[] = []
+    for (let dy = -offset; dy <= offset; dy++) {
+      for (let dx = -offset; dx <= offset; dx++) {
+        tileCoords.push({ tx: x + dx, ty: y + dy })
+      }
+    }
+    const sizes = await Promise.all(
+      tileCoords.map(async ({ tx, ty }) => {
+        try {
+          const url = `${host}${latest.path}/256/${zoom}/${tx}/${ty}/6/0_1.png`
+          const { buffer } = await proxyTile(url)
+          return buffer.length
+        } catch {
+          return 0
+        }
+      })
+    )
+    hasPrecipitation = sizes.some((size) => size > PRECIP_THRESHOLD)
   } catch {
     // If tile fetch fails, assume precipitation (show radar as fallback)
+    hasPrecipitation = true
   }
 
   const data: RadarData = {
@@ -78,10 +104,18 @@ export async function getRadarData(): Promise<RadarData> {
     host,
     radarPath: latest.path,
     hasPrecipitation,
+    frameCount: pastFrames.length,
   }
 
-  radarCache = { data, fetchedAt: Date.now() }
+  radarCache = { data, framePaths: pastFrames.map((f) => f.path), fetchedAt: Date.now() }
   return data
+}
+
+export function getFramePath(frameIdx: number): string | null {
+  if (!radarCache) return null
+  const { framePaths } = radarCache
+  if (frameIdx < 0 || frameIdx >= framePaths.length) return null
+  return framePaths[frameIdx]
 }
 
 export async function proxyTile(url: string): Promise<{ buffer: Buffer; contentType: string }> {

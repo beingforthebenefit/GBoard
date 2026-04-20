@@ -412,9 +412,9 @@ export function NewspaperLayout({
           <TickerBar sobrietyDate={sobrietyDate} piholeData={piholeData} dark={dark} />
         </div>
 
-        {/* Radar */}
+        {/* Radar — small widget */}
         {showRadar && radarData && (
-          <div className={`flex-shrink-0 mt-3 border ${radarBorder} overflow-hidden`}>
+          <div className={`flex-shrink-0 mt-3 ml-auto w-64 border ${radarBorder} overflow-hidden`}>
             <RadarTiles data={radarData} />
           </div>
         )}

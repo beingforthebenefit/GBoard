@@ -50,9 +50,9 @@ export function ZenLayout({
         <PiholeWidget data={piholeData} loading={piholeLoading} className="flex-1" />
       </div>
 
-      {/* Radar */}
+      {/* Radar — small widget */}
       {showRadar && radarData && (
-        <div className="flex-shrink-0 card rounded-xl overflow-hidden">
+        <div className="flex-shrink-0 self-end w-64 card rounded-xl overflow-hidden">
           <RadarTiles data={radarData} />
         </div>
       )}

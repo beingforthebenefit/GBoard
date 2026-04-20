@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getRadarData, proxyTile, latLonToTile, _resetCache } from '../src/services/radarService.js'
+import {
+  getRadarData,
+  getFramePath,
+  proxyTile,
+  latLonToTile,
+  _resetCache,
+} from '../src/services/radarService.js'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -43,22 +49,26 @@ describe('latLonToTile', () => {
 })
 
 describe('getRadarData', () => {
+  function mockTileFetches(sizes: number[]) {
+    for (const size of sizes) {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: async () => new Uint8Array(size).buffer,
+        headers: { get: () => 'image/png' },
+      })
+    }
+  }
+
   it('fetches RainViewer API and returns radar data', async () => {
     vi.stubEnv('WEATHER_LAT', '34.05')
     vi.stubEnv('WEATHER_LON', '-118.24')
 
-    // First call: RainViewer API; second call: overlay tile for precipitation check
-    const largeTile = new Uint8Array(4000) // >3000 bytes = has precipitation
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => rainViewerResponse,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        arrayBuffer: async () => largeTile.buffer,
-        headers: { get: () => 'image/png' },
-      })
+    // First call: RainViewer API; then 9 overlay tile checks (all tiles in grid)
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => rainViewerResponse,
+    })
+    mockTileFetches(new Array(9).fill(1000)) // all tiles > 600 threshold
 
     const data = await getRadarData()
     expect(data.zoom).toBe(6)
@@ -71,62 +81,52 @@ describe('getRadarData', () => {
     expect(data.host).toBe('https://tilecache.rainviewer.com')
     expect(data.radarPath).toBe('/v2/radar/1710000600')
     expect(data.hasPrecipitation).toBe(true)
-    expect(mockFetch).toHaveBeenCalledTimes(2)
+    expect(data.frameCount).toBe(2)
+    expect(mockFetch).toHaveBeenCalledTimes(10)
   })
 
   it('uses cached data on subsequent calls', async () => {
     vi.stubEnv('WEATHER_LAT', '34.05')
     vi.stubEnv('WEATHER_LON', '-118.24')
 
-    const largeTile = new Uint8Array(2000)
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => rainViewerResponse,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        arrayBuffer: async () => largeTile.buffer,
-        headers: { get: () => 'image/png' },
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => rainViewerResponse,
+    })
+    mockTileFetches(new Array(9).fill(1000))
 
     await getRadarData()
     const data2 = await getRadarData()
     expect(data2.radarPath).toBe('/v2/radar/1710000600')
-    // 2 calls total: RainViewer API + overlay tile (both cached after first getRadarData)
-    expect(mockFetch).toHaveBeenCalledTimes(2)
+    expect(mockFetch).toHaveBeenCalledTimes(10)
   })
 
-  it('detects no precipitation from small overlay tile', async () => {
+  it('detects no precipitation when all tiles are below threshold', async () => {
     vi.stubEnv('WEATHER_LAT', '34.05')
     vi.stubEnv('WEATHER_LON', '-118.24')
 
-    const smallTile = new Uint8Array(300) // <3000 bytes = no precipitation
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => rainViewerResponse,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        arrayBuffer: async () => smallTile.buffer,
-        headers: { get: () => 'image/png' },
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => rainViewerResponse,
+    })
+    mockTileFetches(new Array(9).fill(300))
 
     const data = await getRadarData()
     expect(data.hasPrecipitation).toBe(false)
   })
 
-  it('defaults hasPrecipitation to true when tile fetch fails', async () => {
+  it('detects precipitation when any neighboring tile exceeds threshold', async () => {
     vi.stubEnv('WEATHER_LAT', '34.05')
     vi.stubEnv('WEATHER_LON', '-118.24')
 
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => rainViewerResponse,
-      })
-      .mockResolvedValueOnce({ ok: false, status: 500 })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => rainViewerResponse,
+    })
+    // Only one neighbor has precipitation; center and others are empty
+    const sizes = new Array(9).fill(200)
+    sizes[3] = 1500
+    mockTileFetches(sizes)
 
     const data = await getRadarData()
     expect(data.hasPrecipitation).toBe(true)
@@ -139,6 +139,32 @@ describe('getRadarData', () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 })
 
     await expect(getRadarData()).rejects.toThrow('RainViewer API error: 500')
+  })
+})
+
+describe('getFramePath', () => {
+  it('returns null before any radar fetch', () => {
+    expect(getFramePath(0)).toBeNull()
+  })
+
+  it('returns path for valid frame index after fetch', async () => {
+    vi.stubEnv('WEATHER_LAT', '34.05')
+    vi.stubEnv('WEATHER_LON', '-118.24')
+
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => rainViewerResponse })
+    for (let i = 0; i < 9; i++) {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: async () => new Uint8Array(1000).buffer,
+        headers: { get: () => 'image/png' },
+      })
+    }
+    await getRadarData()
+
+    expect(getFramePath(0)).toBe('/v2/radar/1710000000')
+    expect(getFramePath(1)).toBe('/v2/radar/1710000600')
+    expect(getFramePath(2)).toBeNull()
+    expect(getFramePath(-1)).toBeNull()
   })
 })
 

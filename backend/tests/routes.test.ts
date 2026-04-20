@@ -6,6 +6,7 @@ vi.mock('../src/services/weatherService.js', () => ({
 }))
 vi.mock('../src/services/radarService.js', () => ({
   getRadarData: vi.fn(),
+  getFramePath: vi.fn(),
   proxyTile: vi.fn(),
 }))
 vi.mock('../src/services/calendarService.js', () => ({
@@ -25,7 +26,7 @@ vi.mock('../src/services/plexService.js', () => ({
 }))
 
 import { fetchWeather } from '../src/services/weatherService.js'
-import { getRadarData, proxyTile } from '../src/services/radarService.js'
+import { getRadarData, getFramePath, proxyTile } from '../src/services/radarService.js'
 import { fetchCalendarEvents } from '../src/services/calendarService.js'
 import { fetchUpcomingMedia } from '../src/services/mediaService.js'
 import { fetchPhotos } from '../src/services/photosService.js'
@@ -164,7 +165,7 @@ describe('weather routes', () => {
   })
 
   describe('GET /radar/overlay/:z/:x/:y', () => {
-    it('proxies overlay tile using radar data', async () => {
+    it('proxies overlay tile using latest radar frame when no frame query is given', async () => {
       const radarData = {
         host: 'https://tilecache.rainviewer.com',
         radarPath: '/v2/radar/1234567890',
@@ -187,6 +188,42 @@ describe('weather routes', () => {
       expect(res.set).toHaveBeenCalledWith('Content-Type', 'image/png')
       expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=300')
       expect(res.send).toHaveBeenCalledWith(tileResult.buffer)
+    })
+
+    it('serves the requested past frame when ?frame=N is provided', async () => {
+      const radarData = {
+        host: 'https://tilecache.rainviewer.com',
+        radarPath: '/v2/radar/latest',
+      }
+      vi.mocked(getRadarData).mockResolvedValue(radarData as any)
+      vi.mocked(getFramePath).mockReturnValue('/v2/radar/older')
+
+      const tileResult = { buffer: Buffer.from('older'), contentType: 'image/png' }
+      vi.mocked(proxyTile).mockResolvedValue(tileResult)
+
+      const req = mockReq({ params: { z: '5', x: '10', y: '15' }, query: { frame: '2' } })
+      const res = mockRes()
+      const next = vi.fn()
+
+      await getHandler(router, 'get', '/radar/overlay/:z/:x/:y')(req, res, next)
+
+      expect(getFramePath).toHaveBeenCalledWith(2)
+      expect(proxyTile).toHaveBeenCalledWith(
+        'https://tilecache.rainviewer.com/v2/radar/older/256/5/10/15/6/0_1.png'
+      )
+    })
+
+    it('returns 404 when requested frame index is out of range', async () => {
+      vi.mocked(getRadarData).mockResolvedValue({ host: 'h', radarPath: 'p' } as any)
+      vi.mocked(getFramePath).mockReturnValue(null)
+
+      const req = mockReq({ params: { z: '5', x: '10', y: '15' }, query: { frame: '99' } })
+      const res = mockRes()
+      const next = vi.fn()
+
+      await getHandler(router, 'get', '/radar/overlay/:z/:x/:y')(req, res, next)
+
+      expect(res.status).toHaveBeenCalledWith(404)
     })
 
     it('calls next with error on failure', async () => {

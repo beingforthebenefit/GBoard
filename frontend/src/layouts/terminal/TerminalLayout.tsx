@@ -450,9 +450,9 @@ export function TerminalLayout({
           </Box>
         </div>
 
-        {/* Radar */}
+        {/* Radar — small widget */}
         {showRadar && radarData && (
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 w-64 self-end">
             <Box title="RADAR">
               <div className="overflow-hidden rounded-sm">
                 <RadarTiles data={radarData} />

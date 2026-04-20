@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { fetchWeather } from '../services/weatherService.js'
-import { getRadarData, proxyTile } from '../services/radarService.js'
+import { getRadarData, getFramePath, proxyTile } from '../services/radarService.js'
 
 const router = Router()
 
@@ -39,7 +39,10 @@ router.get('/radar/overlay/:z/:x/:y', async (req, res, next) => {
   try {
     const { z, x, y } = req.params
     const data = await getRadarData()
-    const url = `${data.host}${data.radarPath}/256/${z}/${x}/${y}/6/0_1.png`
+    const frameIdx = req.query.frame != null ? parseInt(String(req.query.frame), 10) : NaN
+    const path = Number.isFinite(frameIdx) ? getFramePath(frameIdx) : data.radarPath
+    if (!path) return res.status(404).send()
+    const url = `${data.host}${path}/256/${z}/${x}/${y}/6/0_1.png`
     const { buffer, contentType } = await proxyTile(url)
     res.set('Content-Type', contentType)
     res.set('Cache-Control', 'public, max-age=300')

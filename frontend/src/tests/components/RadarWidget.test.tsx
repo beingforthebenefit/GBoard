@@ -12,6 +12,7 @@ const radarData: RadarData = {
   host: 'tile.openweathermap.org',
   radarPath: '/map/precipitation_new',
   hasPrecipitation: true,
+  frameCount: 1,
 }
 
 describe('RadarWidget', () => {

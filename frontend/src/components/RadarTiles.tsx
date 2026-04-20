@@ -1,10 +1,37 @@
+import { useEffect, useState } from 'react'
 import { RadarData } from '../types/index.js'
 
 const GRID = 3
+const FRAME_INTERVAL_MS = 500
+const PAUSE_MS = 1500
 
 export function RadarTiles({ data }: { data: RadarData }) {
-  const { zoom, centerX, centerY, locX, locY } = data
+  const { zoom, centerX, centerY, locX, locY, frameCount } = data
   const offset = Math.floor(GRID / 2)
+  const totalFrames = Math.max(1, frameCount)
+
+  const [frameIdx, setFrameIdx] = useState(totalFrames - 1)
+
+  useEffect(() => {
+    if (totalFrames < 2) return
+    let cancelled = false
+    const tick = () => {
+      if (cancelled) return
+      setFrameIdx((prev) => {
+        const next = prev + 1
+        if (next >= totalFrames) {
+          setTimeout(() => !cancelled && setFrameIdx(0), PAUSE_MS)
+          return prev
+        }
+        return next
+      })
+    }
+    const id = setInterval(tick, FRAME_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [totalFrames])
 
   const tiles: { x: number; y: number }[] = []
   for (let dy = -offset; dy <= offset; dy++) {
@@ -12,6 +39,9 @@ export function RadarTiles({ data }: { data: RadarData }) {
       tiles.push({ x: centerX + dx, y: centerY + dy })
     }
   }
+
+  const frames = Array.from({ length: totalFrames }, (_, i) => i)
+  const isLatest = frameIdx === totalFrames - 1
 
   return (
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
@@ -32,12 +62,15 @@ export function RadarTiles({ data }: { data: RadarData }) {
               alt=""
               className="absolute inset-0 w-full h-full block"
             />
-            <img
-              src={`/api/weather/radar/overlay/${zoom}/${x}/${y}`}
-              alt=""
-              className="absolute inset-0 w-full h-full block"
-              style={{ opacity: 0.7 }}
-            />
+            {frames.map((f) => (
+              <img
+                key={f}
+                src={`/api/weather/radar/overlay/${zoom}/${x}/${y}?frame=${f}`}
+                alt=""
+                className="absolute inset-0 w-full h-full block"
+                style={{ opacity: f === frameIdx ? 0.75 : 0 }}
+              />
+            ))}
           </div>
         ))}
         <div className="absolute inset-0 pointer-events-none">
@@ -51,6 +84,16 @@ export function RadarTiles({ data }: { data: RadarData }) {
           />
         </div>
       </div>
+      {totalFrames > 1 && (
+        <div className="absolute bottom-1 right-2 flex items-center gap-1 pointer-events-none">
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${isLatest ? 'bg-red-400/90' : 'bg-white/40'}`}
+          />
+          <span className="text-[9px] text-white/70 font-mono tabular-nums drop-shadow">
+            {isLatest ? 'NOW' : `-${(totalFrames - 1 - frameIdx) * 10}m`}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
