@@ -173,9 +173,7 @@ describe('fetchUpcomingMedia', () => {
       return Promise.resolve({
         ok: true,
         json: () =>
-          Promise.resolve([
-            { title: 'Movie', year: 2026, digitalRelease: '2026-04-20T00:00:00Z' },
-          ]),
+          Promise.resolve([{ title: 'Movie', year: 2026, digitalRelease: '2026-04-20T00:00:00Z' }]),
       })
     })
 
@@ -199,9 +197,7 @@ describe('fetchUpcomingMedia', () => {
       return Promise.resolve({
         ok: true,
         json: () =>
-          Promise.resolve([
-            { title: 'Movie', year: 2026, digitalRelease: '2026-04-20T00:00:00Z' },
-          ]),
+          Promise.resolve([{ title: 'Movie', year: 2026, digitalRelease: '2026-04-20T00:00:00Z' }]),
       })
     })
 
