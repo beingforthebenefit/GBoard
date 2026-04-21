@@ -433,23 +433,30 @@ export function TerminalLayout({
           <TermClock />
         </div>
 
-        {/* Weather / Sober / Pi-hole — with radar in the right column below sober when shown */}
+        {/* Weather / Sober / Pi-hole — with radar filling right column (below sober) when shown */}
         {showRadar && radarData ? (
-          <div className="flex-shrink-0 grid grid-cols-[1fr_16rem] gap-4">
-            <Box title="WEATHER">
-              <TermWeather weatherData={weatherData} weatherLoading={weatherLoading} />
-            </Box>
-            <Box title="SOBER TIME">
-              <TermSober sobrietyDate={sobrietyDate} />
-            </Box>
-            <Box title="PI-HOLE">
-              <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
-            </Box>
-            <Box title="RADAR">
-              <div className="overflow-hidden rounded-sm">
-                <RadarTiles data={radarData} />
+          <div className="flex-shrink-0 flex gap-4 items-stretch">
+            <div className="flex-1 flex flex-col gap-2.5 min-w-0">
+              <Box title="WEATHER">
+                <TermWeather weatherData={weatherData} weatherLoading={weatherLoading} />
+              </Box>
+              <Box title="PI-HOLE">
+                <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
+              </Box>
+            </div>
+            <div className="w-64 flex flex-col gap-2.5">
+              <Box title="SOBER TIME">
+                <TermSober sobrietyDate={sobrietyDate} />
+              </Box>
+              <div className="relative flex-1 flex flex-col min-h-0">
+                <div className="text-green-500/60 text-[10px] uppercase tracking-[0.15em] mb-0.5">
+                  RADAR
+                </div>
+                <div className="border border-green-500/30 rounded-sm p-2 flex-1 min-h-0 overflow-hidden">
+                  <RadarTiles data={radarData} fill />
+                </div>
               </div>
-            </Box>
+            </div>
           </div>
         ) : (
           <>

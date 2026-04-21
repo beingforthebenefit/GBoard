@@ -87,7 +87,7 @@ export function ZenLayout({
       </div>
 
       {/* Upcoming + Calendar side by side */}
-      <div className="flex-shrink-0 grid grid-cols-2 gap-4">
+      <div className="flex-shrink-0 grid grid-cols-[1fr_2fr] gap-4">
         <MediaWidget
           items={mediaItems}
           loading={mediaLoading}
@@ -96,7 +96,7 @@ export function ZenLayout({
         <CalendarGrid
           events={events}
           loading={calendarLoading}
-          numDays={4}
+          numDays={7}
           hourHeight={22}
           className="card rounded-xl px-4 py-2"
         />
