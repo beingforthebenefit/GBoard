@@ -4,6 +4,7 @@ const RADARR_URL = () => process.env.RADARR_URL || ''
 const RADARR_API_KEY = () => process.env.RADARR_API_KEY || ''
 
 const CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+const CACHE_TTL_PARTIAL = 2 * 60 * 1000 // 2 minutes when a source failed
 
 export interface UpcomingItem {
   title: string
@@ -39,7 +40,7 @@ export interface MediaResult {
   lastDayRemaining: number
 }
 
-let cache: { data: MediaResult; fetchedAt: number } | null = null
+let cache: { data: MediaResult; fetchedAt: number; ttl: number } | null = null
 
 export function _resetCache() {
   cache = null
@@ -106,7 +107,7 @@ async function fetchRadarr(startDate: string, endDate: string): Promise<Upcoming
 }
 
 export async function fetchUpcomingMedia(): Promise<MediaResult> {
-  if (cache && Date.now() - cache.fetchedAt < CACHE_TTL) {
+  if (cache && Date.now() - cache.fetchedAt < cache.ttl) {
     return cache.data
   }
 
@@ -118,13 +119,17 @@ export async function fetchUpcomingMedia(): Promise<MediaResult> {
   end.setDate(end.getDate() + WINDOW_DAYS)
   const endDate = localDate(end)
 
+  let sonarrFailed = false
+  let radarrFailed = false
   const [episodes, movies] = await Promise.all([
     fetchSonarr(startDate, endDate).catch((err) => {
       console.error('[media] Sonarr fetch failed:', err.message)
+      sonarrFailed = SONARR_URL() !== '' && SONARR_API_KEY() !== ''
       return [] as UpcomingItem[]
     }),
     fetchRadarr(startDate, endDate).catch((err) => {
       console.error('[media] Radarr fetch failed:', err.message)
+      radarrFailed = RADARR_URL() !== '' && RADARR_API_KEY() !== ''
       return [] as UpcomingItem[]
     }),
   ])
@@ -148,6 +153,7 @@ export async function fetchUpcomingMedia(): Promise<MediaResult> {
     lastDayRemaining,
   }
 
-  cache = { data: result, fetchedAt: Date.now() }
+  const ttl = sonarrFailed || radarrFailed ? CACHE_TTL_PARTIAL : CACHE_TTL
+  cache = { data: result, fetchedAt: Date.now(), ttl }
   return result
 }

@@ -158,6 +158,60 @@ describe('fetchUpcomingMedia', () => {
     expect(result.items[0].title).toBe('Movie')
   })
 
+  it('uses a short TTL when a source fails so the next call retries', async () => {
+    vi.stubEnv('SONARR_URL', 'http://sonarr.test')
+    vi.stubEnv('SONARR_API_KEY', 'key')
+    vi.stubEnv('RADARR_URL', 'http://radarr.test')
+    vi.stubEnv('RADARR_API_KEY', 'key')
+
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-04-20T12:00:00Z'))
+
+    // First call: Sonarr fails, Radarr succeeds
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('sonarr')) return Promise.resolve({ ok: false, status: 503 })
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            { title: 'Movie', year: 2026, digitalRelease: '2026-04-20T00:00:00Z' },
+          ]),
+      })
+    })
+
+    const first = await fetchUpcomingMedia()
+    expect(first.items.every((i) => i.type === 'movie')).toBe(true)
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+
+    // 3 minutes later: partial-TTL (2min) has expired → re-fetch
+    vi.setSystemTime(new Date('2026-04-20T12:03:00Z'))
+    mockFetch.mockClear()
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('sonarr')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve([
+              { seriesTitle: 'Show', seasonNumber: 1, episodeNumber: 1, airDate: '2026-04-20' },
+            ]),
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            { title: 'Movie', year: 2026, digitalRelease: '2026-04-20T00:00:00Z' },
+          ]),
+      })
+    })
+
+    const second = await fetchUpcomingMedia()
+    expect(second.items.some((i) => i.type === 'episode')).toBe(true)
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+
+    vi.useRealTimers()
+  })
+
   it('prefers series.title over seriesTitle', async () => {
     vi.stubEnv('SONARR_URL', 'http://sonarr.test')
     vi.stubEnv('SONARR_API_KEY', 'key')
