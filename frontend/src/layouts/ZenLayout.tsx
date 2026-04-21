@@ -91,7 +91,7 @@ export function ZenLayout({
         <CalendarGrid
           events={events}
           loading={calendarLoading}
-          numDays={7}
+          numDays={5}
           hourHeight={22}
           className="card rounded-xl px-4 py-2"
         />
