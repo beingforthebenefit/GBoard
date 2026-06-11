@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { Fragment, memo, useEffect, useRef, useState } from 'react'
 
 export type BoardStatusKind = 'ok' | 'active' | 'dim'
 
@@ -200,52 +200,60 @@ export const SplitFlapBoard = memo(function SplitFlapBoard({
   }, [sweepSeed, rowsKey])
 
   return (
-    <div ref={boardRef} className={`font-mono text-amber-100 ${className}`}>
-      <div
-        className="grid items-center gap-x-4 text-[10px] tracking-[0.25em] uppercase pb-1.5 mb-2.5 border-b border-amber-200/20"
-        style={{ gridTemplateColumns: 'auto 1fr auto', color: 'rgba(231, 183, 95, 0.5)' }}
-      >
-        <span>Time</span>
-        <span>Destination</span>
-        <span>Status</span>
-      </div>
-      <div className="space-y-2.5">
-        {padded.map((row, i) => (
-          <div
-            key={`${row.title}-${row.status}-${i}`}
-            className="grid items-center gap-x-4 text-base"
-            style={{ gridTemplateColumns: 'auto 1fr auto' }}
+    // One grid for the header and every row, so the column tracks stay aligned
+    <div
+      ref={boardRef}
+      className={`grid items-center gap-x-4 gap-y-2.5 content-start font-mono text-amber-100 ${className}`}
+      style={{ gridTemplateColumns: 'auto 1fr auto' }}
+    >
+      <Fragment>
+        {['Time', 'Destination', 'Status'].map((label) => (
+          <span
+            key={label}
+            className={`text-[10px] tracking-[0.25em] uppercase ${
+              label === 'Status' ? 'text-right' : ''
+            }`}
+            style={{ color: 'rgba(231, 183, 95, 0.5)' }}
           >
-            <span className="tabular-nums" style={{ color: '#e7b75f' }}>
-              <FlapWord text={row.time} width={7} baseDelayMs={i * 110} />
-            </span>
-            <span className="min-w-0 flex items-baseline gap-2">
-              <FlapWord text={row.title} width={titleWidth} baseDelayMs={i * 110 + 7 * 25} />
-              {row.detail && (
-                <span
-                  className="text-xs truncate normal-case"
-                  style={{ color: 'rgba(231, 183, 95, 0.45)' }}
-                >
-                  {row.detail}
-                </span>
-              )}
-            </span>
-            <span
-              className={`text-xs tracking-[0.15em] uppercase ${
-                row.statusKind === 'active' ? 'pulse-dot' : ''
-              }`}
-              style={{ color: STATUS_COLORS[row.statusKind ?? 'ok'] }}
-            >
-              {row.status}
-            </span>
-          </div>
+            {label}
+          </span>
         ))}
-        {padded.length === 0 && (
-          <div className="text-xs py-3" style={{ color: 'rgba(231, 183, 95, 0.4)' }}>
-            NO SCHEDULED DEPARTURES
-          </div>
-        )}
-      </div>
+        <div className="border-b border-amber-200/20 -mt-1" style={{ gridColumn: '1 / -1' }} />
+      </Fragment>
+      {padded.map((row, i) => (
+        <Fragment key={`${row.title}-${row.status}-${i}`}>
+          <span className="text-base tabular-nums" style={{ color: '#e7b75f' }}>
+            <FlapWord text={row.time} width={7} baseDelayMs={i * 110} />
+          </span>
+          <span className="min-w-0 flex items-baseline gap-2 text-base">
+            <FlapWord text={row.title} width={titleWidth} baseDelayMs={i * 110 + 7 * 25} />
+            {row.detail && (
+              <span
+                className="text-xs truncate normal-case"
+                style={{ color: 'rgba(231, 183, 95, 0.45)' }}
+              >
+                {row.detail}
+              </span>
+            )}
+          </span>
+          <span
+            className={`text-xs tracking-[0.15em] uppercase text-right ${
+              row.statusKind === 'active' ? 'pulse-dot' : ''
+            }`}
+            style={{ color: STATUS_COLORS[row.statusKind ?? 'ok'] }}
+          >
+            {row.status}
+          </span>
+        </Fragment>
+      ))}
+      {padded.length === 0 && (
+        <div
+          className="text-xs py-3"
+          style={{ gridColumn: '1 / -1', color: 'rgba(231, 183, 95, 0.4)' }}
+        >
+          NO SCHEDULED DEPARTURES
+        </div>
+      )}
     </div>
   )
 })
