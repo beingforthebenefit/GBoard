@@ -228,6 +228,22 @@ describe('DeparturesLayout', () => {
     expect(getByText(/CHECKPOINT ACTIVE/)).toBeTruthy()
   })
 
+  it('shows the observation deck slideshow section', () => {
+    const { getByText } = render(<DeparturesLayout {...mockProps} />)
+    expect(getByText(/Observation Deck/i)).toBeTruthy()
+  })
+
+  it('shows a no-signal placeholder when there are no photos', () => {
+    const { getByText } = render(<DeparturesLayout {...mockProps} photos={[]} />)
+    expect(getByText(/NO SIGNAL/)).toBeTruthy()
+  })
+
+  it('renders the slideshow when photos exist', () => {
+    const photos = [{ filename: 'a.jpg' }, { filename: 'b.jpg' }]
+    const { queryByText } = render(<DeparturesLayout {...mockProps} photos={photos} />)
+    expect(queryByText(/NO SIGNAL/)).toBeNull()
+  })
+
   it('handles missing weather and pihole data', () => {
     const { getByText } = render(
       <DeparturesLayout

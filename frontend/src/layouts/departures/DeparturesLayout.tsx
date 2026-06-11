@@ -3,11 +3,80 @@ import { useClock } from '../../hooks/useClock.js'
 import { FlapClock } from '../../components/FlapClock.js'
 import { SplitFlapBoard } from '../../components/SplitFlapBoard.js'
 import { RadarTiles } from '../../components/RadarTiles.js'
+import { PhotoBackground } from '../../components/PhotoBackground.js'
 import { computeMilestoneProgress } from '../../utils/milestones.js'
 import { buildBoardRows } from './boardRows.js'
 import { LayoutProps, shouldShowRadar } from '../index.js'
+import { PhotoInfo } from '../../types/index.js'
 
 // ── Sections ──
+
+/** Amber-duotone photo slideshow styled as an airport observation deck camera */
+function ObservationDeck({ photos }: Pick<LayoutProps, 'photos'>) {
+  const [photo, setPhoto] = useState<PhotoInfo | null>(null)
+
+  const captionParts: string[] = []
+  if (photo?.location?.city) {
+    captionParts.push(
+      photo.location.city + (photo.location.state ? `, ${photo.location.state}` : '')
+    )
+  }
+  if (photo?.dateTaken) {
+    captionParts.push(
+      new Date(photo.dateTaken).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    )
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      <div
+        className="flex-shrink-0 text-[10px] tracking-[0.25em] uppercase mb-1"
+        style={{ color: 'rgba(231, 183, 95, 0.5)' }}
+      >
+        Observation Deck
+      </div>
+      <div className="flex-1 min-h-0 relative border border-amber-200/15 rounded-lg overflow-hidden bg-[#131315]">
+        {photos.length === 0 ? (
+          <div
+            className="absolute inset-0 flex items-center justify-center text-xs tracking-[0.2em]"
+            style={{ color: 'rgba(231, 183, 95, 0.3)' }}
+          >
+            [ NO SIGNAL ]
+          </div>
+        ) : (
+          <>
+            <div
+              className="absolute inset-0"
+              style={{ filter: 'sepia(0.4) saturate(0.65) brightness(0.8) contrast(1.05)' }}
+            >
+              <PhotoBackground
+                photos={photos}
+                renderCaption={() => null}
+                onPhotoChange={setPhoto}
+              />
+            </div>
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: 'rgba(231, 183, 95, 0.1)', mixBlendMode: 'overlay' }}
+            />
+            {captionParts.length > 0 && (
+              <div
+                className="absolute bottom-1.5 left-2.5 z-10 text-[10px] uppercase tracking-[0.1em] pointer-events-none"
+                style={{ color: 'rgba(231, 183, 95, 0.6)' }}
+              >
+                [{captionParts.join(' · ')}]
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function ConditionsLine({
   weatherData: data,
@@ -57,6 +126,7 @@ export function DeparturesLayout({
   events,
   sessions,
   piholeData,
+  photos,
   mediaItems,
   radarData,
   radarMode,
@@ -111,24 +181,29 @@ export function DeparturesLayout({
         <ConditionsLine weatherData={weatherData} weatherLoading={weatherLoading} />
       </div>
 
-      {/* Board + optional radar */}
-      <div className="flex-1 min-h-0 flex gap-4">
-        <div className="flex-1 min-w-0 bg-[#131315] border border-amber-200/15 rounded-lg p-4 overflow-hidden">
-          <SplitFlapBoard rows={rows} minRows={16} sweepSeed={sweepSeed} />
-        </div>
-        {showRadar && radarData && (
-          <div className="flex-shrink-0 w-64 flex flex-col">
-            <div
-              className="text-[10px] tracking-[0.25em] uppercase mb-1"
-              style={{ color: 'rgba(231, 183, 95, 0.5)' }}
-            >
-              Precip Radar
-            </div>
-            <div className="flex-1 min-h-0 border border-amber-200/15 rounded-lg overflow-hidden">
-              <RadarTiles data={radarData} fill />
-            </div>
+      {/* Board + optional radar, slideshow fills the rest */}
+      <div className="flex-1 min-h-0 flex flex-col gap-4">
+        <div className="flex-shrink-0 flex gap-4 items-stretch">
+          <div className="flex-1 min-w-0 bg-[#131315] border border-amber-200/15 rounded-lg p-4 overflow-hidden">
+            <SplitFlapBoard rows={rows} minRows={16} sweepSeed={sweepSeed} />
           </div>
-        )}
+          {showRadar && radarData && (
+            <div className="flex-shrink-0 w-64 flex flex-col">
+              <div
+                className="text-[10px] tracking-[0.25em] uppercase mb-1"
+                style={{ color: 'rgba(231, 183, 95, 0.5)' }}
+              >
+                Precip Radar
+              </div>
+              <div className="flex-1 min-h-0 border border-amber-200/15 rounded-lg overflow-hidden">
+                <RadarTiles data={radarData} fill />
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-h-0">
+          <ObservationDeck photos={photos} />
+        </div>
       </div>
 
       {/* Security footer */}
