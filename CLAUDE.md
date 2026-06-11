@@ -43,14 +43,17 @@ GBoard/
 │   ├── src/
 │   │   ├── App.tsx           # Main app (polls admin prefs, renders active layout)
 │   │   ├── components/       # Shared UI widgets (Weather, Clock, Calendar, Plex, etc.)
-│   │   ├── layouts/          # Theme layouts (zen, classic, terminal, newspaper)
+│   │   ├── layouts/          # Theme layouts (zen, classic, terminal, newspaper, departures, fridge, observatory)
 │   │   │   ├── index.ts      # Layout registry + LayoutProps interface
 │   │   │   ├── ZenLayout.tsx
 │   │   │   ├── classic/      # Classic three-column glassmorphism
 │   │   │   ├── terminal/     # Green-on-black CRT terminal
-│   │   │   └── newspaper/    # Editorial broadsheet with serif typography
+│   │   │   ├── newspaper/    # Editorial broadsheet with serif typography
+│   │   │   ├── departures/   # Solari split-flap airport departures board
+│   │   │   ├── fridge/       # Kitchen fridge door: polaroids, magnets, sticky notes
+│   │   │   └── observatory/  # Night-sky almanac with instruments (day/night theming)
 │   │   ├── hooks/            # Data-fetching hooks with polling intervals
-│   │   ├── utils/            # Sobriety math
+│   │   ├── utils/            # Sobriety math, milestones, moon phase, photo memories, thumbor
 │   │   └── types/index.ts    # Shared interfaces (duplicated from backend)
 │   ├── tests/
 │   └── nginx/default.conf    # SPA fallback + /api proxy to backend
@@ -94,8 +97,8 @@ GBoard/
 - **No database** — all data comes from external APIs or disk cache (photos in Docker volume)
 - **No frontend routing** — single-page dashboard with swappable layout themes
 - **Admin panel** — self-contained HTML served by Express at `/admin`; stores preferences in `admin-prefs.json`
-- **Layout system** — layout registry in `layouts/index.ts`; all themes receive the same `LayoutProps` interface
-- **Day/night theming** — `useDayNight` hook applies `html.dark`/`html.light` CSS classes; Zen and Newspaper respond to them
+- **Layout system** — layout registry in `layouts/index.ts`; all themes receive the same `LayoutProps` interface; new layouts must also be added to the `LAYOUTS` array in `backend/src/routes/admin.ts` (admin panel picker + theme-section visibility)
+- **Day/night theming** — `useDayNight` hook applies `html.dark`/`html.light` CSS classes; Zen, Newspaper, and Observatory respond to them (shared `useIsDark` hook in `hooks/useIsDark.ts`)
 - **No state management library** — plain React hooks (useState/useEffect) with polling
 - **Security**: All external API calls proxy through backend; no secrets exposed to browser
 - **Auto-reload**: Frontend polls `/api/version` every 10s; page reloads when backend restarts

@@ -25,7 +25,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 
 ## Themes
 
-Four built-in layouts, switchable live from the admin panel. Zen and Newspaper support light/dark color modes (auto, manual, or based on sunrise/sunset).
+Seven built-in layouts, switchable live from the admin panel. Zen, Newspaper, and Observatory support light/dark color modes (auto, manual, or based on sunrise/sunset).
 
 <table>
   <tr>
@@ -41,6 +41,12 @@ Four built-in layouts, switchable live from the admin panel. Zen and Newspaper s
     <td align="center"><strong>Newspaper (Dark)</strong><br/><img src="docs/screenshots/newspaper-dark.png" width="300" /></td>
   </tr>
 </table>
+
+Three more layouts (screenshots pending):
+
+- **Departures** — Solari split-flap airport board: calendar events, upcoming media, and active Plex streams merge into one chronological board with `BOARDING` / `IN FLIGHT` / `DEPARTED` statuses; the sobriety counter becomes the header streak
+- **Fridge** — Kitchen fridge door: Polaroid photos with tape, sticky-note agenda, magnet-letter clock, weather magnets, an "On this day" memory photo, and a gold-star milestone chart counting down to the next sobriety anniversary
+- **Observatory** — Night-sky almanac: sun arc, moon phase, wind compass, an hourly temperature/precipitation chart, a circular porthole photo, and Pi-hole/Plex as mission telemetry
 
 ### Admin Panel
 

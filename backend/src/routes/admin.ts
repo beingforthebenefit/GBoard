@@ -479,6 +479,9 @@ const LAYOUTS = [
   { name: 'classic', label: 'Classic', icon: '&#9733;', desc: 'Three-column, glassmorphism' },
   { name: 'terminal', label: 'Terminal', icon: '&#62;&lowbar;', desc: 'Green-on-black retro CRT' },
   { name: 'newspaper', label: 'Newspaper', icon: '&#9998;', desc: 'Editorial broadsheet, serif type' },
+  { name: 'departures', label: 'Departures', icon: '&#9992;', desc: 'Split-flap airport board' },
+  { name: 'fridge', label: 'Fridge', icon: '&#128204;', desc: 'Polaroids &amp; sticky notes' },
+  { name: 'observatory', label: 'Observatory', icon: '&#9789;', desc: 'Night-sky almanac, day/night theming' },
 ];
 
 function toast(msg, type = 'success') {
@@ -515,7 +518,7 @@ async function setLayout(name) {
   renderLayoutPicker();
   // Show/hide theme section based on layout
   document.getElementById('theme-section').style.display =
-    (name === 'zen' || name === 'newspaper') ? '' : 'none';
+    (name === 'zen' || name === 'newspaper' || name === 'observatory') ? '' : 'none';
   try {
     await fetch(API + '/theme', {
       method: 'PUT',
@@ -537,7 +540,8 @@ async function loadPrefs() {
     currentLayout = data.layout || 'zen';
     renderLayoutPicker();
     document.getElementById('theme-section').style.display =
-      (currentLayout === 'zen' || currentLayout === 'newspaper') ? '' : 'none';
+      (currentLayout === 'zen' || currentLayout === 'newspaper' || currentLayout === 'observatory')
+        ? '' : 'none';
   } catch {}
 }
 

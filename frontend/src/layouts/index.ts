@@ -12,6 +12,9 @@ import { ClassicLayout } from './classic/ClassicLayout.js'
 import { ZenLayout } from './ZenLayout.js'
 import { TerminalLayout } from './terminal/TerminalLayout.js'
 import { NewspaperLayout } from './newspaper/NewspaperLayout.js'
+import { DeparturesLayout } from './departures/DeparturesLayout.js'
+import { FridgeLayout } from './fridge/FridgeLayout.js'
+import { ObservatoryLayout } from './observatory/ObservatoryLayout.js'
 
 export type RadarMode = 'adaptive' | 'on' | 'off'
 
@@ -74,6 +77,24 @@ export const LAYOUTS: LayoutDefinition[] = [
     label: 'Newspaper',
     description: 'Editorial broadsheet with serif typography',
     component: NewspaperLayout,
+  },
+  {
+    name: 'departures',
+    label: 'Departures',
+    description: 'Split-flap airport departures board',
+    component: DeparturesLayout,
+  },
+  {
+    name: 'fridge',
+    label: 'Fridge',
+    description: 'Polaroids, magnets, and sticky notes',
+    component: FridgeLayout,
+  },
+  {
+    name: 'observatory',
+    label: 'Observatory',
+    description: 'Night-sky almanac with instruments, day/night theming',
+    component: ObservatoryLayout,
   },
 ]
 
