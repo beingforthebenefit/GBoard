@@ -122,6 +122,30 @@ body {
   animation: pulse-dot 2s infinite;
 }
 
+@keyframes flap-flip {
+  from {
+    transform: rotateX(80deg);
+    opacity: 0.4;
+  }
+  to {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.flap-tile {
+  /* Fast enough that rapid spin steps each read as a distinct flip */
+  animation: flap-flip 180ms ease-out both;
+  transform-origin: center;
+  backface-visibility: hidden;
+}
+
+/* While the shared sweep timer is swapping characters, run one continuous
+   flutter instead of restarting the one-shot animation per character */
+.flap-spinning {
+  animation: flap-flip 140ms linear infinite;
+}
+
 /* ── Themed card ── */
 
 .card {
