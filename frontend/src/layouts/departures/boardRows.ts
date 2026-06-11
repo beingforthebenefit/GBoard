@@ -62,10 +62,24 @@ export function buildBoardRows(
       status = 'BOARDING'
       statusKind = 'active'
     }
+    // All-day events on other days still need to say which day they fall on
+    let time: string
+    if (!e.allDay) {
+      time = fmtBoardTime(start, now)
+    } else {
+      const ahead = daysFromNow(start, now)
+      if (ahead <= 0) {
+        time = 'ALL DAY'
+      } else if (ahead <= 6) {
+        time = start.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
+      } else {
+        time = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+      }
+    }
     rows.push({
       sort: start.getTime(),
       row: {
-        time: e.allDay ? 'ALL DAY' : fmtBoardTime(start, now),
+        time,
         title: flapTitle(e.title),
         status,
         statusKind,

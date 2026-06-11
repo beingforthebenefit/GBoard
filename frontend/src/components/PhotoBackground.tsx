@@ -19,6 +19,8 @@ interface PhotoBackgroundProps {
   transitionMs?: number
   renderCaption?: (photo: PhotoInfo) => ReactNode
   onPhotoChange?: (photo: PhotoInfo) => void
+  /** Corner rounding, overridable so the photo matches its host container */
+  className?: string
 }
 
 const IMAGE_RETRY_MS = 5 * 1000
@@ -88,6 +90,7 @@ export function PhotoBackground({
   transitionMs = 2000,
   renderCaption,
   onPhotoChange,
+  className = 'rounded-2xl',
 }: PhotoBackgroundProps) {
   const shuffled = useMemo(() => shuffle(photos), [photos])
   const containerRef = useRef<HTMLDivElement>(null)
@@ -137,7 +140,7 @@ export function PhotoBackground({
     return (
       <div
         ref={containerRef}
-        className="w-full h-full rounded-2xl"
+        className={`w-full h-full ${className}`}
         style={{ backgroundColor: 'var(--photo-bg)' }}
       />
     )
@@ -161,7 +164,7 @@ export function PhotoBackground({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full rounded-2xl overflow-hidden relative"
+      className={`w-full h-full overflow-hidden relative ${className}`}
       style={{ backgroundColor: 'var(--photo-bg)' }}
     >
       {srcA && (

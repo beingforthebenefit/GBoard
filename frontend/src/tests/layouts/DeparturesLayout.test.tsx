@@ -137,6 +137,25 @@ describe('buildBoardRows', () => {
     expect(rows[1].title).toBe('MEETING')
   })
 
+  it('labels all-day events with their day when not today', () => {
+    const allDay = (id: string, date: string): CalendarEvent => ({
+      id,
+      title: `Event ${id}`,
+      start: `${date}T00:00:00`,
+      end: `${date}T23:59:59`,
+      allDay: true,
+    })
+    const rows = buildBoardRows(
+      [allDay('1', '2026-06-09'), allDay('2', '2026-06-12'), allDay('3', '2026-06-30')],
+      [],
+      [],
+      now
+    )
+    expect(rows[0].time).toBe('ALL DAY')
+    expect(rows[1].time).toBe('FRI')
+    expect(rows[2].time).toBe('JUN 30')
+  })
+
   it('uses weekday labels for media within the next week', () => {
     const rows = buildBoardRows(
       [],

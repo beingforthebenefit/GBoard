@@ -49,24 +49,18 @@ function ObservationDeck({ photos }: Pick<LayoutProps, 'photos'>) {
           </div>
         ) : (
           <>
-            <div
-              className="absolute inset-0"
-              style={{ filter: 'sepia(0.4) saturate(0.65) brightness(0.8) contrast(1.05)' }}
-            >
+            <div className="absolute inset-0">
               <PhotoBackground
                 photos={photos}
                 renderCaption={() => null}
                 onPhotoChange={setPhoto}
+                className="rounded-lg"
               />
             </div>
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'rgba(231, 183, 95, 0.1)', mixBlendMode: 'overlay' }}
-            />
             {captionParts.length > 0 && (
               <div
-                className="absolute bottom-1.5 left-2.5 z-10 text-[10px] uppercase tracking-[0.1em] pointer-events-none"
-                style={{ color: 'rgba(231, 183, 95, 0.6)' }}
+                className="absolute bottom-1.5 left-2.5 z-10 text-[10px] uppercase tracking-[0.1em] pointer-events-none bg-black/60 px-1.5 py-0.5 rounded-sm"
+                style={{ color: 'rgba(231, 183, 95, 0.8)' }}
               >
                 [{captionParts.join(' · ')}]
               </div>
