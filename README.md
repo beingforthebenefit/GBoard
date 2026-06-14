@@ -48,7 +48,7 @@ Five more layouts (screenshots pending):
 - **Fridge** — Kitchen fridge door: Polaroid photos with tape, sticky-note agenda, magnet-letter clock, weather magnets, an "On this day" memory photo, and a gold-star milestone chart counting down to the next sobriety anniversary
 - **Observatory** — Night-sky almanac: sun arc, moon phase, wind compass, an hourly temperature/precipitation chart, a circular porthole photo, and Pi-hole/Plex as mission telemetry
 - **Flux** — Kinetic ambient backdrop: a canvas particle flow field driven live by the weather (wind sets the flow direction and speed, temperature sets the palette, rain adds streaks), with the clock, sober counter, and agenda floating over it
-- **Mosaic** — Kinetic geometric backdrop: a hex tessellation with a gradient wave flowing through it (wind sets direction/speed, temperature tints it, the sober streak sets the base hue), and ripples that radiate from the center on Pi-hole blocked-query spikes, Plex playback, and the top of each hour
+- **Mosaic** — Kinetic geometric backdrop: a hex tessellation with a gradient wave flowing through it (wind sets direction/speed, temperature tints it, and the base hue tracks the time of day, cycling the spectrum every 12 hours), and ripples that radiate from the center on Pi-hole blocked-query spikes, Plex playback, and the top of each hour
 
 ### Admin Panel
 

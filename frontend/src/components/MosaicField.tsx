@@ -9,8 +9,6 @@ interface MosaicFieldProps {
   piholeData: PiholeStats | null
   sessions: PlexSession[]
   dark: boolean
-  /** Base hue for the gradient, derived from the sober streak */
-  accentHue: number
   /** Shimmer multiplier (>1 near a milestone) */
   shimmer: number
 }
@@ -32,12 +30,14 @@ const RIPPLE_LIGHT = 28 // lightness boost at the crest
 const MAX_RIPPLES = 8
 const AMBIENT_MS = 4500 // idle cadence of ambient ripples
 const AMBIENT_PLAYING_MS = 2200 // livelier cadence while Plex plays
+const HUE_CYCLE_HOURS = 12 // base hue completes a full rotation this often (~30°/hr)
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
-export function soberAccentHue(totalDays: number): number {
-  // Slowly evolving personal color — ~1°/day, so it reads as stable week to week
-  return (((totalDays * 0.9) % 360) + 360) % 360
+export function timeHue(date: Date, cycleHours = HUE_CYCLE_HOURS): number {
+  // Base hue tracks the time of day, so the palette visibly shifts each hour
+  const hours = date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600
+  return ((((hours / cycleHours) * 360) % 360) + 360) % 360
 }
 
 interface Palette {
@@ -59,14 +59,7 @@ interface Ripple {
   intensity: number
 }
 
-export function MosaicField({
-  weather,
-  piholeData,
-  sessions,
-  dark,
-  accentHue,
-  shimmer,
-}: MosaicFieldProps) {
+export function MosaicField({ weather, piholeData, sessions, dark, shimmer }: MosaicFieldProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const size = useElementSize(containerRef)
@@ -76,14 +69,12 @@ export function MosaicField({
   const piholeRef = useRef(piholeData)
   const sessionsRef = useRef(sessions)
   const darkRef = useRef(dark)
-  const accentRef = useRef(accentHue)
   const shimmerRef = useRef(shimmer)
   useEffect(() => {
     weatherRef.current = weather
     piholeRef.current = piholeData
     sessionsRef.current = sessions
     darkRef.current = dark
-    accentRef.current = accentHue
     shimmerRef.current = shimmer
   })
 
@@ -199,7 +190,7 @@ export function MosaicField({
       const dirX = Math.cos(blowTo)
       const dirY = Math.sin(blowTo)
       const flow = elapsed * (BASE_FLOW + (wx?.windSpeed ?? 0) * WIND_FLOW)
-      const accent = accentRef.current
+      const accent = timeHue(new Date())
       const shim = shimmerRef.current
 
       ctx.fillStyle = pal.bg

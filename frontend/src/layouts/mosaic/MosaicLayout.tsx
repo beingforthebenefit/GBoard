@@ -1,5 +1,5 @@
 import { useIsDark } from '../../hooks/useIsDark.js'
-import { MosaicField, soberAccentHue } from '../../components/MosaicField.js'
+import { MosaicField } from '../../components/MosaicField.js'
 import { WeatherHeader } from '../../components/WeatherWidget.js'
 import { AgendaList } from '../../components/AgendaList.js'
 import {
@@ -35,8 +35,7 @@ export function MosaicLayout({
   sobrietyDate,
 }: LayoutProps) {
   const dark = useIsDark()
-  const { totalDays, daysRemaining } = computeMilestoneProgress(new Date(sobrietyDate), new Date())
-  const accentHue = soberAccentHue(totalDays)
+  const { daysRemaining } = computeMilestoneProgress(new Date(sobrietyDate), new Date())
   // Tighten the shimmer as a milestone approaches (within two weeks)
   const shimmer = daysRemaining <= 14 ? 1 + (1 - daysRemaining / 14) * 0.6 : 1
 
@@ -50,7 +49,6 @@ export function MosaicLayout({
         piholeData={piholeData}
         sessions={sessions}
         dark={dark}
-        accentHue={accentHue}
         shimmer={shimmer}
       />
 
