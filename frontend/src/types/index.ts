@@ -95,3 +95,23 @@ export interface RadarData {
   hasPrecipitation: boolean
   frameCount: number
 }
+
+export interface WordConjugation {
+  pronoun: string
+  form: string
+}
+
+export interface WordOfDay {
+  word: string
+  partOfSpeech: 'noun' | 'verb' | 'adjective' | 'adverb' | 'interjection' | 'phrase'
+  gender?: 'm' | 'f'
+  pronunciation?: string
+  definition: string
+  spanishDefinition?: string
+  note?: string
+  conjugationTense?: string
+  conjugations?: WordConjugation[]
+  example: string
+  exampleTranslation: string
+  date: string
+}

@@ -35,7 +35,7 @@ GBoard/
 │   ├── src/
 │   │   ├── index.ts          # Entry point
 │   │   ├── types/index.ts    # Shared TypeScript interfaces
-│   │   ├── routes/           # Express routers (weather, calendar, plex, pihole, photos, media, admin)
+│   │   ├── routes/           # Express routers (weather, calendar, plex, pihole, photos, media, word, admin)
 │   │   ├── services/         # Business logic + external API integrations
 │   │   └── middleware/       # Error handler
 │   └── tests/
@@ -88,6 +88,7 @@ GBoard/
 | `GET /api/photos/image/:filename` | Serve cached photo file | - |
 | `GET /api/media` | Next 10 upcoming TV/movies (Sonarr/Radarr, 14-day window) | 30 min |
 | `GET /api/pihole` | Pi-hole query stats + top clients (v6 API) | None (polled 1 min) |
+| `GET /api/word` | Spanish (Mexican) word of the day — curated dataset, rotates daily | Static (date-seeded) |
 | `GET /api/version` | `{ startedAt }` timestamp for deploy detection | None (polled 10s) |
 | `GET /admin` | Admin panel (layout, theme, settings) | - |
 | `GET /admin/theme` | Current theme + layout preferences | - |
@@ -100,6 +101,7 @@ GBoard/
 ## Architecture Notes
 
 - **No database** — all data comes from external APIs or disk cache (photos in Docker volume)
+- **Word of the day** — `GET /api/word` serves a Mexican-Spanish word (definition, conjugations for irregular verbs, example sentence) from a curated dataset (`services/wordData.ts`), rotating deterministically by local calendar date. The shared `WordOfDayWidget` (`components/WordOfDay.tsx`) renders in `currentColor` with opacity tiers, so every layout drops it into its own chrome (glass card, ASCII box, sticky note, instrument panel, etc.)
 - **No frontend routing** — single-page dashboard with swappable layout themes
 - **Admin panel** — self-contained HTML served by Express at `/admin`; stores preferences in `admin-prefs.json`
 - **Layout system** — layout registry in `layouts/index.ts`; all themes receive the same `LayoutProps` interface; new layouts must also be added to the `LAYOUTS` array in `backend/src/routes/admin.ts` (admin panel picker + theme-section visibility)

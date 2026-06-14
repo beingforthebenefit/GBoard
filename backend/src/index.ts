@@ -6,6 +6,7 @@ import plexRouter from './routes/plex.js'
 import photosRouter from './routes/photos.js'
 import piholeRouter from './routes/pihole.js'
 import mediaRouter from './routes/media.js'
+import wordRouter from './routes/word.js'
 import adminRouter from './routes/admin.js'
 import { loadFromDisk, startSync, startPeriodicSync } from './services/photosService.js'
 import { loadSession, deletePiholeSession } from './services/piholeService.js'
@@ -50,6 +51,7 @@ app.use('/api/plex', plexRouter)
 app.use('/api/photos', photosRouter)
 app.use('/api/pihole', piholeRouter)
 app.use('/api/media', mediaRouter)
+app.use('/api/word', wordRouter)
 app.use('/admin', adminRouter)
 
 app.use(errorHandler)

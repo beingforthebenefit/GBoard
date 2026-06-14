@@ -5,6 +5,7 @@ import { useElementSize } from '../../hooks/useElementSize.js'
 import { buildThumborUrl } from '../../utils/thumbor.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { RadarTiles } from '../../components/RadarTiles.js'
+import { WordOfDayWidget } from '../../components/WordOfDay.js'
 import { LayoutProps, shouldShowRadar } from '../index.js'
 
 // ── Helpers ──
@@ -376,6 +377,7 @@ export function TerminalLayout({
   radarData,
   radarMode,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const showRadar = shouldShowRadar(radarMode, radarData)
   const now = useClock()
@@ -440,9 +442,6 @@ export function TerminalLayout({
               <Box title="WEATHER">
                 <TermWeather weatherData={weatherData} weatherLoading={weatherLoading} />
               </Box>
-              <Box title="PI-HOLE">
-                <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
-              </Box>
             </div>
             <div className="w-64 flex flex-col gap-2.5">
               <Box title="SOBER TIME">
@@ -468,19 +467,26 @@ export function TerminalLayout({
                 <TermSober sobrietyDate={sobrietyDate} />
               </Box>
             </div>
-            <div className="flex-shrink-0">
-              <Box title="PI-HOLE">
-                <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
-              </Box>
-            </div>
           </>
         )}
 
-        {/* Plex */}
-        <div className="flex-shrink-0">
-          <Box title="PLEX ▸">
-            <TermPlex sessions={sessions} plexLoading={plexLoading} />
+        {/* Word of the day (left) · Pi-hole + Plex (right) */}
+        <div className="flex-shrink-0 grid grid-cols-2 gap-4 items-start">
+          <Box title="PALABRA DEL DÍA · ESPAÑOL">
+            {wordOfDay ? (
+              <WordOfDayWidget word={wordOfDay} compact label="" />
+            ) : (
+              <span className="text-green-500/30 text-xs">cargando…</span>
+            )}
           </Box>
+          <div className="flex flex-col gap-2.5">
+            <Box title="PI-HOLE">
+              <TermPihole piholeData={piholeData} piholeLoading={piholeLoading} />
+            </Box>
+            <Box title="PLEX ▸">
+              <TermPlex sessions={sessions} plexLoading={plexLoading} />
+            </Box>
+          </div>
         </div>
 
         {/* Photo — fills remaining space */}

@@ -50,6 +50,8 @@ const minimalProps = {
   radarLoading: false,
   radarMode: 'adaptive' as const,
   sobrietyDate: '2024-01-01T00:00:00',
+  wordOfDay: null,
+  wordLoading: false,
 }
 
 const fullProps = {

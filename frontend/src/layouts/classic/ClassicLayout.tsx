@@ -6,6 +6,7 @@ import { useClock } from '../../hooks/useClock.js'
 import { useAvailableHeight } from '../../hooks/useAvailableHeight.js'
 import { GlassPanel } from './GlassPanel.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
+import { WordOfDayWidget } from '../../components/WordOfDay.js'
 import { LayoutProps, shouldShowRadar } from '../index.js'
 import { ClassicPhotoBackground } from './ClassicPhotoBackground.js'
 import { ClassicRadarWidget } from './ClassicRadarWidget.js'
@@ -663,6 +664,7 @@ export function ClassicLayout({
   radarData,
   radarMode,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const { ref: leftColRef, height: leftColHeight } = useAvailableHeight<HTMLDivElement>()
 
@@ -739,6 +741,13 @@ export function ClassicLayout({
               />
             </GlassPanel>
           </div>
+          {wordOfDay && (
+            <div className="w-80 flex-shrink-0">
+              <GlassPanel className="px-5 py-4 text-white">
+                <WordOfDayWidget word={wordOfDay} />
+              </GlassPanel>
+            </div>
+          )}
         </div>
       </div>
     </div>

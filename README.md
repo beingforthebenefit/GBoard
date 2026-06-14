@@ -20,6 +20,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 - **Upcoming Media** — Next 10 upcoming TV episodes (Sonarr) and movies (Radarr), grouped by day
 - **Plex Now Playing** — Active streams with progress animation, hidden when idle
 - **Calendar** — 7-day rolling view from iCloud shared CalDAV/ICS calendars
+- **Word of the Day** — A Mexican-Spanish word each day with its definition, conjugations (for irregular verbs), and an example sentence — shown on every theme
 - **Photo Background** — Rotating iCloud shared album photos with blurred fill backdrop, served through a self-hosted [Thumbor](https://www.thumbor.org/) instance for on-demand resizing, WebP conversion, and face-aware smart cropping
 - **Admin Panel** — Web-based settings management with layout/theme picker
 

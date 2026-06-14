@@ -52,6 +52,8 @@ const mockProps = {
   radarLoading: false,
   radarMode: 'adaptive' as const,
   sobrietyDate: '2024-01-01T00:00:00',
+  wordOfDay: null,
+  wordLoading: false,
 }
 
 describe('BambooLayout', () => {
@@ -100,5 +102,19 @@ describe('BambooLayout', () => {
     }
     const { getByText } = render(<BambooLayout {...mockProps} sessions={[session]} />)
     expect(getByText('Interstellar')).toBeTruthy()
+  })
+
+  it('shows the Spanish word of the day when provided', () => {
+    const wordOfDay = {
+      word: 'órale',
+      partOfSpeech: 'interjection' as const,
+      definition: 'whoa; okay, let’s go',
+      example: '¡Órale!',
+      exampleTranslation: 'Come on!',
+      date: '2026-06-14',
+    }
+    const { getByText } = render(<BambooLayout {...mockProps} wordOfDay={wordOfDay} />)
+    expect(getByText('Palabra del Día')).toBeTruthy()
+    expect(getByText('órale')).toBeTruthy()
   })
 })

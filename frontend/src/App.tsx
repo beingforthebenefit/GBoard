@@ -7,6 +7,7 @@ import { usePhotos } from './hooks/usePhotos.js'
 import { useVersion } from './hooks/useVersion.js'
 import { useMedia } from './hooks/useMedia.js'
 import { useRadar } from './hooks/useRadar.js'
+import { useWordOfDay } from './hooks/useWordOfDay.js'
 import { useDayNight } from './hooks/useDayNight.js'
 import { getLayout, DEFAULT_LAYOUT } from './layouts/index.js'
 
@@ -49,6 +50,7 @@ export function App() {
   const { photos } = usePhotos()
   const { items: mediaItems, loading: mediaLoading } = useMedia()
   const { data: radarData, loading: radarLoading } = useRadar()
+  const { word: wordOfDay, loading: wordLoading } = useWordOfDay()
 
   // Day/night theme (zen layout uses this; classic ignores it)
   useDayNight(weatherData)
@@ -73,6 +75,8 @@ export function App() {
       radarLoading={radarLoading}
       radarMode={radarMode}
       sobrietyDate={SOBRIETY_DATE}
+      wordOfDay={wordOfDay}
+      wordLoading={wordLoading}
     />
   )
 }

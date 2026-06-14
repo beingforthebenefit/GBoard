@@ -5,6 +5,7 @@ import { buildThumborUrl } from '../../utils/thumbor.js'
 import { AgendaList } from '../../components/AgendaList.js'
 import { MilestoneWidget } from '../../components/MilestoneWidget.js'
 import { OnThisDay } from '../../components/OnThisDay.js'
+import { WordOfDayWidget } from '../../components/WordOfDay.js'
 import { findMemories } from '../../utils/photoMemories.js'
 import { RadarTiles } from '../../components/RadarTiles.js'
 import { LayoutProps, shouldShowRadar } from '../index.js'
@@ -253,6 +254,7 @@ export function FridgeLayout({
   radarData,
   radarMode,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const now = useClock()
   const showRadar = shouldShowRadar(radarMode, radarData)
@@ -341,6 +343,17 @@ export function FridgeLayout({
           )}
 
           <div className="mt-auto flex-shrink-0 flex flex-col gap-3">
+            {wordOfDay && (
+              <div
+                className="bg-[#fff6a8] shadow-md px-3 py-2 text-[#5c5546]"
+                style={{ transform: 'rotate(-1.1deg)' }}
+              >
+                <div className="text-[10px] uppercase tracking-wider text-[#a89f8d] font-bold mb-1">
+                  Palabra del día
+                </div>
+                <WordOfDayWidget word={wordOfDay} compact label="" />
+              </div>
+            )}
             <TvGuide mediaItems={mediaItems} />
             <HouseNotes sessions={sessions} piholeData={piholeData} />
           </div>

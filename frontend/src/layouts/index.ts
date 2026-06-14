@@ -6,6 +6,7 @@ import {
   UpcomingItem,
   RadarData,
   PhotoInfo,
+  WordOfDay,
 } from '../types/index.js'
 import { PiholeStats } from '../hooks/usePihole.js'
 import { ClassicLayout } from './classic/ClassicLayout.js'
@@ -40,6 +41,8 @@ export interface LayoutProps {
   radarLoading: boolean
   radarMode: RadarMode
   sobrietyDate: string
+  wordOfDay: WordOfDay | null
+  wordLoading: boolean
 }
 
 export function shouldShowRadar(

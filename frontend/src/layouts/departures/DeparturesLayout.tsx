@@ -3,6 +3,7 @@ import { useClock } from '../../hooks/useClock.js'
 import { FlapClock } from '../../components/FlapClock.js'
 import { SplitFlapBoard } from '../../components/SplitFlapBoard.js'
 import { RadarTiles } from '../../components/RadarTiles.js'
+import { WordOfDayWidget } from '../../components/WordOfDay.js'
 import { PhotoBackground } from '../../components/PhotoBackground.js'
 import { computeMilestoneProgress } from '../../utils/milestones.js'
 import { buildBoardRows } from './boardRows.js'
@@ -85,20 +86,25 @@ function ConditionsLine({
   }
   const { current, forecast } = data
   return (
-    <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-xs font-mono">
-      <span className="text-base" style={{ color: '#e7b75f' }}>
-        {current.temp}°F
-      </span>
-      <span className="uppercase" style={{ color: 'rgba(231, 183, 95, 0.7)' }}>
-        {current.description}
-      </span>
-      <span style={{ color: 'rgba(231, 183, 95, 0.5)' }}>
-        WIND {current.windDirection} {current.windSpeed}MPH
-        {current.windGust != null && ` G${Math.round(current.windGust)}`}
-      </span>
-      <span style={{ color: 'rgba(231, 183, 95, 0.5)' }}>VIS {current.visibility}MI</span>
-      <span style={{ color: 'rgba(231, 183, 95, 0.5)' }}>HUM {current.humidity}%</span>
-      <span className="ml-auto flex gap-3" style={{ color: 'rgba(231, 183, 95, 0.5)' }}>
+    <div className="flex flex-col gap-1 text-xs font-mono">
+      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+        <span className="text-base" style={{ color: '#e7b75f' }}>
+          {current.temp}°F
+        </span>
+        <span className="uppercase" style={{ color: 'rgba(231, 183, 95, 0.7)' }}>
+          {current.description}
+        </span>
+        <span style={{ color: 'rgba(231, 183, 95, 0.5)' }}>
+          WIND {current.windDirection} {current.windSpeed}MPH
+          {current.windGust != null && ` G${Math.round(current.windGust)}`}
+        </span>
+        <span style={{ color: 'rgba(231, 183, 95, 0.5)' }}>VIS {current.visibility}MI</span>
+        <span style={{ color: 'rgba(231, 183, 95, 0.5)' }}>HUM {current.humidity}%</span>
+      </div>
+      <div
+        className="flex flex-wrap gap-x-3 gap-y-0.5"
+        style={{ color: 'rgba(231, 183, 95, 0.5)' }}
+      >
         {forecast.slice(1, 5).map((day) => (
           <span key={day.date}>
             {new Date(day.date + 'T12:00:00')
@@ -107,7 +113,7 @@ function ConditionsLine({
             {day.high}/{day.low}
           </span>
         ))}
-      </span>
+      </div>
     </div>
   )
 }
@@ -125,6 +131,7 @@ export function DeparturesLayout({
   radarData,
   radarMode,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const now = useClock()
   const showRadar = shouldShowRadar(radarMode, radarData)
@@ -170,9 +177,18 @@ export function DeparturesLayout({
         </div>
       </div>
 
-      {/* Field conditions */}
-      <div className="flex-shrink-0">
+      {/* Field conditions + Spanish word of the day, side by side */}
+      <div className="flex-shrink-0 grid grid-cols-[3fr_2fr] gap-6 items-start">
         <ConditionsLine weatherData={weatherData} weatherLoading={weatherLoading} />
+        {wordOfDay && (
+          <WordOfDayWidget
+            word={wordOfDay}
+            compact
+            label="PALABRA DEL DÍA"
+            className="font-mono"
+            style={{ color: '#e7b75f' }}
+          />
+        )}
       </div>
 
       {/* Board + optional radar, slideshow fills the rest */}

@@ -99,3 +99,23 @@ export interface PiholeResponse {
   queriesLastHour: number
   clients: PiholeClient[]
 }
+
+export interface WordConjugation {
+  pronoun: string // e.g. 'yo', 'tú', 'él/ella', 'nosotros', 'ellos/ellas'
+  form: string // the conjugated verb form
+}
+
+export interface WordOfDay {
+  word: string // the Spanish (Mexican) word or phrase
+  partOfSpeech: 'noun' | 'verb' | 'adjective' | 'adverb' | 'interjection' | 'phrase'
+  gender?: 'm' | 'f' // for nouns
+  pronunciation?: string // rough phonetic hint
+  definition: string // English definition
+  spanishDefinition?: string // Spanish gloss
+  note?: string // Mexican usage / register note
+  conjugationTense?: string // e.g. 'Present' — present when conjugations are included
+  conjugations?: WordConjugation[] // present only for irregular verbs
+  example: string // example sentence in Spanish
+  exampleTranslation: string // English translation of the example
+  date: string // YYYY-MM-DD this word is served for
+}

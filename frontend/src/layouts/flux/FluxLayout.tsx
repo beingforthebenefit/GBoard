@@ -2,6 +2,7 @@ import { useIsDark } from '../../hooks/useIsDark.js'
 import { FluxField } from '../../components/FluxField.js'
 import { WeatherHeader } from '../../components/WeatherWidget.js'
 import { AgendaList } from '../../components/AgendaList.js'
+import { WordOfDayWidget } from '../../components/WordOfDay.js'
 import {
   Glass,
   KineticClock,
@@ -34,6 +35,7 @@ export function FluxLayout({
   sessions,
   piholeData,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const dark = useIsDark()
 
@@ -71,6 +73,11 @@ export function FluxLayout({
             </div>
             <AgendaList events={events} loading={calendarLoading} maxItems={4} />
           </Glass>
+          {wordOfDay && (
+            <Glass dark={dark} className="px-4 py-3">
+              <WordOfDayWidget word={wordOfDay} style={{ color: 'var(--text)' }} />
+            </Glass>
+          )}
           <FlowCaption weatherData={weatherData} piholeData={piholeData} />
         </div>
       </div>

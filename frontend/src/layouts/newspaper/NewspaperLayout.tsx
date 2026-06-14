@@ -5,6 +5,7 @@ import { useElementSize } from '../../hooks/useElementSize.js'
 import { buildThumborUrl } from '../../utils/thumbor.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { RadarTiles } from '../../components/RadarTiles.js'
+import { WordOfDayWidget } from '../../components/WordOfDay.js'
 import { LayoutProps, shouldShowRadar } from '../index.js'
 
 // ── Helpers ──
@@ -158,13 +159,11 @@ function TickerBar({
 
   const textColor = dark ? 'text-neutral-100' : 'text-black'
   const subtleColor = dark ? 'text-neutral-500' : 'text-neutral-400'
-  const borderColor = dark ? 'border-neutral-700' : 'border-black'
-  const innerBorder = dark ? 'border-neutral-700' : 'border-neutral-300'
 
   return (
-    <div className={`flex items-center gap-0 border-y ${borderColor} py-1.5 text-xs`}>
-      <div className={`flex items-center gap-3 pr-4 border-r ${innerBorder}`}>
-        <span className={`font-semibold uppercase tracking-wider text-[10px] ${subtleColor}`}>
+    <div className="flex flex-col gap-2 text-xs">
+      <div className="flex items-center gap-3">
+        <span className={`font-semibold uppercase tracking-wider text-[10px] w-14 ${subtleColor}`}>
           Sober
         </span>
         <div className="flex gap-2 tabular-nums">
@@ -182,7 +181,7 @@ function TickerBar({
         </div>
       </div>
       {piholeData && (
-        <div className="flex items-center gap-3 pl-4 flex-1">
+        <div className="flex items-center gap-3">
           <span
             className={`w-1.5 h-1.5 rounded-full ${
               piholeData.status === 'enabled'
@@ -192,7 +191,7 @@ function TickerBar({
                 : 'bg-red-400'
             }`}
           />
-          <span className={subtleColor}>Pi-hole</span>
+          <span className={`w-12 ${subtleColor}`}>Pi-hole</span>
           <span className={`font-semibold ${textColor}`}>
             {piholeData.totalQueries.toLocaleString()}
           </span>
@@ -386,6 +385,7 @@ export function NewspaperLayout({
   radarData,
   radarMode,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const dark = useIsDark()
   const showRadar = shouldShowRadar(radarMode, radarData)
@@ -407,9 +407,21 @@ export function NewspaperLayout({
           <WeatherHeadline weatherData={weatherData} weatherLoading={weatherLoading} dark={dark} />
         </div>
 
-        {/* Sober + Pi-hole ticker */}
-        <div className="flex-shrink-0 mt-3">
-          <TickerBar sobrietyDate={sobrietyDate} piholeData={piholeData} dark={dark} />
+        {/* Sober + Pi-hole stacked in one column, Spanish word in the other */}
+        <div
+          className={`flex-shrink-0 mt-3 grid grid-cols-2 gap-5 border-y py-2 ${
+            dark ? 'border-neutral-700' : 'border-black'
+          }`}
+        >
+          <div className={`pr-5 border-r ${dark ? 'border-neutral-700' : 'border-neutral-300'}`}>
+            <TickerBar sobrietyDate={sobrietyDate} piholeData={piholeData} dark={dark} />
+          </div>
+          {wordOfDay && (
+            <div>
+              <SectionHead dark={dark}>Palabra del Día · Daily Spanish</SectionHead>
+              <WordOfDayWidget word={wordOfDay} compact label="" className="font-serif" />
+            </div>
+          )}
         </div>
 
         {/* Radar — small widget */}

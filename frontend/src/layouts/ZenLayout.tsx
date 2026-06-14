@@ -8,6 +8,7 @@ import { PlexWidget } from '../components/PlexWidget.js'
 import { CalendarGrid } from '../components/CalendarGrid.js'
 import { PiholeWidget } from '../components/PiholeWidget.js'
 import { RadarTiles } from '../components/RadarTiles.js'
+import { WordOfDayWidget } from '../components/WordOfDay.js'
 import { LayoutProps, shouldShowRadar } from './index.js'
 import { useState } from 'react'
 import { PhotoInfo } from '../types/index.js'
@@ -27,6 +28,7 @@ export function ZenLayout({
   radarData,
   radarMode,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const showRadar = shouldShowRadar(radarMode, radarData)
   const [currentPhoto, setCurrentPhoto] = useState<PhotoInfo | null>(null)
@@ -85,6 +87,18 @@ export function ZenLayout({
       <div className="flex-shrink-0">
         <PlexWidget sessions={sessions} loading={plexLoading} />
       </div>
+
+      {/* Spanish word of the day */}
+      {wordOfDay && (
+        <div className="flex-shrink-0">
+          <WordOfDayWidget
+            word={wordOfDay}
+            compact
+            className="card rounded-xl px-4 py-2"
+            style={{ color: 'var(--text)' }}
+          />
+        </div>
+      )}
 
       {/* Upcoming + Calendar side by side */}
       <div className="flex-shrink-0 grid grid-cols-[2fr_1fr] gap-4">

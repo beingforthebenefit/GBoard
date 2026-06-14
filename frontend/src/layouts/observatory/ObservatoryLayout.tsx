@@ -9,6 +9,7 @@ import { WindCompass } from '../../components/WindCompass.js'
 import { SunArcWidget } from '../../components/SunArcWidget.js'
 import { CalendarGrid } from '../../components/CalendarGrid.js'
 import { RadarTiles } from '../../components/RadarTiles.js'
+import { WordOfDayWidget } from '../../components/WordOfDay.js'
 import { useSoberCounter } from '../../hooks/useSoberCounter.js'
 import { LayoutProps, shouldShowRadar } from '../index.js'
 
@@ -235,6 +236,7 @@ export function ObservatoryLayout({
   radarData,
   radarMode,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const dark = useIsDark()
   const showRadar = shouldShowRadar(radarMode, radarData)
@@ -339,35 +341,47 @@ export function ObservatoryLayout({
               }
             />
           </Panel>
-          <Panel title="Ephemeris" className="min-w-0 overflow-hidden">
-            {mediaItems.length === 0 ? (
-              <div className="text-xs italic" style={{ color: 'var(--text-3)' }}>
-                Nothing on the horizon
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {mediaItems.slice(0, 8).map((item, i) => {
-                  const d = new Date(item.date + 'T00:00:00')
-                  const isToday = d.toDateString() === new Date().toDateString()
-                  return (
-                    <div key={i} className="flex items-baseline gap-2 text-xs leading-snug">
-                      <span
-                        className="w-10 flex-shrink-0 tabular-nums"
-                        style={{ color: isToday ? 'var(--obs-gold)' : 'var(--text-3)' }}
-                      >
-                        {isToday
-                          ? 'Today'
-                          : d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}
-                      </span>
-                      <span className="truncate" style={{ color: 'var(--text-2)' }}>
-                        {item.title}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
+          <div className="flex flex-col gap-3 min-w-0">
+            <Panel title="Ephemeris" className="min-w-0 overflow-hidden">
+              {mediaItems.length === 0 ? (
+                <div className="text-xs italic" style={{ color: 'var(--text-3)' }}>
+                  Nothing on the horizon
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {mediaItems.slice(0, 8).map((item, i) => {
+                    const d = new Date(item.date + 'T00:00:00')
+                    const isToday = d.toDateString() === new Date().toDateString()
+                    return (
+                      <div key={i} className="flex items-baseline gap-2 text-xs leading-snug">
+                        <span
+                          className="w-10 flex-shrink-0 tabular-nums"
+                          style={{ color: isToday ? 'var(--obs-gold)' : 'var(--text-3)' }}
+                        >
+                          {isToday
+                            ? 'Today'
+                            : d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}
+                        </span>
+                        <span className="truncate" style={{ color: 'var(--text-2)' }}>
+                          {item.title}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Panel>
+            {wordOfDay && (
+              <Panel title="Léxico · Palabra del Día" className="flex-1 min-w-0">
+                <WordOfDayWidget
+                  word={wordOfDay}
+                  compact
+                  label=""
+                  style={{ color: 'var(--text)' }}
+                />
+              </Panel>
             )}
-          </Panel>
+          </div>
         </div>
         <div className="flex-1 min-h-0">
           <PortholePhoto photos={photos} />

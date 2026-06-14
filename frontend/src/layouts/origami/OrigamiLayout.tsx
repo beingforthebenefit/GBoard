@@ -2,6 +2,7 @@ import { useIsDark } from '../../hooks/useIsDark.js'
 import { OrigamiField } from '../../components/OrigamiField.js'
 import { WeatherHeader } from '../../components/WeatherWidget.js'
 import { AgendaList } from '../../components/AgendaList.js'
+import { WordOfDayWidget } from '../../components/WordOfDay.js'
 import {
   Glass,
   KineticClock,
@@ -18,6 +19,7 @@ export function OrigamiLayout({
   calendarLoading,
   sessions,
   sobrietyDate,
+  wordOfDay,
 }: LayoutProps) {
   const dark = useIsDark()
 
@@ -55,6 +57,11 @@ export function OrigamiLayout({
             </div>
             <AgendaList events={events} loading={calendarLoading} maxItems={4} />
           </Glass>
+          {wordOfDay && (
+            <Glass dark={dark} className="px-4 py-3">
+              <WordOfDayWidget word={wordOfDay} style={{ color: 'var(--text)' }} />
+            </Glass>
+          )}
         </div>
       </div>
     </div>
