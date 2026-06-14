@@ -17,6 +17,14 @@ const FIELD_SCALE = 0.0016 // spatial frequency of the flow field (per CSS px)
 const TIME_SCALE = 0.00018 // how fast the field evolves (per ms)
 const FIELD_STRENGTH = 0.9 // radians of swirl the field adds to wind direction
 
+// Slow color pulse that travels diagonally through the particles
+const PULSE_WAVELENGTH = 720 // CSS px between pulse crests
+const PULSE_PERIOD_MS = 7000 // time for the wave to advance one wavelength
+const PULSE_HUE_AMP = 16 // degrees of hue swing
+const PULSE_LIGHT_AMP = 14 // lightness % swing
+const PULSE_ALPHA_AMP = 0.12 // opacity swing
+const TWO_PI = Math.PI * 2
+
 interface Particle {
   x: number
   y: number
@@ -207,9 +215,17 @@ export function FluxField({ weather, dark }: FluxFieldProps) {
         if (p.rain) {
           ctx.strokeStyle = isDark ? 'rgba(200, 220, 255, 0.5)' : 'rgba(120, 150, 200, 0.45)'
         } else {
-          const hue = (pal.hue + p.hueJitter + 360) % 360
-          const light = Math.max(20, Math.min(85, pal.light + p.lightJitter))
-          ctx.strokeStyle = `hsla(${hue}, ${pal.sat}%, ${light}%, ${pal.alpha})`
+          // Traveling wave so a band of brighter, hue-shifted particles drifts across
+          const pulse = Math.sin(
+            ((p.x + p.y) / PULSE_WAVELENGTH - elapsed / PULSE_PERIOD_MS) * TWO_PI
+          )
+          const hue = (pal.hue + p.hueJitter + pulse * PULSE_HUE_AMP + 360) % 360
+          const light = Math.max(
+            18,
+            Math.min(88, pal.light + p.lightJitter + pulse * PULSE_LIGHT_AMP)
+          )
+          const alpha = Math.max(0.15, Math.min(1, pal.alpha + pulse * PULSE_ALPHA_AMP))
+          ctx.strokeStyle = `hsla(${hue}, ${pal.sat}%, ${light}%, ${alpha})`
         }
         ctx.beginPath()
         ctx.moveTo(p.px, p.py)

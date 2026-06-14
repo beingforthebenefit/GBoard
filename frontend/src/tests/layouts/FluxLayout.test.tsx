@@ -79,11 +79,9 @@ describe('FluxLayout', () => {
     expect(getByText('2:30')).toBeTruthy()
   })
 
-  it('shows the sober hero with counter values', () => {
-    const { getAllByText, getByText } = render(<FluxLayout {...mockProps} />)
-    expect(getByText('Sober')).toBeTruthy()
-    expect(getByText('yr')).toBeTruthy()
-    expect(getAllByText('1').length).toBeGreaterThan(0)
+  it('shows a compact sober line under the clock', () => {
+    const { getByText } = render(<FluxLayout {...mockProps} />)
+    expect(getByText(/Sober 1y 2m 3d/)).toBeTruthy()
   })
 
   it('shows the weather temperature', () => {

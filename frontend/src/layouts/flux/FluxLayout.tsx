@@ -71,48 +71,22 @@ function FluxClock() {
   )
 }
 
-function SoberHero({ sobrietyDate, dark }: { sobrietyDate: string; dark: boolean }) {
-  const { years, months, days, hours } = useSoberCounter(sobrietyDate)
+// Small, unobtrusive line under the clock — present but not the focus
+function SoberChip({ sobrietyDate }: { sobrietyDate: string }) {
+  const { years, months, days } = useSoberCounter(sobrietyDate)
   const { next, daysRemaining } = computeMilestoneProgress(new Date(sobrietyDate), new Date())
-  const cells = [
-    { v: years, l: 'yr' },
-    { v: months, l: 'mo' },
-    { v: days, l: 'dy' },
-    { v: hours, l: 'hr' },
-  ]
-
+  const parts = [years && `${years}y`, months && `${months}m`, `${days}d`].filter(Boolean).join(' ')
   return (
-    <Glass dark={dark} className="px-7 py-5 text-center">
-      <div
-        className="text-[11px] uppercase tracking-[0.3em] mb-2"
-        style={{ color: 'var(--text-3)' }}
-      >
-        Sober
-      </div>
-      <div className="flex gap-6 justify-center">
-        {cells.map(({ v, l }) => (
-          <div key={l}>
-            <div
-              className="text-4xl font-light tabular-nums leading-none"
-              style={{ color: 'var(--sober-text)' }}
-            >
-              {v}
-            </div>
-            <div
-              className="text-[10px] uppercase tracking-wider mt-1"
-              style={{ color: 'var(--text-3)' }}
-            >
-              {l}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="text-xs mt-3" style={{ color: 'var(--text-2)' }}>
-        {daysRemaining === 0
-          ? `${next.label} — today 🎉`
-          : `${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} to ${next.label}`}
-      </div>
-    </Glass>
+    <div
+      className="text-xs font-light mt-2 tracking-wide"
+      style={{ color: 'var(--text-2)', textShadow: TEXT_SHADOW }}
+    >
+      <span style={{ color: 'var(--sober-text)' }}>●</span> Sober {parts}
+      <span style={{ color: 'var(--text-3)' }}>
+        {' '}
+        · {daysRemaining === 0 ? `${next.label} today` : `${daysRemaining}d to ${next.label}`}
+      </span>
+    </div>
   )
 }
 
@@ -174,18 +148,19 @@ export function FluxLayout({
       <FluxField weather={weatherData} dark={dark} />
 
       <div className="absolute inset-0 z-10 flex flex-col p-6 gap-4">
-        {/* Top: clock + weather */}
+        {/* Top: clock + small sober line on the left, weather on the right */}
         <div className="flex-shrink-0 flex items-start justify-between gap-4">
-          <FluxClock />
+          <div>
+            <FluxClock />
+            <SoberChip sobrietyDate={sobrietyDate} />
+          </div>
           <div style={{ textShadow: TEXT_SHADOW }}>
             <WeatherHeader data={weatherData} loading={weatherLoading} />
           </div>
         </div>
 
-        {/* Hero sober counter, vertically centered so the field breathes around it */}
-        <div className="flex-1 min-h-0 flex items-center justify-center">
-          <SoberHero sobrietyDate={sobrietyDate} dark={dark} />
-        </div>
+        {/* Open center so the flow field is the focus */}
+        <div className="flex-1 min-h-0" />
 
         {/* Bottom: now playing, agenda, flow caption */}
         <div className="flex-shrink-0 flex flex-col gap-3">
