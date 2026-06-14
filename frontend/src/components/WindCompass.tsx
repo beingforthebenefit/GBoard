@@ -1,3 +1,5 @@
+import { windDirToDegrees } from '../utils/wind.js'
+
 interface WindCompassProps {
   speed: number
   direction: string
@@ -5,28 +7,9 @@ interface WindCompassProps {
   className?: string
 }
 
-const DIR_DEGREES: Record<string, number> = {
-  N: 0,
-  NNE: 22.5,
-  NE: 45,
-  ENE: 67.5,
-  E: 90,
-  ESE: 112.5,
-  SE: 135,
-  SSE: 157.5,
-  S: 180,
-  SSW: 202.5,
-  SW: 225,
-  WSW: 247.5,
-  W: 270,
-  WNW: 292.5,
-  NW: 315,
-  NNW: 337.5,
-}
-
 /** Compass dial with a needle pointing the way the wind is blowing */
 export function WindCompass({ speed, direction, gust, className = '' }: WindCompassProps) {
-  const fromDeg = DIR_DEGREES[direction]
+  const fromDeg = windDirToDegrees(direction)
   // Weather reports the direction wind comes FROM; the needle points where it blows
   const toDeg = fromDeg != null ? (fromDeg + 180) % 360 : null
 
