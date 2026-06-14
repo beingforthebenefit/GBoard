@@ -25,7 +25,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 
 ## Themes
 
-Ten built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, Flux, Mosaic, and Fractal support light/dark color modes (auto, manual, or based on sunrise/sunset).
+Ten built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, Flux, Mosaic, and Aurora support light/dark color modes (auto, manual, or based on sunrise/sunset).
 
 <table>
   <tr>
@@ -49,7 +49,7 @@ Six more layouts (screenshots pending):
 - **Observatory** — Night-sky almanac: sun arc, moon phase, wind compass, an hourly temperature/precipitation chart, a circular porthole photo, and Pi-hole/Plex as mission telemetry
 - **Flux** — Kinetic ambient backdrop: a canvas particle flow field driven live by the weather (wind sets the flow direction and speed, temperature sets the palette, rain adds streaks), with the clock, sober counter, and agenda floating over it
 - **Mosaic** — Kinetic geometric backdrop: a hex tessellation with a gradient wave flowing through it (wind sets direction/speed, temperature tints it, and the base hue tracks the time of day, cycling the spectrum every 12 hours), and ripples that radiate from the center on Pi-hole blocked-query spikes, Plex playback, and the top of each hour
-- **Fractal** — Kinetic infinite backdrop: an endless self-similar zoom built from nested octaves of a randomly-generated motif, so new detail keeps emerging from the center and the pattern is different on every load (wind sets the descent speed, temperature tints the hue)
+- **Aurora** — Kinetic color backdrop: soft ribbons of color drift and bloom where they overlap, like northern lights or ink in water (temperature sets the palette, wind sets the drift speed); rendered at low resolution and upscaled for buttery-smooth gradients on low-power hardware
 
 ### Admin Panel
 

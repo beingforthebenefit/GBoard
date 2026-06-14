@@ -484,7 +484,7 @@ const LAYOUTS = [
   { name: 'observatory', label: 'Observatory', icon: '&#9789;', desc: 'Night-sky almanac, day/night theming' },
   { name: 'flux', label: 'Flux', icon: '&#10070;', desc: 'Weather-driven particle flow field' },
   { name: 'mosaic', label: 'Mosaic', icon: '&#11042;', desc: 'Kinetic hex tessellation with data ripples' },
-  { name: 'fractal', label: 'Fractal', icon: '&#8734;', desc: 'Endless self-similar zoom, always new' },
+  { name: 'aurora', label: 'Aurora', icon: '&#127770;', desc: 'Drifting ribbons of color that bloom' },
 ];
 
 function toast(msg, type = 'success') {
@@ -526,7 +526,7 @@ async function setLayout(name) {
       name === 'observatory' ||
       name === 'flux' ||
       name === 'mosaic' ||
-      name === 'fractal')
+      name === 'aurora')
       ? '' : 'none';
   try {
     await fetch(API + '/theme', {
@@ -554,7 +554,7 @@ async function loadPrefs() {
         currentLayout === 'observatory' ||
         currentLayout === 'flux' ||
         currentLayout === 'mosaic' ||
-        currentLayout === 'fractal')
+        currentLayout === 'aurora')
         ? '' : 'none';
   } catch {}
 }
