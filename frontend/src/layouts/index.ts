@@ -15,6 +15,7 @@ import { NewspaperLayout } from './newspaper/NewspaperLayout.js'
 import { DeparturesLayout } from './departures/DeparturesLayout.js'
 import { FridgeLayout } from './fridge/FridgeLayout.js'
 import { ObservatoryLayout } from './observatory/ObservatoryLayout.js'
+import { FluxLayout } from './flux/FluxLayout.js'
 
 export type RadarMode = 'adaptive' | 'on' | 'off'
 
@@ -95,6 +96,12 @@ export const LAYOUTS: LayoutDefinition[] = [
     label: 'Observatory',
     description: 'Night-sky almanac with instruments, day/night theming',
     component: ObservatoryLayout,
+  },
+  {
+    name: 'flux',
+    label: 'Flux',
+    description: 'Weather-driven particle flow field, day/night theming',
+    component: FluxLayout,
   },
 ]
 

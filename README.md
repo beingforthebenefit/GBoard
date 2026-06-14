@@ -25,7 +25,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 
 ## Themes
 
-Seven built-in layouts, switchable live from the admin panel. Zen, Newspaper, and Observatory support light/dark color modes (auto, manual, or based on sunrise/sunset).
+Eight built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, and Flux support light/dark color modes (auto, manual, or based on sunrise/sunset).
 
 <table>
   <tr>
@@ -42,11 +42,12 @@ Seven built-in layouts, switchable live from the admin panel. Zen, Newspaper, an
   </tr>
 </table>
 
-Three more layouts (screenshots pending):
+Four more layouts (screenshots pending):
 
-- **Departures** — Solari split-flap airport board: calendar events, upcoming media, and active Plex streams merge into one chronological board with `BOARDING` / `IN FLIGHT` / `DEPARTED` statuses; the sobriety counter becomes the header streak
+- **Departures** — Solari split-flap airport board: calendar events, upcoming media, and active Plex streams merge into one chronological board with `BOARDING` / `IN FLIGHT` / `DEPARTED` statuses; the sobriety counter becomes the header streak, with a tinted observation-deck slideshow below
 - **Fridge** — Kitchen fridge door: Polaroid photos with tape, sticky-note agenda, magnet-letter clock, weather magnets, an "On this day" memory photo, and a gold-star milestone chart counting down to the next sobriety anniversary
 - **Observatory** — Night-sky almanac: sun arc, moon phase, wind compass, an hourly temperature/precipitation chart, a circular porthole photo, and Pi-hole/Plex as mission telemetry
+- **Flux** — Kinetic ambient backdrop: a canvas particle flow field driven live by the weather (wind sets the flow direction and speed, temperature sets the palette, rain adds streaks), with the clock, sober counter, and agenda floating over it
 
 ### Admin Panel
 
