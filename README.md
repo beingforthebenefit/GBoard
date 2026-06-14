@@ -25,7 +25,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 
 ## Themes
 
-Nine built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, Flux, and Mosaic support light/dark color modes (auto, manual, or based on sunrise/sunset).
+Ten built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, Flux, Mosaic, and Fractal support light/dark color modes (auto, manual, or based on sunrise/sunset).
 
 <table>
   <tr>
@@ -42,13 +42,14 @@ Nine built-in layouts, switchable live from the admin panel. Zen, Newspaper, Obs
   </tr>
 </table>
 
-Five more layouts (screenshots pending):
+Six more layouts (screenshots pending):
 
 - **Departures** — Solari split-flap airport board: calendar events, upcoming media, and active Plex streams merge into one chronological board with `BOARDING` / `IN FLIGHT` / `DEPARTED` statuses; the sobriety counter becomes the header streak, with a tinted observation-deck slideshow below
 - **Fridge** — Kitchen fridge door: Polaroid photos with tape, sticky-note agenda, magnet-letter clock, weather magnets, an "On this day" memory photo, and a gold-star milestone chart counting down to the next sobriety anniversary
 - **Observatory** — Night-sky almanac: sun arc, moon phase, wind compass, an hourly temperature/precipitation chart, a circular porthole photo, and Pi-hole/Plex as mission telemetry
 - **Flux** — Kinetic ambient backdrop: a canvas particle flow field driven live by the weather (wind sets the flow direction and speed, temperature sets the palette, rain adds streaks), with the clock, sober counter, and agenda floating over it
 - **Mosaic** — Kinetic geometric backdrop: a hex tessellation with a gradient wave flowing through it (wind sets direction/speed, temperature tints it, and the base hue tracks the time of day, cycling the spectrum every 12 hours), and ripples that radiate from the center on Pi-hole blocked-query spikes, Plex playback, and the top of each hour
+- **Fractal** — Kinetic infinite backdrop: an endless self-similar zoom built from nested octaves of a randomly-generated motif, so new detail keeps emerging from the center and the pattern is different on every load (wind sets the descent speed, temperature tints the hue)
 
 ### Admin Panel
 

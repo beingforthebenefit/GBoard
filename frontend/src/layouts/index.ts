@@ -17,6 +17,7 @@ import { FridgeLayout } from './fridge/FridgeLayout.js'
 import { ObservatoryLayout } from './observatory/ObservatoryLayout.js'
 import { FluxLayout } from './flux/FluxLayout.js'
 import { MosaicLayout } from './mosaic/MosaicLayout.js'
+import { FractalLayout } from './fractal/FractalLayout.js'
 
 export type RadarMode = 'adaptive' | 'on' | 'off'
 
@@ -109,6 +110,12 @@ export const LAYOUTS: LayoutDefinition[] = [
     label: 'Mosaic',
     description: 'Kinetic hex tessellation with data ripples, day/night theming',
     component: MosaicLayout,
+  },
+  {
+    name: 'fractal',
+    label: 'Fractal',
+    description: 'Endless self-similar zoom, randomly generated, day/night theming',
+    component: FractalLayout,
   },
 ]
 
