@@ -43,7 +43,7 @@ GBoard/
 │   ├── src/
 │   │   ├── App.tsx           # Main app (polls admin prefs, renders active layout)
 │   │   ├── components/       # Shared UI widgets (Weather, Clock, Calendar, Plex, etc.)
-│   │   ├── layouts/          # Theme layouts (zen, classic, terminal, newspaper, departures, fridge, observatory, flux)
+│   │   ├── layouts/          # Theme layouts (zen, classic, terminal, newspaper, departures, fridge, observatory, flux, mosaic)
 │   │   │   ├── index.ts      # Layout registry + LayoutProps interface
 │   │   │   ├── ZenLayout.tsx
 │   │   │   ├── classic/      # Classic three-column glassmorphism
@@ -52,7 +52,8 @@ GBoard/
 │   │   │   ├── departures/   # Solari split-flap airport departures board
 │   │   │   ├── fridge/       # Kitchen fridge door: polaroids, magnets, sticky notes
 │   │   │   ├── observatory/  # Night-sky almanac with instruments (day/night theming)
-│   │   │   └── flux/         # Weather-driven canvas particle flow field (day/night theming)
+│   │   │   ├── flux/         # Weather-driven canvas particle flow field (day/night theming)
+│   │   │   └── mosaic/       # Kinetic canvas hex tessellation with data ripples (day/night theming)
 │   │   ├── hooks/            # Data-fetching hooks with polling intervals
 │   │   ├── utils/            # Sobriety math, milestones, moon phase, photo memories, wind, thumbor
 │   │   └── types/index.ts    # Shared interfaces (duplicated from backend)
@@ -99,8 +100,8 @@ GBoard/
 - **No frontend routing** — single-page dashboard with swappable layout themes
 - **Admin panel** — self-contained HTML served by Express at `/admin`; stores preferences in `admin-prefs.json`
 - **Layout system** — layout registry in `layouts/index.ts`; all themes receive the same `LayoutProps` interface; new layouts must also be added to the `LAYOUTS` array in `backend/src/routes/admin.ts` (admin panel picker + theme-section visibility)
-- **Day/night theming** — `useDayNight` hook applies `html.dark`/`html.light` CSS classes; Zen, Newspaper, Observatory, and Flux respond to them (shared `useIsDark` hook in `hooks/useIsDark.ts`)
-- **Canvas animation (Flux)** — `FluxField` drives a particle flow field via a single imperative `requestAnimationFrame` loop reading weather/dark from refs (no per-frame React renders); FPS-capped and particle-count/tunables at the top of the file for low-power hardware
+- **Day/night theming** — `useDayNight` hook applies `html.dark`/`html.light` CSS classes; Zen, Newspaper, Observatory, Flux, and Mosaic respond to them (shared `useIsDark` hook in `hooks/useIsDark.ts`)
+- **Kinetic canvas themes (Flux, Mosaic)** — `FluxField` (particle flow field) and `MosaicField` (hex tessellation + data ripples) each drive a single imperative `requestAnimationFrame` loop reading live data from refs (no per-frame React renders); both FPS-capped with cell/particle-count tunables at the top of the file for low-power hardware. Shared floating widgets (clock, sober chip, glass cards, now playing) live in `components/KineticOverlay.tsx`
 - **No state management library** — plain React hooks (useState/useEffect) with polling
 - **Security**: All external API calls proxy through backend; no secrets exposed to browser
 - **Auto-reload**: Frontend polls `/api/version` every 10s; page reloads when backend restarts

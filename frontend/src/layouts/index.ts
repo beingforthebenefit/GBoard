@@ -16,6 +16,7 @@ import { DeparturesLayout } from './departures/DeparturesLayout.js'
 import { FridgeLayout } from './fridge/FridgeLayout.js'
 import { ObservatoryLayout } from './observatory/ObservatoryLayout.js'
 import { FluxLayout } from './flux/FluxLayout.js'
+import { MosaicLayout } from './mosaic/MosaicLayout.js'
 
 export type RadarMode = 'adaptive' | 'on' | 'off'
 
@@ -102,6 +103,12 @@ export const LAYOUTS: LayoutDefinition[] = [
     label: 'Flux',
     description: 'Weather-driven particle flow field, day/night theming',
     component: FluxLayout,
+  },
+  {
+    name: 'mosaic',
+    label: 'Mosaic',
+    description: 'Kinetic hex tessellation with data ripples, day/night theming',
+    component: MosaicLayout,
   },
 ]
 

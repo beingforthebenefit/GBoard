@@ -483,6 +483,7 @@ const LAYOUTS = [
   { name: 'fridge', label: 'Fridge', icon: '&#128204;', desc: 'Polaroids &amp; sticky notes' },
   { name: 'observatory', label: 'Observatory', icon: '&#9789;', desc: 'Night-sky almanac, day/night theming' },
   { name: 'flux', label: 'Flux', icon: '&#10070;', desc: 'Weather-driven particle flow field' },
+  { name: 'mosaic', label: 'Mosaic', icon: '&#11042;', desc: 'Kinetic hex tessellation with data ripples' },
 ];
 
 function toast(msg, type = 'success') {
@@ -519,7 +520,11 @@ async function setLayout(name) {
   renderLayoutPicker();
   // Show/hide theme section based on layout
   document.getElementById('theme-section').style.display =
-    (name === 'zen' || name === 'newspaper' || name === 'observatory' || name === 'flux')
+    (name === 'zen' ||
+      name === 'newspaper' ||
+      name === 'observatory' ||
+      name === 'flux' ||
+      name === 'mosaic')
       ? '' : 'none';
   try {
     await fetch(API + '/theme', {
@@ -545,7 +550,8 @@ async function loadPrefs() {
       (currentLayout === 'zen' ||
         currentLayout === 'newspaper' ||
         currentLayout === 'observatory' ||
-        currentLayout === 'flux')
+        currentLayout === 'flux' ||
+        currentLayout === 'mosaic')
         ? '' : 'none';
   } catch {}
 }
