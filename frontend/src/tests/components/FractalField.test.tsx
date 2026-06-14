@@ -45,13 +45,14 @@ describe('makeMotif', () => {
   it('keeps generated parameters within expected ranges', () => {
     for (let s = 0; s < 40; s++) {
       const m = makeMotif(s * 7919 + 1)
-      expect(m.arms).toBeGreaterThanOrEqual(3)
-      expect(m.arms).toBeLessThanOrEqual(8)
-      expect(m.sides === 0 || (m.sides >= 3 && m.sides <= 6)).toBe(true)
-      expect(m.ringRs.length).toBeGreaterThanOrEqual(1)
-      m.ringRs.forEach((r) => {
-        expect(r).toBeGreaterThan(1)
-        expect(r).toBeLessThan(2)
+      expect(m.sides).toBeGreaterThanOrEqual(3)
+      expect(m.sides).toBeLessThanOrEqual(7)
+      expect(m.arms === 0 || (m.arms >= 5 && m.arms <= 10)).toBe(true)
+      expect(m.satSides === 0 || (m.satSides >= 3 && m.satSides <= 6)).toBe(true)
+      expect(m.shells.length).toBeGreaterThanOrEqual(2)
+      m.shells.forEach((r) => {
+        expect(r).toBeGreaterThan(0.9)
+        expect(r).toBeLessThan(2.1)
       })
     }
   })
