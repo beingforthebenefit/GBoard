@@ -18,6 +18,7 @@ import { ObservatoryLayout } from './observatory/ObservatoryLayout.js'
 import { FluxLayout } from './flux/FluxLayout.js'
 import { MosaicLayout } from './mosaic/MosaicLayout.js'
 import { AuroraLayout } from './aurora/AuroraLayout.js'
+import { OrigamiLayout } from './origami/OrigamiLayout.js'
 
 export type RadarMode = 'adaptive' | 'on' | 'off'
 
@@ -114,8 +115,14 @@ export const LAYOUTS: LayoutDefinition[] = [
   {
     name: 'aurora',
     label: 'Aurora',
-    description: 'Drifting ribbons of color that bloom where they overlap, day/night theming',
+    description: 'Lava-lamp metaballs that drift and merge, day/night theming',
     component: AuroraLayout,
+  },
+  {
+    name: 'origami',
+    label: 'Origami',
+    description: 'Folding paper tessellation, day/night theming',
+    component: OrigamiLayout,
   },
 ]
 

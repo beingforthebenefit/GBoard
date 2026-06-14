@@ -25,7 +25,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 
 ## Themes
 
-Ten built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, Flux, Mosaic, and Aurora support light/dark color modes (auto, manual, or based on sunrise/sunset).
+Eleven built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, Flux, Mosaic, Aurora, and Origami support light/dark color modes (auto, manual, or based on sunrise/sunset).
 
 <table>
   <tr>
@@ -49,7 +49,8 @@ Six more layouts (screenshots pending):
 - **Observatory** — Night-sky almanac: sun arc, moon phase, wind compass, an hourly temperature/precipitation chart, a circular porthole photo, and Pi-hole/Plex as mission telemetry
 - **Flux** — Kinetic ambient backdrop: a canvas particle flow field driven live by the weather (wind sets the flow direction and speed, temperature sets the palette, rain adds streaks), with the clock, sober counter, and agenda floating over it
 - **Mosaic** — Kinetic geometric backdrop: a hex tessellation with a gradient wave flowing through it (wind sets direction/speed, temperature tints it, and the base hue tracks the time of day, cycling the spectrum every 12 hours), and ripples that radiate from the center on Pi-hole blocked-query spikes, Plex playback, and the top of each hour
-- **Aurora** — Kinetic color backdrop: soft ribbons of color drift and bloom where they overlap, like northern lights or ink in water (temperature sets the palette, wind sets the drift speed); rendered at low resolution and upscaled for buttery-smooth gradients on low-power hardware
+- **Aurora** — Kinetic color backdrop: lava-lamp metaballs that drift and merge, their colors melting together where they meet (temperature sets the palette, wind sets the drift speed); a per-pixel field computed on a small canvas and upscaled for smooth blobs on low-power hardware
+- **Origami** — Kinetic geometric backdrop: a folding paper tessellation where a fold wave travels across the sheet, lifting creases and shifting each facet's light and shadow (temperature tints the paper); flat-shaded polygons keep it cheap on low-power hardware
 
 ### Admin Panel
 
