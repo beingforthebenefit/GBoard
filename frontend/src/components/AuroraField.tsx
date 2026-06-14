@@ -14,7 +14,6 @@ const RES_LONG = 380 // internal canvas long-side resolution in px
 const BLOB_COUNT = 6
 const TARGET_FPS = 30
 const HUE_DRIFT = 0.0016 // base hue degrees per ms (full cycle ~3.7 min)
-const CONTOUR_STEPS = 30 // points around each blob's morphing outline
 const TWO_PI = Math.PI * 2
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
@@ -73,27 +72,12 @@ interface Blob {
   hueWobAmt: number // per-blob hue wobble
   hueWobFreq: number
   hueWobPhase: number
-  hk: number[] // contour harmonic numbers
-  ha: number[] // contour harmonic amplitudes
-  hp: number[] // contour harmonic phases
-  hs: number[] // contour harmonic morph speeds (rad/ms)
 }
 
 function makeBlobs(count: number): Blob[] {
   const rnd = (a: number, b: number) => a + Math.random() * (b - a)
   const blobs: Blob[] = []
   for (let i = 0; i < count; i++) {
-    const harmonics = 3
-    const hk: number[] = []
-    const ha: number[] = []
-    const hp: number[] = []
-    const hs: number[] = []
-    for (let k = 0; k < harmonics; k++) {
-      hk.push(2 + Math.floor(Math.random() * 4)) // lobes: 2..5
-      ha.push(rnd(0.05, 0.13)) // amplitude
-      hp.push(rnd(0, TWO_PI))
-      hs.push(rnd(0.00004, 0.00012) * (Math.random() < 0.5 ? -1 : 1)) // morph speed/dir
-    }
     blobs.push({
       ax: rnd(0.15, 0.85),
       ay: rnd(0.12, 0.88),
@@ -114,10 +98,6 @@ function makeBlobs(count: number): Blob[] {
       hueWobAmt: rnd(6, 16),
       hueWobFreq: rnd(0.00003, 0.00009),
       hueWobPhase: rnd(0, TWO_PI),
-      hk,
-      ha,
-      hp,
-      hs,
     })
   }
   return blobs
@@ -183,16 +163,15 @@ export function AuroraField({ weather, dark }: AuroraFieldProps) {
         const r = b.baseR * minDim * (1 + 0.18 * Math.sin(elapsed * b.pr + b.pp))
         const hueWob = Math.sin(elapsed * b.hueWobFreq + b.hueWobPhase) * b.hueWobAmt
         const hue = (((anchorHue + b.hueN * pal.spread + b.hueJit + hueWob) % 360) + 360) % 360
-        let maxAmp = 0
-        for (let i = 0; i < b.ha.length; i++) maxAmp += b.ha[i]
 
         ctx.save()
         ctx.translate(x, y)
         ctx.rotate(b.angle + elapsed * b.adrift)
         ctx.scale(1, b.squash)
 
-        // Gradient sized past the largest lobe so the morphing edge stays soft
-        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * (1 + maxAmp))
+        // Soft ellipse: a radial gradient fading fully to transparent at the edge,
+        // with a brighter core for a luminous glow
+        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
         grad.addColorStop(
           0,
           `hsla(${hue}, ${pal.sat}%, ${Math.min(100, pal.light + 12)}%, ${Math.min(0.95, pal.alpha * 1.15)})`
@@ -200,22 +179,8 @@ export function AuroraField({ weather, dark }: AuroraFieldProps) {
         grad.addColorStop(0.5, `hsla(${hue}, ${pal.sat}%, ${pal.light}%, ${pal.alpha})`)
         grad.addColorStop(1, `hsla(${hue}, ${pal.sat}%, ${pal.light}%, 0)`)
         ctx.fillStyle = grad
-
-        // Organic morphing outline instead of a plain ellipse
         ctx.beginPath()
-        for (let a = 0; a <= CONTOUR_STEPS; a++) {
-          const ang = (a / CONTOUR_STEPS) * TWO_PI
-          let warp = 1
-          for (let i = 0; i < b.hk.length; i++) {
-            warp += b.ha[i] * Math.sin(b.hk[i] * ang + b.hp[i] + elapsed * b.hs[i])
-          }
-          const rr = r * warp
-          const px = Math.cos(ang) * rr
-          const py = Math.sin(ang) * rr
-          if (a === 0) ctx.moveTo(px, py)
-          else ctx.lineTo(px, py)
-        }
-        ctx.closePath()
+        ctx.arc(0, 0, r, 0, TWO_PI)
         ctx.fill()
         ctx.restore()
       }
