@@ -25,7 +25,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 
 ## Themes
 
-Eleven built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, Flux, Mosaic, Aurora, and Origami support light/dark color modes (auto, manual, or based on sunrise/sunset).
+Twelve built-in layouts, switchable live from the admin panel. Zen, Newspaper, Observatory, Flux, Mosaic, Aurora, Origami, and Bamboo support light/dark color modes (auto, manual, or based on sunrise/sunset).
 
 <table>
   <tr>
@@ -42,7 +42,7 @@ Eleven built-in layouts, switchable live from the admin panel. Zen, Newspaper, O
   </tr>
 </table>
 
-Six more layouts (screenshots pending):
+Eight more layouts (screenshots pending):
 
 - **Departures** — Solari split-flap airport board: calendar events, upcoming media, and active Plex streams merge into one chronological board with `BOARDING` / `IN FLIGHT` / `DEPARTED` statuses; the sobriety counter becomes the header streak, with a tinted observation-deck slideshow below
 - **Fridge** — Kitchen fridge door: Polaroid photos with tape, sticky-note agenda, magnet-letter clock, weather magnets, an "On this day" memory photo, and a gold-star milestone chart counting down to the next sobriety anniversary
@@ -50,7 +50,8 @@ Six more layouts (screenshots pending):
 - **Flux** — Kinetic ambient backdrop: a canvas particle flow field driven live by the weather (wind sets the flow direction and speed, temperature sets the palette, rain adds streaks), with the clock, sober counter, and agenda floating over it
 - **Mosaic** — Kinetic geometric backdrop: a hex tessellation with a gradient wave flowing through it (wind sets direction/speed, temperature tints it, and the base hue tracks the time of day, cycling the spectrum every 12 hours), and ripples that radiate from the center on Pi-hole blocked-query spikes, Plex playback, and the top of each hour
 - **Aurora** — Kinetic color backdrop: lava-lamp metaballs that drift and merge, their colors melting together where they meet (temperature sets the palette, wind sets the drift speed); a per-pixel field computed on a small canvas and upscaled for smooth blobs on low-power hardware
-- **Origami** — Kinetic geometric backdrop: a folding paper tessellation where a fold wave travels across the sheet, lifting creases and shifting each facet's light and shadow (temperature tints the paper); flat-shaded polygons keep it cheap on low-power hardware
+- **Origami** — Kinetic geometric backdrop: a folded-paper tessellation that corrugates in both directions at once (a Miura/egg-carton diamond grid), breathing open and closed so the diamonds deepen and the sheet compresses toward center as it folds (temperature tints the paper); flat-shaded polygons keep it cheap on low-power hardware
+- **Bamboo** — Kinetic geometric backdrop: a field of tall shaded facets that sways on a slow traveling diagonal, the light shimmering up the stalks like reeds or bamboo in a breeze (temperature tints it); flat-shaded polygons keep it cheap on low-power hardware
 
 ### Admin Panel
 

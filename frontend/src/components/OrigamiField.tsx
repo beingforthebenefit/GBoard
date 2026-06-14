@@ -8,20 +8,31 @@ interface OrigamiFieldProps {
 }
 
 // ── Tunables ──
-// Flat-shaded polygons are cheap on the Pi (no per-pixel work, no filters). A grid
-// of paper facets folds as a wave travels across it: creases lift and each facet's
-// light/shadow shifts with its tilt, so it reads as paper folding and unfolding.
-const COLS = 11
-const ROWS = 20
+// A folded-paper tessellation. The sheet corrugates in BOTH directions at once (an
+// egg-carton / Miura diamond grid): every vertex is a peak or a pit, so each quad
+// facet tilts in 2D and catches the light differently — no flat "bands." It animates
+// by actually folding: as the fold angle breathes, the diamonds deepen and the whole
+// grid compresses toward the center (pleats bunching up), then spreads flat as it
+// opens. A slow traveling wave makes regions fold at different times. Flat-shaded
+// polygons keep it cheap on the Pi (no per-pixel work, no filters).
 const TARGET_FPS = 30
 const MAX_DPR = 1.5
-const DEPTH = 0.62 // crease height as a fraction of a cell (fold relief)
-const ZIG = 0.16 // per-column row shift (parallelogram zigzag)
-const SX = 0.9 // fold-wave spatial frequency along columns (rad/cell)
-const SY = 0.5 // …and along rows
-const SPEED = 0.0012 // fold-wave travel speed (rad/ms)
-const HUE_SPREAD = 42 // hue gradient across the sheet
-const HUE_DRIFT = 0.0018 // paper hue drift (deg/ms)
+const VIS_COLS = 5 // diamonds across the screen when open (fewer = bolder folds)
+const VIS_ROWS = 9
+const COLS = 12 // total columns — oversized so the compressed grid still covers
+const ROWS = 20 // total rows
+const MAX_ANGLE = 1.05 // peak fold angle in radians (~60°)
+const FOLD_MIN = 0.12 // residual fold when "open" — avoids a dead-flat sheet
+const FOLD_MAX = 0.95 // peak fold at the top of the breath
+const DEPTH = 1.15 // crease depth, as a multiple of cell size × sin(fold)
+const FOCAL = 1050 // perspective focal length in px (smaller = stronger parallax)
+const BREATHE_SPEED = 0.00032 // global fold/unfold rate (rad/ms) ≈ 20s per breath
+const WAVE_AMP = 0.18 // per-region fold variation (fold units) — traveling fold
+const WAVE_SPEED = 0.0013 // travel speed of that wave (rad/ms)
+const WAVE_X = 0.7 // wave spatial frequency across columns
+const WAVE_Y = 0.45 // …and down rows (combined → diagonal travel)
+const HUE_SPREAD = 30 // hue gradient across the sheet
+const HUE_DRIFT = 0.0015 // paper hue drift (deg/ms)
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
@@ -50,13 +61,13 @@ interface Palette {
 }
 
 export function origamiPalette(dark: boolean): Palette {
-  if (dark) return { sat: 46, baseLight: 40, contrast: 30 }
-  return { sat: 38, baseLight: 70, contrast: 26 }
+  if (dark) return { sat: 48, baseLight: 38, contrast: 40 }
+  return { sat: 40, baseLight: 70, contrast: 34 }
 }
 
-// Light direction (from upper-left, slightly toward the viewer), normalized
-const LX = -0.45
-const LY = -0.55
+// Light direction (from upper-left, toward the viewer), normalized
+const LX = -0.4
+const LY = -0.6
 const LZ = 0.7
 const LLEN = Math.sqrt(LX * LX + LY * LY + LZ * LZ)
 
@@ -86,23 +97,20 @@ export function OrigamiField({ weather, dark }: OrigamiFieldProps) {
     canvas.height = Math.round(cssH * dpr)
     ctx.scale(dpr, dpr)
 
-    const cellW = cssW / COLS
-    const cellH = cssH / ROWS
-    const depthPx = cellH * DEPTH
-    const zigPx = cellH * ZIG
+    const cx = cssW / 2
+    const cy = cssH / 2
+    const cellW = cssW / VIS_COLS // diamond size when open (oversized grid covers edges)
+    const cellH = cssH / VIS_ROWS
+    const cellMin = Math.min(cellW, cellH)
 
-    // Overscan one cell so fold relief never opens gaps at the screen edges
-    const i0 = -1
-    const i1 = COLS + 1
-    const j0 = -1
-    const j1 = ROWS + 1
-    const cols = i1 - i0 + 1
-    const rows = j1 - j0 + 1
-    // Scratch grids (reused each frame)
-    const px = new Float64Array(cols * rows) // projected x
-    const py = new Float64Array(cols * rows) // projected y
-    const wy = new Float64Array(cols * rows) // world y (for normals)
-    const wz = new Float64Array(cols * rows) // world z (for normals)
+    const NV = COLS + 1 // vertices per row
+    const NR = ROWS + 1 // vertex rows
+    const N = NV * NR
+    const WX = new Float64Array(N) // world x (compressed)
+    const WY = new Float64Array(N) // world y (compressed)
+    const WZ = new Float64Array(N) // world z (depth; + toward viewer)
+    const SX = new Float64Array(N) // projected screen x
+    const SY = new Float64Array(N) // projected screen y
 
     const frameInterval = 1000 / TARGET_FPS
     let raf = 0
@@ -122,45 +130,54 @@ export function OrigamiField({ weather, dark }: OrigamiFieldProps) {
       const wx = weatherRef.current?.current
       const pal = origamiPalette(darkRef.current)
       const baseHue = tempToPaperHue(wx?.temp ?? 60) + elapsed * HUE_DRIFT
-      const t = elapsed * SPEED
 
-      // Build the folded grid
-      for (let a = 0; a < cols; a++) {
-        const i = i0 + a
-        const colSign = i & 1 ? 1 : -1
-        const xBase = i * cellW
-        for (let b = 0; b < rows; b++) {
-          const j = j0 + b
-          const fold = 0.5 + 0.5 * Math.sin(i * SX + j * SY - t) // 0..1 traveling fold
-          const z = colSign * depthPx * fold
-          const worldY = j * cellH + colSign * zigPx * fold
-          const idx = a * rows + b
-          wy[idx] = worldY
-          wz[idx] = z
-          px[idx] = xBase
-          py[idx] = worldY - z // oblique projection: ridges lift upward
+      // Global fold breath (eases between FOLD_MIN and FOLD_MAX) + a traveling wave
+      const breathe = 0.5 - 0.5 * Math.cos(elapsed * BREATHE_SPEED)
+      const foldGlobal = FOLD_MIN + (FOLD_MAX - FOLD_MIN) * breathe
+      const wt = elapsed * WAVE_SPEED
+
+      // Build the folded grid: corrugate in both directions, compress as it folds
+      for (let i = 0; i <= COLS; i++) {
+        const iSign = i & 1 ? -1 : 1 // column parity → half of the egg-carton
+        const baseX = (i - COLS / 2) * cellW
+        for (let j = 0; j <= ROWS; j++) {
+          const f = clamp(foldGlobal + WAVE_AMP * Math.sin(i * WAVE_X + j * WAVE_Y - wt), 0, 1)
+          const a = f * MAX_ANGLE
+          const comp = Math.cos(a) // in-plane compression: pleats bunch as they fold
+          const amp = DEPTH * cellMin * Math.sin(a)
+          const jSign = j & 1 ? -1 : 1
+          const worldX = baseX * comp
+          const worldY = (j - ROWS / 2) * cellH * comp
+          const z = 0.5 * amp * (iSign + jSign) // egg-carton: peaks, pits, saddles
+          const idx = i * NR + j
+          WX[idx] = worldX
+          WY[idx] = worldY
+          WZ[idx] = z
+          const s = FOCAL / (FOCAL - z)
+          SX[idx] = cx + worldX * s
+          SY[idx] = cy + worldY * s
         }
       }
 
       // Shade and fill each quad facet
-      for (let a = 0; a < cols - 1; a++) {
-        const i = i0 + a
+      for (let i = 0; i < COLS; i++) {
         const hue = (((baseHue + (i / COLS) * HUE_SPREAD) % 360) + 360) % 360
-        for (let b = 0; b < rows - 1; b++) {
-          const i00 = a * rows + b
-          const i10 = (a + 1) * rows + b
-          const i01 = a * rows + (b + 1)
-          const i11 = (a + 1) * rows + (b + 1)
+        for (let j = 0; j < ROWS; j++) {
+          const i00 = i * NR + j
+          const i10 = (i + 1) * NR + j
+          const i01 = i * NR + (j + 1)
+          const i11 = (i + 1) * NR + (j + 1)
 
-          // Facet normal from world-space edges (x is uniform: cellW per column)
-          const e1y = wy[i10] - wy[i00]
-          const e1z = wz[i10] - wz[i00]
-          const e2y = wy[i01] - wy[i00]
-          const e2z = wz[i01] - wz[i00]
-          // n = e1 × e2, with e1=(cellW,e1y,e1z), e2=(0,e2y,e2z)
-          let nx = e1y * e2z - e1z * e2y
-          let ny = e1z * 0 - cellW * e2z
-          let nz = cellW * e2y - e1y * 0
+          // Quad normal from its diagonals: d1 = P11 − P00, d2 = P01 − P10
+          const d1x = WX[i11] - WX[i00]
+          const d1y = WY[i11] - WY[i00]
+          const d1z = WZ[i11] - WZ[i00]
+          const d2x = WX[i01] - WX[i10]
+          const d2y = WY[i01] - WY[i10]
+          const d2z = WZ[i01] - WZ[i10]
+          let nx = d1y * d2z - d1z * d2y
+          let ny = d1z * d2x - d1x * d2z
+          let nz = d1x * d2y - d1y * d2x
           if (nz < 0) {
             nx = -nx
             ny = -ny
@@ -168,15 +185,15 @@ export function OrigamiField({ weather, dark }: OrigamiFieldProps) {
           }
           const nlen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1
           const ndotl = (nx * LX + ny * LY + nz * LZ) / (nlen * LLEN)
-          const light = clamp(pal.baseLight + ndotl * pal.contrast, 6, 96)
+          const light = clamp(pal.baseLight + ndotl * pal.contrast, 5, 97)
 
           ctx.fillStyle = `hsl(${hue}, ${pal.sat}%, ${light}%)`
           ctx.strokeStyle = ctx.fillStyle // seal hairline seams between facets
           ctx.beginPath()
-          ctx.moveTo(px[i00], py[i00])
-          ctx.lineTo(px[i10], py[i10])
-          ctx.lineTo(px[i11], py[i11])
-          ctx.lineTo(px[i01], py[i01])
+          ctx.moveTo(SX[i00], SY[i00])
+          ctx.lineTo(SX[i10], SY[i10])
+          ctx.lineTo(SX[i11], SY[i11])
+          ctx.lineTo(SX[i01], SY[i01])
           ctx.closePath()
           ctx.fill()
           ctx.stroke()

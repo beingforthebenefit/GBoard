@@ -485,7 +485,8 @@ const LAYOUTS = [
   { name: 'flux', label: 'Flux', icon: '&#10070;', desc: 'Weather-driven particle flow field' },
   { name: 'mosaic', label: 'Mosaic', icon: '&#11042;', desc: 'Kinetic hex tessellation with data ripples' },
   { name: 'aurora', label: 'Aurora', icon: '&#127770;', desc: 'Lava-lamp metaballs that drift and merge' },
-  { name: 'origami', label: 'Origami', icon: '&#9650;', desc: 'Folding paper tessellation' },
+  { name: 'origami', label: 'Origami', icon: '&#9650;', desc: 'Folded-paper diamond tessellation' },
+  { name: 'bamboo', label: 'Bamboo', icon: '&#127883;', desc: 'Swaying reed/wave field of facets' },
 ];
 
 function toast(msg, type = 'success') {
@@ -528,7 +529,8 @@ async function setLayout(name) {
       name === 'flux' ||
       name === 'mosaic' ||
       name === 'aurora' ||
-      name === 'origami')
+      name === 'origami' ||
+      name === 'bamboo')
       ? '' : 'none';
   try {
     await fetch(API + '/theme', {
@@ -557,7 +559,8 @@ async function loadPrefs() {
         currentLayout === 'flux' ||
         currentLayout === 'mosaic' ||
         currentLayout === 'aurora' ||
-        currentLayout === 'origami')
+        currentLayout === 'origami' ||
+        currentLayout === 'bamboo')
         ? '' : 'none';
   } catch {}
 }

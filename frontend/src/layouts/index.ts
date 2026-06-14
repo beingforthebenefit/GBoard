@@ -19,6 +19,7 @@ import { FluxLayout } from './flux/FluxLayout.js'
 import { MosaicLayout } from './mosaic/MosaicLayout.js'
 import { AuroraLayout } from './aurora/AuroraLayout.js'
 import { OrigamiLayout } from './origami/OrigamiLayout.js'
+import { BambooLayout } from './bamboo/BambooLayout.js'
 
 export type RadarMode = 'adaptive' | 'on' | 'off'
 
@@ -121,8 +122,14 @@ export const LAYOUTS: LayoutDefinition[] = [
   {
     name: 'origami',
     label: 'Origami',
-    description: 'Folding paper tessellation, day/night theming',
+    description: 'Folded-paper diamond tessellation, day/night theming',
     component: OrigamiLayout,
+  },
+  {
+    name: 'bamboo',
+    label: 'Bamboo',
+    description: 'Swaying reed/wave field of shaded facets, day/night theming',
+    component: BambooLayout,
   },
 ]
 
