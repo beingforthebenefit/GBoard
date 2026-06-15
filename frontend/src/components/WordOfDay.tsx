@@ -49,9 +49,7 @@ export function WordOfDayWidget({
       <div className="flex items-baseline gap-2 flex-wrap leading-tight">
         <span className={`${compact ? 'text-lg' : 'text-2xl'} font-semibold`}>{word.word}</span>
         <span className="text-xs italic opacity-60">{formatPartOfSpeech(word)}</span>
-        {!compact && word.pronunciation && (
-          <span className="text-xs opacity-45">[{word.pronunciation}]</span>
-        )}
+        {word.pronunciation && <span className="text-xs opacity-45">[{word.pronunciation}]</span>}
       </div>
 
       <div className={`${compact ? 'text-xs' : 'text-sm'} opacity-90 mt-0.5`}>

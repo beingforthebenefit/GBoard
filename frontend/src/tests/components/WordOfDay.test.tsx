@@ -71,6 +71,11 @@ describe('WordOfDayWidget', () => {
     expect(queryByText(/yo tengo/)).toBeNull()
   })
 
+  it('shows the phonetic pronunciation in compact mode', () => {
+    const { getByText } = render(<WordOfDayWidget word={verb} compact />)
+    expect(getByText('[te-NEHR]')).toBeTruthy()
+  })
+
   it('renders the default label', () => {
     const { getByText } = render(<WordOfDayWidget word={noun} />)
     expect(getByText('Palabra del Día')).toBeTruthy()
