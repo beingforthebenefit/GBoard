@@ -105,14 +105,20 @@ function ConditionsLine({
         className="flex flex-wrap gap-x-3 gap-y-0.5"
         style={{ color: 'rgba(231, 183, 95, 0.5)' }}
       >
-        {forecast.slice(1, 5).map((day) => (
-          <span key={day.date}>
-            {new Date(day.date + 'T12:00:00')
-              .toLocaleDateString('en-US', { weekday: 'short' })
-              .toUpperCase()}{' '}
-            {day.high}/{day.low}
-          </span>
-        ))}
+        {forecast.slice(0, 5).map((day) => {
+          const todayStr = new Date().toLocaleDateString('en-CA')
+          const label =
+            day.date === todayStr
+              ? 'TODAY'
+              : new Date(day.date + 'T12:00:00')
+                  .toLocaleDateString('en-US', { weekday: 'short' })
+                  .toUpperCase()
+          return (
+            <span key={day.date}>
+              {label} {day.high}/{day.low}
+            </span>
+          )
+        })}
       </div>
     </div>
   )
