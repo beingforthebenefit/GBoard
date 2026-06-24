@@ -26,6 +26,58 @@ function fmtBoardTime(d: Date, now: Date): string {
   return `${day} ${h % 12 || 12}${h >= 12 ? 'P' : 'A'}`
 }
 
+interface MediaRow {
+  title: string
+  date: string
+  detail: string
+}
+
+/**
+ * Collapse episodes of the same series, season, and day into a single range row
+ * (e.g. a whole season dropping at once becomes "S05E01-08") so one show can't
+ * flood the board. Movies and one-off episodes pass through unchanged. Original
+ * first-seen order is preserved (the board re-sorts by date afterward).
+ */
+export function collapseMedia(items: UpcomingItem[]): MediaRow[] {
+  interface Group {
+    title: string
+    date: string
+    season: string
+    eps: number[]
+    pad: number
+  }
+  const groups = new Map<string, Group>()
+  const order: (Group | MediaRow)[] = []
+
+  for (const item of items) {
+    const m = item.type === 'episode' ? /^S(\d+)E(\d+)$/i.exec(item.subtitle.trim()) : null
+    if (!m) {
+      order.push({ title: item.title, date: item.date, detail: item.subtitle })
+      continue
+    }
+    const key = `${item.title}|${item.date}|${m[1]}`
+    let g = groups.get(key)
+    if (!g) {
+      g = { title: item.title, date: item.date, season: m[1], eps: [], pad: m[2].length }
+      groups.set(key, g)
+      order.push(g)
+    }
+    g.eps.push(parseInt(m[2], 10))
+    g.pad = Math.max(g.pad, m[2].length)
+  }
+
+  return order.map((e) => {
+    if ('detail' in e) return e
+    const eps = [...e.eps].sort((a, b) => a - b)
+    const fmt = (n: number) => String(n).padStart(e.pad, '0')
+    const detail =
+      eps.length > 1
+        ? `S${e.season}E${fmt(eps[0])}-${fmt(eps[eps.length - 1])}`
+        : `S${e.season}E${fmt(eps[0])}`
+    return { title: e.title, date: e.date, detail }
+  })
+}
+
 /** Merges Plex sessions, calendar events, and upcoming media into one departure board */
 export function buildBoardRows(
   events: CalendarEvent[],
@@ -87,7 +139,7 @@ export function buildBoardRows(
     })
   }
 
-  for (const item of mediaItems) {
+  for (const item of collapseMedia(mediaItems)) {
     const d = new Date(item.date + 'T00:00:00')
     const ahead = daysFromNow(d, now)
     // Match the weekday style of event rows inside the next week
@@ -104,7 +156,7 @@ export function buildBoardRows(
       row: {
         time,
         title: flapTitle(item.title),
-        detail: item.subtitle,
+        detail: item.detail,
         status: ahead === 0 ? 'ARRIVING' : 'SCHEDULED',
         statusKind: ahead === 0 ? 'active' : 'ok',
       },
