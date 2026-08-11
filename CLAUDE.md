@@ -43,7 +43,7 @@ GBoard/
 │   ├── src/
 │   │   ├── App.tsx           # Main app (polls admin prefs, renders active layout)
 │   │   ├── components/       # Shared UI widgets (Weather, Clock, Calendar, Plex, etc.)
-│   │   ├── layouts/          # Theme layouts (zen, classic, terminal, newspaper, departures, fridge, observatory, flux, mosaic, aurora, origami, bamboo)
+│   │   ├── layouts/          # Theme layouts (zen, classic, terminal, newspaper, departures, fridge, observatory, flux, mosaic, aurora, origami, bamboo, blueprint)
 │   │   │   ├── index.ts      # Layout registry + LayoutProps interface
 │   │   │   ├── ZenLayout.tsx
 │   │   │   ├── classic/      # Classic three-column glassmorphism
@@ -56,7 +56,8 @@ GBoard/
 │   │   │   ├── mosaic/       # Kinetic canvas hex tessellation with data ripples (day/night theming)
 │   │   │   ├── aurora/       # Lava-lamp metaballs that drift and merge (day/night theming)
 │   │   │   ├── origami/      # Folded-paper diamond tessellation, flat-shaded facets (day/night theming)
-│   │   │   └── bamboo/       # Swaying reed/wave field of shaded facets (day/night theming)
+│   │   │   ├── bamboo/       # Swaying reed/wave field of shaded facets (day/night theming)
+│   │   │   └── blueprint/    # Architect's drawing sheet: cyanotype/vellum, HA systems schedule + thermal section (day/night theming, portrait)
 │   │   ├── hooks/            # Data-fetching hooks with polling intervals
 │   │   ├── utils/            # Sobriety math, milestones, moon phase, photo memories, wind, thumbor
 │   │   └── types/index.ts    # Shared interfaces (duplicated from backend)
@@ -89,6 +90,7 @@ GBoard/
 | `GET /api/media` | Next 10 upcoming TV/movies (Sonarr/Radarr, 14-day window) | 30 min |
 | `GET /api/pihole` | Pi-hole query stats + top clients (v6 API) | None (polled 1 min) |
 | `GET /api/word` | Spanish (Mexican) word of the day — curated dataset, rotates daily | Static (date-seeded) |
+| `GET /api/homeassistant` | Curated HA device/sensor summary + 24 h indoor/outdoor temp history (read-only) | 20 s states, 5 min history, last-good fallback |
 | `GET /api/version` | `{ startedAt }` timestamp for deploy detection | None (polled 10s) |
 | `GET /admin` | Admin panel (layout, theme, settings) | - |
 | `GET /admin/theme` | Current theme + layout preferences | - |
@@ -105,7 +107,15 @@ GBoard/
 - **No frontend routing** — single-page dashboard with swappable layout themes
 - **Admin panel** — self-contained HTML served by Express at `/admin`; stores preferences in `admin-prefs.json`
 - **Layout system** — layout registry in `layouts/index.ts`; all themes receive the same `LayoutProps` interface; new layouts must also be added to the `LAYOUTS` array in `backend/src/routes/admin.ts` (admin panel picker + theme-section visibility)
-- **Day/night theming** — `useDayNight` hook applies `html.dark`/`html.light` CSS classes; Zen, Newspaper, Observatory, Flux, Mosaic, Aurora, Origami, and Bamboo respond to them (shared `useIsDark` hook in `hooks/useIsDark.ts`)
+- **Day/night theming** — `useDayNight` hook applies `html.dark`/`html.light` CSS classes; Zen, Newspaper, Observatory, Flux, Mosaic, Aurora, Origami, Bamboo, and Blueprint respond to them (shared `useIsDark` hook in `hooks/useIsDark.ts`)
+- **Home Assistant** — `GET /api/homeassistant` proxies HA's `/api/states` (Bearer token auth) and curates it into a `HomeAssistantSummary`. Read-only — no service calls. Returns `configured: false` (HTTP 200) when env vars are missing so layouts can render a setup note. Rendered by the Blueprint layout's "House Systems Schedule" (`layouts/blueprint/SystemsSchedule.tsx`). The curation is what makes it readable, and all of it lives in `buildSummary`:
+  - **Noise** — integration config toggles are dropped by id (`NOISE_RE`): Hue's per-behaviour bridge switches (permanently "on"), Sync Box format settings, and Pi-hole (it has its own widget). HA only exposes `entity_category` via the websocket entity registry, never in `/api/states`, so id matching is the only option
+  - **Grouping** (`groupDevices`) — Hue publishes a room group light *and* every bulb in it, so a wall switch driving four synced bulbs became five rows. Numbered members (`light.kitchen_kitchen_2`) are dropped when their group exists; fixtures differing only by a trailing L/R merge into one row reporting `2/4 on`. Named members ("Sofa Light") are kept — they're separately controllable
+  - **Rooms** (`detectRooms`) — areas are also websocket-only, but Hue names room group lights with a doubled slug (`light.living_room_living_room`), which yields both the room slug and its label; every entity prefixed with one belongs to that room. Devices sort room-by-room with busy rooms first, so trimming to `MAX_ROWS` only ever drops quiet kit
+  - **Readouts** — the four-up strip is a fixed set (interior/exterior temperature, then each one's humidity, paired by `…_temperature` → `…_humidity`) relabelled Interior/Exterior rather than showing HA's long entity names. Temperature and humidity round to whole units
+  - **Media players** — `mediaKind` distinguishes a HomePod from a TV (HA sets `device_class: tv` but leaves AirPlay speakers blank, so fall back to `volume_level`/`media_artist`), which is what tells a speaker named "Kitchen" apart from the Hue room light of the same name
+- **Blueprint layout is built for the portrait wall display** — bands stacked down the sheet, not a landscape grid. The two charts share a row and the calendar/media/word-of-day share another, which buys the site photograph enough height to be a real image rather than a letterbox strip. **Only the photograph is flexible (`flex-1`); every other band is `flex-none`** — that's deliberate, and it means the sheet mathematically cannot overflow into the title block. Hard `min-h-[…]` values on several bands did overflow, repeatedly; don't reintroduce them. The chart and photo measure their own containers (`useElementSize`) and render at true pixel size, since a fixed SVG `viewBox` letterboxes badly in a wide, short band
+- **Thermal history** — the same endpoint also returns `temps`: 24 h of indoor vs outdoor temperature from HA's `/api/history/period`, resampled into 48 half-hour buckets (cached 5 min separately from the 20 s states cache, since history is the expensive call). Sensors are auto-detected from `device_class: temperature` entities by name (outdoor/patio/… vs indoor/living/…) and can be pinned with `HOMEASSISTANT_{INDOOR,OUTDOOR}_TEMP_ENTITY`. HA only records on change, so buckets forward-fill the last known reading. A history failure degrades to `available: false` without blanking the device schedule. Drawn by `layouts/blueprint/ThermalProfile.tsx`
 - **Kinetic canvas themes (Flux, Mosaic, Aurora, Origami, Bamboo)** — `FluxField` (particle flow field), `MosaicField` (hex tessellation + data ripples), `AuroraField` (per-pixel metaball field computed on a small canvas and bilinear-upscaled — SVG/GPU filters are too slow on the Pi), `OrigamiField` (flat-shaded folded-paper diamond tessellation that corrugates in both axes and breathes open/closed), and `BambooField` (flat-shaded reed/wave field that sways on a traveling diagonal — the original folding-paper math, kept as its own theme) each drive a single imperative `requestAnimationFrame` loop reading live data from refs (no per-frame React renders); all FPS-capped with tunables at the top of the file for low-power hardware. Shared floating widgets (clock, sober chip, glass cards, now playing) live in `components/KineticOverlay.tsx`
 - **No state management library** — plain React hooks (useState/useEffect) with polling
 - **Security**: All external API calls proxy through backend; no secrets exposed to browser
@@ -127,6 +137,8 @@ See `.env.example` for all required variables. Key ones:
 - `ICAL_URLS` — comma-separated ICS/CalDAV URLs
 - `ICLOUD_ALBUM_URL` — iCloud shared album
 - `PIHOLE_URL`, `PIHOLE_PASSWORD`, `PIHOLE_CLIENT_ALIASES` — Pi-hole v6
+- `HOMEASSISTANT_URL`, `HOMEASSISTANT_TOKEN` — Home Assistant (long-lived access token; read-only device statuses)
+- `HOMEASSISTANT_INDOOR_TEMP_ENTITY`, `HOMEASSISTANT_OUTDOOR_TEMP_ENTITY` — optional; pin the thermal-section sensors instead of auto-detecting by name
 - `SONARR_URL`, `SONARR_API_KEY` — Sonarr (upcoming TV episodes)
 - `RADARR_URL`, `RADARR_API_KEY` — Radarr (upcoming movies)
 - `SOBRIETY_DATE` / `VITE_SOBRIETY_DATE` — sobriety counter (backend + Vite build-time)
