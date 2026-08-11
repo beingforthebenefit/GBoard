@@ -100,6 +100,23 @@ const SETTING_GROUPS = [
     ],
   },
   {
+    label: 'Home Assistant',
+    fields: [
+      { key: 'HOMEASSISTANT_URL', label: 'URL', type: 'text' as const },
+      { key: 'HOMEASSISTANT_TOKEN', label: 'Long-Lived Access Token', type: 'password' as const },
+      {
+        key: 'HOMEASSISTANT_INDOOR_TEMP_ENTITY',
+        label: 'Indoor Temp Entity (optional, auto-detected)',
+        type: 'text' as const,
+      },
+      {
+        key: 'HOMEASSISTANT_OUTDOOR_TEMP_ENTITY',
+        label: 'Outdoor Temp Entity (optional, auto-detected)',
+        type: 'text' as const,
+      },
+    ],
+  },
+  {
     label: 'Sonarr / Radarr',
     fields: [
       { key: 'SONARR_URL', label: 'Sonarr URL', type: 'text' as const },
@@ -487,6 +504,7 @@ const LAYOUTS = [
   { name: 'aurora', label: 'Aurora', icon: '&#127770;', desc: 'Lava-lamp metaballs that drift and merge' },
   { name: 'origami', label: 'Origami', icon: '&#9650;', desc: 'Folded-paper diamond tessellation' },
   { name: 'bamboo', label: 'Bamboo', icon: '&#127883;', desc: 'Swaying reed/wave field of facets' },
+  { name: 'blueprint', label: 'Blueprint', icon: '&#128208;', desc: 'Architect\\'s drawing sheet with home systems' },
 ];
 
 function toast(msg, type = 'success') {
@@ -530,7 +548,8 @@ async function setLayout(name) {
       name === 'mosaic' ||
       name === 'aurora' ||
       name === 'origami' ||
-      name === 'bamboo')
+      name === 'bamboo' ||
+      name === 'blueprint')
       ? '' : 'none';
   try {
     await fetch(API + '/theme', {
@@ -560,7 +579,8 @@ async function loadPrefs() {
         currentLayout === 'mosaic' ||
         currentLayout === 'aurora' ||
         currentLayout === 'origami' ||
-        currentLayout === 'bamboo')
+        currentLayout === 'bamboo' ||
+        currentLayout === 'blueprint')
         ? '' : 'none';
   } catch {}
 }
