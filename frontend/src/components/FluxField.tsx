@@ -183,7 +183,7 @@ export function FluxField({ weather, dark }: FluxFieldProps) {
       const gustBoost = gust != null ? 1 + 0.35 * Math.max(0, Math.sin(elapsed * 0.0007)) : 1
       const speed = Math.min(140, Math.max(6, (8 + windSpeed * 2.0) * gustBoost))
 
-      const precip = (weatherRef.current?.hourly?.[0]?.pop ?? 0) > 0.35 ? 0.28 : 0
+      const precip = (weatherRef.current?.hourly?.[0]?.pop ?? 0) > 35 ? 0.28 : 0
       const t = elapsed * TIME_SCALE
 
       // Fade previous frame for trails (cheaper than tracking history)

@@ -1,16 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { buildForecast, fetchWeather, _resetCache } from '../src/services/weatherService.js'
+import {
+  buildForecast,
+  buildHourlyForecast,
+  fetchWeather,
+  _resetCache,
+} from '../src/services/weatherService.js'
 
 const makeSlot = (
   dt_txt: string,
   temp_max: number,
   temp_min: number,
   icon = '01d',
-  description = 'clear sky'
+  description = 'clear sky',
+  temp = temp_max
 ) => ({
   dt: Math.floor(Date.parse(dt_txt.replace(' ', 'T') + 'Z') / 1000),
   dt_txt,
-  main: { temp_max, temp_min },
+  main: { temp, temp_max, temp_min },
   weather: [{ icon, description }],
 })
 
@@ -47,7 +53,22 @@ describe('buildForecast', () => {
 
     const result = buildForecast(slots)
     expect(result[0].high).toBe(80)
-    expect(result[0].low).toBe(55)
+    expect(result[0].low).toBe(70)
+  })
+
+  it('takes high and low from the forecast temps, not the city-area spread', () => {
+    // temp_max/temp_min run several degrees wide of temp on near-term slots, which made
+    // the daily strip disagree with the hourly line drawn beside it
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+    const slots = [
+      makeSlot(`${tomorrow} 06:00:00`, 77, 55, '01d', 'clear sky', 70),
+      makeSlot(`${tomorrow} 12:00:00`, 84, 60, '01d', 'clear sky', 73),
+      makeSlot(`${tomorrow} 18:00:00`, 80, 58, '01d', 'clear sky', 64),
+    ]
+
+    const result = buildForecast(slots)
+    expect(result[0].high).toBe(73)
+    expect(result[0].low).toBe(64)
   })
 
   it('prefers midday slot icon and description', () => {
@@ -220,5 +241,44 @@ describe('fetchWeather', () => {
     )
 
     await expect(fetchWeather()).rejects.toThrow('OWM forecast error: 500')
+  })
+})
+
+describe('buildHourlyForecast', () => {
+  const inHours = (h: number) => {
+    const d = new Date(Date.now() + h * 3600_000)
+    return d.toISOString().slice(0, 19).replace('T', ' ')
+  }
+
+  it('passes the timestamp through untouched', () => {
+    // Clients render these with the viewer's local timezone. Shifting them by the
+    // location's UTC offset here labelled a 2pm slot as 7am on a UTC-7 board.
+    const slot = makeSlot(inHours(2), 77, 69)
+    const [hour] = buildHourlyForecast([slot])
+    expect(hour.time).toBe(slot.dt)
+    expect(new Date(hour.time * 1000).getUTCHours()).toBe(new Date(slot.dt * 1000).getUTCHours())
+  })
+
+  it('plots the forecast temperature, not the slot maximum', () => {
+    // OWM reports temp_max several degrees above temp on near-term slots, which made
+    // the line contradict the current temperature displayed beside it
+    const slot = makeSlot(inHours(2), 77, 69, '01d', 'clear sky', 70)
+    expect(buildHourlyForecast([slot])[0].temp).toBe(70)
+  })
+
+  it('drops slots already in the past', () => {
+    const past = makeSlot(inHours(-3), 70, 60)
+    const future = makeSlot(inHours(3), 72, 62)
+    expect(buildHourlyForecast([past, future]).map((h) => h.time)).toEqual([future.dt])
+  })
+
+  it('returns at most 8 slots and carries precipitation probability', () => {
+    const slots = Array.from({ length: 12 }, (_, i) => ({
+      ...makeSlot(inHours(i + 1), 70, 60),
+      pop: 0.42,
+    }))
+    const hours = buildHourlyForecast(slots)
+    expect(hours).toHaveLength(8)
+    expect(hours[0].pop).toBe(42)
   })
 })

@@ -13,7 +13,9 @@ interface OWMCurrentResponse {
 interface OWMForecastItem {
   dt: number
   dt_txt: string
-  main: { temp_max: number; temp_min: number }
+  // temp is the forecast at this timestamp; temp_max/min are the spread across the city
+  // area for the slot, so they belong to daily highs/lows rather than an hourly line
+  main: { temp: number; temp_max: number; temp_min: number }
   weather: { icon: string; description: string }[]
   pop?: number
 }
@@ -87,7 +89,7 @@ export async function fetchWeather(): Promise<WeatherResponse> {
       icon: current.weather[0]?.icon ?? '',
       description: current.weather[0]?.description ?? '',
     }),
-    hourly: buildHourlyForecast(forecast.list, tz),
+    hourly: buildHourlyForecast(forecast.list),
   }
 
   cache = { data, fetchedAt: Date.now() }
@@ -140,8 +142,11 @@ export function buildForecast(
     const slots = byDate.get(date)!
     if (days.length >= 6) break
 
-    const high = Math.round(Math.max(...slots.map((s) => s.main.temp_max)))
-    const low = Math.round(Math.min(...slots.map((s) => s.main.temp_min)))
+    // From the forecast temperatures, not temp_max/temp_min — those are the spread across
+    // the city area for a slot and run several degrees hot, which left the daily high
+    // disagreeing with the hourly line drawn beside it
+    const high = Math.round(Math.max(...slots.map((s) => s.main.temp)))
+    const low = Math.round(Math.min(...slots.map((s) => s.main.temp)))
 
     // Prefer the local midday slot (12:00) for icon/description; fallback to nearest to noon.
     const midday =
@@ -164,17 +169,18 @@ export function buildForecast(
   return days
 }
 
-export function buildHourlyForecast(
-  items: OWMForecastItem[],
-  timezoneOffsetSeconds = 0
-): WeatherForecastHour[] {
+export function buildHourlyForecast(items: OWMForecastItem[]): WeatherForecastHour[] {
   const now = Date.now() / 1000
   return items
     .filter((item) => item.dt > now)
     .slice(0, 8)
     .map((item) => ({
-      time: item.dt + timezoneOffsetSeconds,
-      temp: Math.round(item.main.temp_max),
+      // dt is already a UTC epoch. The clients format it with the viewer's local
+      // timezone, so adding the location's offset here shifts every label twice.
+      time: item.dt,
+      // temp_max can run several degrees above the actual forecast on near-term slots,
+      // which made the line disagree with the current temperature shown beside it
+      temp: Math.round(item.main.temp),
       icon: item.weather[0]?.icon ?? '',
       pop: Math.round((item.pop ?? 0) * 100),
     }))

@@ -11,7 +11,8 @@ interface HourlyChartProps {
 const W = 640
 const PAD_L = 20
 const PAD_R = 12
-const TEMP_TOP = 12
+// TEMP_TOP leaves room for the label sitting above the warmest vertex
+const TEMP_TOP = 22
 const TEMP_BOTTOM = 64
 const BASELINE = 72
 const POP_BASE = 94
@@ -53,8 +54,14 @@ export function HourlyChart({ data, loading, hours = 12, className = '' }: Hourl
 
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(p.temp)}`).join(' ')
   const areaPath = `${linePath} L ${x(points.length - 1)} ${BASELINE} L ${x(0)} ${BASELINE} Z`
-  const peakIdx = temps.indexOf(Math.max(...temps))
-  const labelIdxs = new Set([0, peakIdx, points.length - 1])
+
+  // Every vertex is labelled — there is no y-axis, so an unlabelled point can't be read.
+  // Labels sit above the line except at a trough, where below keeps them off the curve.
+  const labelBelow = (i: number) => {
+    const prev = temps[i - 1] ?? temps[i + 1] ?? temps[i]
+    const next = temps[i + 1] ?? temps[i - 1] ?? temps[i]
+    return temps[i] < prev && temps[i] < next
+  }
 
   return (
     <svg viewBox={`0 0 ${W} 112`} className={`w-full ${className}`} role="img">
@@ -68,26 +75,22 @@ export function HourlyChart({ data, loading, hours = 12, className = '' }: Hourl
       />
       {points.map((p, i) => (
         <g key={p.time}>
-          {labelIdxs.has(i) && (
-            <>
-              <circle cx={x(i)} cy={y(p.temp)} r="3" fill="var(--hourly-line, #e8a87c)" />
-              <text
-                x={x(i)}
-                y={y(p.temp) - 7}
-                textAnchor="middle"
-                fontSize="11"
-                fill="var(--text-2, #aaa)"
-              >
-                {Math.round(p.temp)}°
-              </text>
-            </>
-          )}
-          {p.pop > 0.05 && (
+          <circle cx={x(i)} cy={y(p.temp)} r="2.5" fill="var(--hourly-line, #e8a87c)" />
+          <text
+            x={x(i)}
+            y={y(p.temp) + (labelBelow(i) ? 14 : -7)}
+            textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}
+            fontSize="11"
+            fill="var(--text-2, #aaa)"
+          >
+            {Math.round(p.temp)}°
+          </text>
+          {p.pop > 5 && (
             <rect
               x={x(i) - 4}
-              y={POP_BASE - p.pop * POP_MAX_H}
+              y={POP_BASE - (p.pop / 100) * POP_MAX_H}
               width="8"
-              height={p.pop * POP_MAX_H}
+              height={(p.pop / 100) * POP_MAX_H}
               rx="1"
               fill="var(--hourly-pop, #6b8afd)"
               opacity="0.8"
