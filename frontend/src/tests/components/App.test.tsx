@@ -21,6 +21,10 @@ vi.mock('../../hooks/usePihole.js', () => ({
   usePihole: () => ({ data: null, loading: true }),
 }))
 
+vi.mock('../../hooks/useHomeAssistant.js', () => ({
+  useHomeAssistant: () => ({ data: null, loading: true }),
+}))
+
 vi.mock('../../hooks/usePhotos.js', () => ({
   usePhotos: () => ({ photos: [] }),
 }))

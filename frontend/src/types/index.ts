@@ -23,10 +23,10 @@ export interface WeatherForecastDay {
 }
 
 export interface WeatherForecastHour {
-  time: number
+  time: number // UTC epoch seconds; clients format it in their own local timezone
   temp: number
   icon: string
-  pop: number
+  pop: number // precipitation probability as a whole percent, 0–100
 }
 
 export interface WeatherData {
@@ -94,6 +94,55 @@ export interface RadarData {
   radarPath: string
   hasPrecipitation: boolean
   frameCount: number
+}
+
+export interface HomeDevice {
+  id: string // entity_id
+  name: string // friendly_name (or prettified entity_id)
+  domain: string // light, switch, media_player, binary_sensor, climate, lock, cover, fan
+  state: string // raw HA state string
+  active: boolean // "on"-like state for the domain (light on, media playing, door open…)
+  unavailable: boolean
+  detail?: string // human extra: "72%", media title, current temp…
+  room: string | null // display label of the room, null when it belongs to none
+}
+
+export interface HomeSensor {
+  id: string
+  name: string
+  kind: 'temperature' | 'humidity' | 'battery'
+  value: number
+  unit: string
+}
+
+/** One resampled time bucket; null where the sensor had no reading yet */
+export interface TempPoint {
+  t: number // unix seconds at bucket start
+  indoor: number | null
+  outdoor: number | null
+}
+
+export interface TempHistory {
+  available: boolean
+  indoorName: string | null
+  outdoorName: string | null
+  unit: string
+  hours: number // window length the points span
+  points: TempPoint[]
+  indoorNow: number | null
+  outdoorNow: number | null
+}
+
+export interface HomeAssistantSummary {
+  configured: boolean // HOMEASSISTANT_URL + TOKEN present
+  reachable: boolean // last poll succeeded (or served from last-good cache)
+  lightsOn: number
+  lightsTotal: number
+  devices: HomeDevice[]
+  sensors: HomeSensor[]
+  unavailableCount: number
+  temps: TempHistory
+  updatedAt: string
 }
 
 export interface WordConjugation {

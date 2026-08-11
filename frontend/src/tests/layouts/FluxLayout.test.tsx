@@ -63,6 +63,8 @@ const mockProps = {
   sobrietyDate: '2024-01-01T00:00:00',
   wordOfDay: null,
   wordLoading: false,
+  haData: null,
+  haLoading: false,
 }
 
 describe('FluxLayout', () => {

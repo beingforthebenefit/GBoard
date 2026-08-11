@@ -7,6 +7,7 @@ import {
   RadarData,
   PhotoInfo,
   WordOfDay,
+  HomeAssistantSummary,
 } from '../types/index.js'
 import { PiholeStats } from '../hooks/usePihole.js'
 import { ClassicLayout } from './classic/ClassicLayout.js'
@@ -21,6 +22,7 @@ import { MosaicLayout } from './mosaic/MosaicLayout.js'
 import { AuroraLayout } from './aurora/AuroraLayout.js'
 import { OrigamiLayout } from './origami/OrigamiLayout.js'
 import { BambooLayout } from './bamboo/BambooLayout.js'
+import { BlueprintLayout } from './blueprint/BlueprintLayout.js'
 
 export type RadarMode = 'adaptive' | 'on' | 'off'
 
@@ -43,6 +45,8 @@ export interface LayoutProps {
   sobrietyDate: string
   wordOfDay: WordOfDay | null
   wordLoading: boolean
+  haData: HomeAssistantSummary | null
+  haLoading: boolean
 }
 
 export function shouldShowRadar(
@@ -133,6 +137,13 @@ export const LAYOUTS: LayoutDefinition[] = [
     label: 'Bamboo',
     description: 'Swaying reed/wave field of shaded facets, day/night theming',
     component: BambooLayout,
+  },
+  {
+    name: 'blueprint',
+    label: 'Blueprint',
+    description:
+      "Architect's drawing sheet with Home Assistant systems schedule, day/night theming",
+    component: BlueprintLayout,
   },
 ]
 
