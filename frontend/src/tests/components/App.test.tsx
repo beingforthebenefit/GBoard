@@ -25,6 +25,10 @@ vi.mock('../../hooks/useHomeAssistant.js', () => ({
   useHomeAssistant: () => ({ data: null, loading: true }),
 }))
 
+vi.mock('../../hooks/useFitness.js', () => ({
+  useFitness: () => ({ data: null, loading: true }),
+}))
+
 vi.mock('../../hooks/usePhotos.js', () => ({
   usePhotos: () => ({ photos: [] }),
 }))

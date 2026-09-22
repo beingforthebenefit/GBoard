@@ -8,6 +8,7 @@ import {
   PhotoInfo,
   WordOfDay,
   HomeAssistantSummary,
+  FitnessSummary,
 } from '../types/index.js'
 import { PiholeStats } from '../hooks/usePihole.js'
 import { ClassicLayout } from './classic/ClassicLayout.js'
@@ -47,6 +48,8 @@ export interface LayoutProps {
   wordLoading: boolean
   haData: HomeAssistantSummary | null
   haLoading: boolean
+  fitnessData: FitnessSummary | null
+  fitnessLoading: boolean
 }
 
 export function shouldShowRadar(

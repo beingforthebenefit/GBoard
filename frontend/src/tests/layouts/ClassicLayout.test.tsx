@@ -54,6 +54,8 @@ const minimalProps = {
   wordLoading: false,
   haData: null,
   haLoading: false,
+  fitnessData: null,
+  fitnessLoading: false,
 }
 
 const fullProps = {

@@ -117,6 +117,17 @@ const SETTING_GROUPS = [
     ],
   },
   {
+    label: 'Apple Health',
+    fields: [
+      { key: 'HEALTHKIT_URL', label: 'Health Service URL', type: 'text' as const },
+      { key: 'HEALTHKIT_READ_KEY', label: 'Read Key', type: 'password' as const },
+      { key: 'FITNESS_CALORIE_BUDGET', label: 'Daily Calorie Budget', type: 'text' as const },
+      { key: 'FITNESS_WORKOUT_DAYS', label: 'Cycling Days / Week', type: 'text' as const },
+      { key: 'FITNESS_WORKOUT_MINUTES', label: 'Cycling Minutes / Session', type: 'text' as const },
+      { key: 'FITNESS_LIFT_DAYS', label: 'Lifting Days / Week', type: 'text' as const },
+    ],
+  },
+  {
     label: 'Sonarr / Radarr',
     fields: [
       { key: 'SONARR_URL', label: 'Sonarr URL', type: 'text' as const },

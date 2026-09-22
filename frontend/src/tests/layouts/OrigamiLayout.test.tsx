@@ -56,6 +56,8 @@ const mockProps = {
   wordLoading: false,
   haData: null,
   haLoading: false,
+  fitnessData: null,
+  fitnessLoading: false,
 }
 
 describe('OrigamiLayout', () => {

@@ -7,7 +7,8 @@ import { buildThumborUrl } from '../../utils/thumbor.js'
 import { HourlyChart } from '../../components/HourlyChart.js'
 import { RadarTiles } from '../../components/RadarTiles.js'
 import { WordOfDayWidget } from '../../components/WordOfDay.js'
-import { SystemsSchedule } from './SystemsSchedule.js'
+import { HealthSchedule } from './HealthSchedule.js'
+import { DimensionBar } from './DimensionBar.js'
 import { ThermalProfile } from './ThermalProfile.js'
 import { LayoutProps, shouldShowRadar } from '../index.js'
 import { CalendarEvent } from '../../types/index.js'
@@ -143,21 +144,6 @@ function Panel({
       </header>
       <div className={`flex-1 min-h-0 ${bodyPad}`}>{children}</div>
     </section>
-  )
-}
-
-/** Progress drawn as a drafting dimension line */
-function DimensionBar({ pct }: { pct: number }) {
-  const W = 72
-  const x = Math.max(2, Math.min(W - 2, (pct / 100) * W))
-  return (
-    <svg width={W} height={10} className="inline-block align-middle mx-1" aria-hidden>
-      <line x1="0" y1="5" x2={W} y2="5" stroke="var(--bp-line)" strokeWidth="1" />
-      <line x1="0.5" y1="1" x2="0.5" y2="9" stroke="var(--bp-line)" strokeWidth="1" />
-      <line x1={W - 0.5} y1="1" x2={W - 0.5} y2="9" stroke="var(--bp-line)" strokeWidth="1" />
-      <line x1="0" y1="5" x2={x} y2="5" stroke="var(--bp-red)" strokeWidth="2" />
-      <line x1={x} y1="1" x2={x} y2="9" stroke="var(--bp-red)" strokeWidth="1.5" />
-    </svg>
   )
 }
 
@@ -644,6 +630,8 @@ export function BlueprintLayout({
   wordOfDay,
   haData,
   haLoading,
+  fitnessData,
+  fitnessLoading,
 }: LayoutProps) {
   const dark = useIsDark()
   const showRadar = shouldShowRadar(radarMode, radarData)
@@ -684,16 +672,20 @@ export function BlueprintLayout({
                 title="THERMAL SECTION · INT / EXT"
                 right={`${haData?.temps?.hours ?? 24} HR`}
               >
-                <ThermalProfile temps={haData?.temps} loading={haLoading} />
+                <ThermalProfile
+                  temps={haData?.temps}
+                  sensors={haData?.sensors}
+                  loading={haLoading}
+                />
               </Panel>
             </div>
 
             <Panel
               num={3}
-              title="HOUSE SYSTEMS · SCHEDULE"
+              title="OCCUPANT · HEALTH SCHEDULE"
               right={
-                haData?.updatedAt
-                  ? `SURVEYED ${new Date(haData.updatedAt).toLocaleTimeString('en-US', {
+                fitnessData?.asOf
+                  ? `SURVEYED ${new Date(fitnessData.asOf).toLocaleTimeString('en-US', {
                       hour: 'numeric',
                       minute: '2-digit',
                     })}`
@@ -701,7 +693,7 @@ export function BlueprintLayout({
               }
               className="flex-none"
             >
-              <SystemsSchedule data={haData} loading={haLoading} columns={3} />
+              <HealthSchedule data={fitnessData} loading={fitnessLoading} />
             </Panel>
 
             <div className="flex-none grid grid-cols-3 gap-3">

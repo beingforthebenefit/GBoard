@@ -8,6 +8,7 @@ import piholeRouter from './routes/pihole.js'
 import mediaRouter from './routes/media.js'
 import wordRouter from './routes/word.js'
 import homeassistantRouter from './routes/homeassistant.js'
+import fitnessRouter from './routes/fitness.js'
 import adminRouter from './routes/admin.js'
 import { loadFromDisk, startSync, startPeriodicSync } from './services/photosService.js'
 import { loadSession, deletePiholeSession } from './services/piholeService.js'
@@ -54,6 +55,7 @@ app.use('/api/pihole', piholeRouter)
 app.use('/api/media', mediaRouter)
 app.use('/api/word', wordRouter)
 app.use('/api/homeassistant', homeassistantRouter)
+app.use('/api/fitness', fitnessRouter)
 app.use('/admin', adminRouter)
 
 app.use(errorHandler)

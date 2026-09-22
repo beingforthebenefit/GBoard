@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
-import { HomeAssistantSummary } from '../../types/index.js'
+import { FitnessSummary, HomeAssistantSummary } from '../../types/index.js'
 
 vi.mock('../../hooks/useClock.js', () => ({
   useClock: () => new Date('2025-01-01T14:30:00'),
@@ -16,7 +16,7 @@ vi.mock('../../hooks/useElementSize.js', () => ({
 }))
 
 import { BlueprintLayout } from '../../layouts/blueprint/BlueprintLayout.js'
-import { SystemsSchedule } from '../../layouts/blueprint/SystemsSchedule.js'
+import { HealthSchedule } from '../../layouts/blueprint/HealthSchedule.js'
 import { ThermalProfile } from '../../layouts/blueprint/ThermalProfile.js'
 
 const NOW = Date.parse('2025-01-01T14:30:00Z') / 1000
@@ -91,6 +91,120 @@ const haData: HomeAssistantSummary = {
   updatedAt: '2025-01-01T14:29:30.000Z',
 }
 
+const TODAY = '2025-01-01'
+
+const day = (offset: number) =>
+  new Date(Date.parse(`${TODAY}T12:00:00Z`) + offset * 86_400_000).toISOString().slice(0, 10)
+
+const fitnessData: FitnessSummary = {
+  configured: true,
+  reachable: true,
+  localDate: TODAY,
+  timezone: 'America/Los_Angeles',
+  asOf: '2025-01-01T22:30:00+00:00',
+  ingestAgeHours: 0.4,
+  medication: {
+    name: 'BP Meds',
+    detail: 'Hyzaar 100mg-25mg Tablet',
+    takenToday: true,
+    takenAt: '09:00',
+    scheduledAt: '09:00',
+    streakDays: 14,
+    last7: Array.from({ length: 7 }, (_, i) => ({ date: day(i - 6), taken: true })),
+  },
+  today: {
+    steps: { metric: 'step_count', value: 3994, units: 'count', held: false },
+    activeEnergy: { metric: 'active_energy', value: 405.9, units: 'kcal', held: false },
+    exerciseMinutes: { metric: 'apple_exercise_time', value: 8, units: 'min', held: false },
+    standHours: { metric: 'apple_stand_hour', value: 14, units: 'count', held: false },
+    distance: { metric: 'walking_running_distance', value: 1.223, units: 'mi', held: false },
+    flightsClimbed: { metric: 'flights_climbed', value: 4, units: 'count', held: false },
+  },
+  calories: { budget: 1900, consumed: 1626, remaining: 274, burnedActive: 406, held: false },
+  workouts: [
+    {
+      key: 'cycling',
+      label: 'Cycling',
+      verb: 'Ride',
+      targetDays: 5,
+      targetMinutes: 60,
+      minutesToday: 0,
+      doneToday: false,
+      needToday: true,
+      daysInWindow: 3,
+      lastSession: { name: 'Indoor Cycling', ts: '2024-12-30T21:50:52+00:00', minutes: 65 },
+      days: Array.from({ length: 7 }, (_, i) => ({
+        date: day(i - 6),
+        minutes: i === 1 || i === 2 || i === 4 ? 64 : 0,
+        qualifying: i === 1 || i === 2 || i === 4,
+      })),
+    },
+    {
+      key: 'lifting',
+      label: 'Lifting',
+      verb: 'Lift',
+      targetDays: 3,
+      targetMinutes: 0,
+      minutesToday: 0,
+      doneToday: false,
+      needToday: true,
+      daysInWindow: 1,
+      lastSession: {
+        name: 'Traditional Strength Training',
+        ts: '2024-12-28T21:34:25+00:00',
+        minutes: 14,
+      },
+      days: Array.from({ length: 7 }, (_, i) => ({
+        date: day(i - 6),
+        minutes: i === 1 ? 14 : 0,
+        qualifying: i === 1,
+      })),
+    },
+  ],
+  bp: {
+    days: 30,
+    points: [
+      { date: day(-20), systolic: 124, diastolic: 86 },
+      { date: day(-12), systolic: 106, diastolic: 73 },
+      { date: day(-4), systolic: 118, diastolic: 78 },
+      { date: TODAY, systolic: 123, diastolic: 86 },
+    ],
+    latest: { date: TODAY, systolic: 123, diastolic: 86 },
+    avgSystolic: 118,
+    avgDiastolic: 81,
+    held: false,
+  },
+  weight: {
+    days: 90,
+    units: 'lb',
+    points: [
+      { date: day(-60), value: 229.4 },
+      { date: day(-30), value: 227.1 },
+      { date: TODAY, value: 225.6 },
+    ],
+    latest: 225.6,
+    change: -3.8,
+    held: false,
+  },
+  sleep: {
+    nights: [
+      { date: day(-2), hours: 6.8, deep: 0.7, rem: 2.0, core: 4.1, awake: 2.7, score: 81 },
+      { date: day(-1), hours: 7.1, deep: 0.6, rem: 2.0, core: 4.5, awake: 1.6, score: 92 },
+    ],
+    score: 87,
+    avgHours: 7,
+  },
+  stepsWeek: Array.from({ length: 7 }, (_, i) => ({ date: day(i - 6), value: 5000 + i })),
+  stepsAvg7: 5102,
+  vitals: [
+    { key: 'restingHeartRate', label: 'Resting HR', value: 75, units: 'bpm', held: false },
+    { key: 'hrv', label: 'HRV', value: 46.2, units: 'ms', held: false },
+    { key: 'vo2Max', label: 'VO₂ Max', value: 32.2, units: 'ml/(kg·min)', held: false },
+  ],
+  heldMetrics: [],
+  updatedAt: '2025-01-01T22:30:00.000Z',
+}
+
 const mockProps = {
   weatherData: {
     current: {
@@ -134,6 +248,8 @@ const mockProps = {
   wordLoading: false,
   haData,
   haLoading: false,
+  fitnessData,
+  fitnessLoading: false,
 }
 
 describe('BlueprintLayout', () => {
@@ -169,6 +285,13 @@ describe('BlueprintLayout', () => {
     const { getByText } = render(<BlueprintLayout {...mockProps} />)
     expect(getByText(/NO WORKS SCHEDULED/i)).toBeTruthy()
     expect(getByText(/NONE PENDING/i)).toBeTruthy()
+  })
+
+  it('replaces the house systems schedule with the occupant health schedule', () => {
+    const { getByText, queryByText } = render(<BlueprintLayout {...mockProps} />)
+    expect(getByText(/OCCUPANT · HEALTH SCHEDULE/)).toBeTruthy()
+    expect(queryByText(/HOUSE SYSTEMS/)).toBeNull()
+    expect(getByText('✓ TAKEN')).toBeTruthy()
   })
 
   it('renders the thermal section panel', () => {
@@ -207,135 +330,165 @@ describe('BlueprintLayout', () => {
   })
 })
 
-describe('SystemsSchedule', () => {
-  it('renders device rows with status and details', () => {
-    const { getByText } = render(<SystemsSchedule data={haData} loading={false} />)
-    expect(getByText(/Living Room/)).toBeTruthy()
-    expect(getByText(/— 50%/)).toBeTruthy()
-    expect(getByText(/THE OFFICE/)).toBeTruthy()
-    expect(getByText('PLAYING')).toBeTruthy()
-    expect(getByText('OFF')).toBeTruthy()
-    expect(getByText('FAULT')).toBeTruthy()
+describe('HealthSchedule', () => {
+  it('shows the medication as taken, with the time and streak', () => {
+    const { getByText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByText('✓ TAKEN')).toBeTruthy()
+    expect(getByText(/09:00 · 14 DAY STREAK/)).toBeTruthy()
+    expect(getByText('BP Meds')).toBeTruthy()
   })
 
-  it('shows the luminaire tally and fault count', () => {
-    const { getByText } = render(<SystemsSchedule data={haData} loading={false} />)
-    expect(getByText('1/3')).toBeTruthy()
-    expect(getByText(/1 FAULT/)).toBeTruthy()
-    expect(getByText(/LINK OK/)).toBeTruthy()
-  })
-
-  it('balances columns instead of stranding a small room in its own column', () => {
-    // Rooms of 2 / 7 / 5 devices: a naive even-thirds cut snapped to the first boundary
-    // and left one column with 3 rows and another with 11
-    const mk = (room: string, n: number) =>
-      Array.from({ length: n }, (_, i) => ({
-        id: `light.${room}_${i}`,
-        name: `${room} ${i}`,
-        domain: 'light',
-        state: 'off',
-        active: false,
-        unavailable: false,
-        room,
-      }))
-    const lopsided = {
-      ...haData,
-      devices: [...mk('Kitchen', 2), ...mk('Living room', 7), ...mk('Bedroom', 5)],
+  it('marks the dose overdue once its scheduled time has passed', () => {
+    const due = {
+      ...fitnessData,
+      medication: {
+        ...fitnessData.medication!,
+        takenToday: false,
+        takenAt: null,
+        scheduledAt: '00:01',
+      },
     }
-    const { container } = render(<SystemsSchedule data={lopsided} loading={false} columns={3} />)
-    const grid = container.querySelector('[style*="grid-template-columns"]') as HTMLElement
-    const counts = Array.from(grid.children).map((col) => col.children.length - 1) // minus header
-    expect(counts.length).toBe(3)
-    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(6)
+    const { getByText } = render(<HealthSchedule data={due} loading={false} />)
+    expect(getByText('✗ OVERDUE')).toBeTruthy()
+    expect(getByText(/SCHEDULED 00:01/)).toBeTruthy()
   })
 
-  it('continues the schedule across columns, breaking at a room heading', () => {
-    const { container } = render(<SystemsSchedule data={haData} loading={false} columns={3} />)
-    const grid = container.querySelector('[style*="grid-template-columns"]') as HTMLElement
-    // Only two rooms here, so it uses two columns rather than spreading thinly over three
-    expect(grid.style.gridTemplateColumns).toBe('repeat(2, minmax(0, 1fr))')
-    // Each column starts with its own room heading, so no room is split across columns
-    const headings = Array.from(grid.children).map(
-      (col) => col.querySelector('.uppercase')?.textContent
-    )
-    expect(headings[0]).toContain('Living room')
+  it('shows steps against the weekly average', () => {
+    const { getByText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByText('3,994')).toBeTruthy()
+    expect(getByText(/7 D AVG 5,102/)).toBeTruthy()
   })
 
-  it('groups devices under room headings with an on/total tally', () => {
-    const { getByText, getAllByText } = render(<SystemsSchedule data={haData} loading={false} />)
-    expect(getByText('Living room')).toBeTruthy()
-    // "Bedroom" is both a room heading and a fixture name, so both nodes are expected
-    expect(getAllByText('Bedroom').length).toBe(2)
-    // Living room has both its devices active, Bedroom none
-    expect(getByText('2/2')).toBeTruthy()
-    expect(getByText('0/2')).toBeTruthy()
+  it('shows calories consumed and what is left of the budget', () => {
+    const { getByText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByText('1,626')).toBeTruthy()
+    expect(getByText(/274 REMAINING/)).toBeTruthy()
   })
 
-  it('shows sensor readouts with units', () => {
-    const { getByText } = render(<SystemsSchedule data={haData} loading={false} />)
-    expect(getByText('72.5')).toBeTruthy()
-    expect(getByText(/AQARA TEMPERATURE/i)).toBeTruthy()
+  it('says how far over budget the day went', () => {
+    const over = {
+      ...fitnessData,
+      calories: { ...fitnessData.calories, consumed: 2100, remaining: -200 },
+    }
+    const { getByText } = render(<HealthSchedule data={over} loading={false} />)
+    expect(getByText(/200 OVER/)).toBeTruthy()
+  })
+
+  it('calls for a ride when the rolling week is short of the target', () => {
+    const { getByText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByText('▲ RIDE 60 MIN')).toBeTruthy()
+    expect(getByText(/3\/5 DAYS/)).toBeTruthy()
+  })
+
+  it('tracks lifting alongside cycling, with no minutes target', () => {
+    const { getByText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByText('Lifting')).toBeTruthy()
+    expect(getByText('▲ LIFT TODAY')).toBeTruthy()
+    expect(getByText(/1\/3 DAYS/)).toBeTruthy()
+  })
+
+  it('calls it a rest day once a target is already met', () => {
+    const met = {
+      ...fitnessData,
+      workouts: [{ ...fitnessData.workouts[0], daysInWindow: 5, needToday: false }],
+    }
+    const { getByText } = render(<HealthSchedule data={met} loading={false} />)
+    expect(getByText('— REST DAY')).toBeTruthy()
+  })
+
+  it("credits today's session once it is logged", () => {
+    const done = {
+      ...fitnessData,
+      workouts: [
+        { ...fitnessData.workouts[0], doneToday: true, needToday: false, minutesToday: 65 },
+        { ...fitnessData.workouts[1], doneToday: true, needToday: false, minutesToday: 9 },
+      ],
+    }
+    const { getByText } = render(<HealthSchedule data={done} loading={false} />)
+    expect(getByText('✓ 65 MIN')).toBeTruthy()
+    expect(getByText('✓ 9 MIN')).toBeTruthy()
+  })
+
+  it('plots blood pressure, body mass and sleep', () => {
+    const { getByLabelText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByLabelText(/ARTERIAL PRESSURE/)).toBeTruthy()
+    expect(getByLabelText(/BODY MASS/)).toBeTruthy()
+    expect(getByLabelText(/SLEEP/)).toBeTruthy()
+  })
+
+  it('shows the latest pressure and the sleep score in the plot headers', () => {
+    const { getByText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByText('123/86')).toBeTruthy()
+    expect(getByText(/SCORE 87 · 7 H AVG/)).toBeTruthy()
+    expect(getByText(/225.6 LB/)).toBeTruthy()
+  })
+
+  it('leaves a gap for a night with no sleep record rather than interpolating', () => {
+    const { container } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    // Two nights recorded out of seven slots: the other five are baseline ticks
+    const sleepPlot = container.querySelectorAll('svg')
+    const bars = Array.from(sleepPlot).flatMap((svg) => Array.from(svg.querySelectorAll('rect')))
+    expect(bars.length).toBeGreaterThan(0)
+    expect(bars.length).toBeLessThanOrEqual(6)
+  })
+
+  it('renders a held reading as HELD, never as a zero', () => {
+    const held = {
+      ...fitnessData,
+      today: {
+        ...fitnessData.today,
+        steps: { metric: 'step_count', value: null, units: 'count', held: true },
+      },
+      weight: { ...fitnessData.weight, held: true, points: [], latest: null },
+      heldMetrics: ['weight_body_mass'],
+    }
+    const { getByText, queryByText } = render(<HealthSchedule data={held} loading={false} />)
+    expect(getByText('HELD')).toBeTruthy()
+    expect(queryByText('0')).toBeNull()
+    expect(getByText(/UNITS CHANGED: WEIGHT_BODY_MASS/)).toBeTruthy()
+    expect(getByText(/UNITS CHANGED — SERIES HELD/)).toBeTruthy()
+  })
+
+  it('notes a phone that has stopped syncing without hiding the figures', () => {
+    const stale = { ...fitnessData, ingestAgeHours: 31 }
+    const { getByText } = render(<HealthSchedule data={stale} loading={false} />)
+    expect(getByText(/PHONE LAST SYNCED 31 H AGO/)).toBeTruthy()
+    expect(getByText('3,994')).toBeTruthy()
+  })
+
+  it('distinguishes an unmeasured series from a broken one', () => {
+    const noBp = {
+      ...fitnessData,
+      bp: { ...fitnessData.bp, points: [], latest: null, avgSystolic: null, avgDiastolic: null },
+    }
+    const { getByText } = render(<HealthSchedule data={noBp} loading={false} />)
+    expect(getByText(/NO READINGS LOGGED THIS PERIOD/)).toBeTruthy()
   })
 
   it('shows the setup note when unconfigured', () => {
-    const unconfigured = { ...haData, configured: false, devices: [], sensors: [] }
-    const { getByText } = render(<SystemsSchedule data={unconfigured} loading={false} />)
-    expect(getByText(/FIELD TELEMETRY NOT CONNECTED/i)).toBeTruthy()
+    const { getByText } = render(
+      <HealthSchedule data={{ ...fitnessData, configured: false }} loading={false} />
+    )
+    expect(getByText(/HEALTH RECORD NOT CONNECTED/i)).toBeTruthy()
   })
 
-  it('shows the link-down note when unreachable with no cached devices', () => {
-    const down = { ...haData, reachable: false, devices: [], sensors: [] }
-    const { getByText } = render(<SystemsSchedule data={down} loading={false} />)
+  it('shows the link-down note when unreachable with nothing cached', () => {
+    const down = { ...fitnessData, reachable: false, vitals: [], medication: null }
+    const { getByText } = render(<HealthSchedule data={down} loading={false} />)
     expect(getByText(/LINK DOWN/)).toBeTruthy()
   })
 
   it('shows a polling note while loading without data', () => {
-    const { getByText } = render(<SystemsSchedule data={null} loading={true} />)
-    expect(getByText(/POLLING FIELD INSTRUMENTS/i)).toBeTruthy()
+    const { getByText } = render(<HealthSchedule data={null} loading={true} />)
+    expect(getByText(/POLLING HEALTH RECORD/i)).toBeTruthy()
   })
 
-  it('lists idle devices individually rather than summarising them', () => {
-    const manyOff = {
-      ...haData,
-      devices: [
-        ...haData.devices,
-        ...[1, 2, 3].map((i) => ({
-          id: `light.off_${i}`,
-          name: `Off Light ${i}`,
-          domain: 'light',
-          state: 'off',
-          active: false,
-          unavailable: false,
-          room: 'Kitchen',
-        })),
-      ],
-    }
-    const { getByText } = render(<SystemsSchedule data={manyOff} loading={false} />)
-    expect(getByText(/Off Light 1/)).toBeTruthy()
-    expect(getByText(/Off Light 3/)).toBeTruthy()
-  })
-
-  it('keeps active devices when the list is trimmed, and says how many were dropped', () => {
-    const overflowing = {
-      ...haData,
-      devices: [
-        ...haData.devices.filter((d) => d.active),
-        ...Array.from({ length: 40 }, (_, i) => ({
-          id: `light.off_${i}`,
-          name: `Off Light ${i}`,
-          domain: 'light',
-          state: 'off',
-          active: false,
-          unavailable: false,
-          room: 'Kitchen',
-        })),
-      ],
-    }
-    const { getByText } = render(<SystemsSchedule data={overflowing} loading={false} />)
-    // The two active devices survive the cut
-    expect(getByText(/Living Room/)).toBeTruthy()
-    expect(getByText(/Roku/)).toBeTruthy()
-    expect(getByText(/FURTHER ITEMS NOT SHOWN/)).toBeTruthy()
+  it('lists the extra vitals in one line', () => {
+    const { getByText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByText(/RHR 75 BPM/)).toBeTruthy()
+    expect(getByText(/FLTS 4/)).toBeTruthy()
+    // VO₂ max is only ever ml/(kg·min); the unit costs more width than it adds
+    expect(getByText(/VO₂ 32.2 ·/)).toBeTruthy()
   })
 })
 
@@ -350,6 +503,16 @@ describe('ThermalProfile', () => {
     const lines = container.querySelectorAll('path[fill="none"][stroke]')
     expect(lines.length).toBe(2)
     expect(container.querySelector('path[stroke-dasharray]')).toBeTruthy()
+  })
+
+  it('carries the interior and exterior humidity in its legend', () => {
+    const sensors = [
+      { id: 'sensor.in_h', name: 'Interior RH', kind: 'humidity' as const, value: 45, unit: '%' },
+      { id: 'sensor.out_h', name: 'Exterior RH', kind: 'humidity' as const, value: 62, unit: '%' },
+    ]
+    const { getByText } = render(<ThermalProfile temps={temps} sensors={sensors} loading={false} />)
+    expect(getByText('45%')).toBeTruthy()
+    expect(getByText('62%')).toBeTruthy()
   })
 
   it('shows the temperature delta between inside and outside', () => {

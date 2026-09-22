@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { TempHistory } from '../../types/index.js'
+import { HomeSensor, TempHistory } from '../../types/index.js'
 import { useElementSize } from '../../hooks/useElementSize.js'
 
 // Fallback viewBox before the container has been measured
@@ -42,6 +42,8 @@ function fmtHourLabel(unix: number): string {
 
 interface Props {
   temps: TempHistory | null | undefined
+  /** Curated readouts from the same poll; the two humidity rows ride along in the legend */
+  sensors?: HomeSensor[]
   loading: boolean
 }
 
@@ -49,7 +51,9 @@ interface Props {
  * 24-hour interior vs exterior temperature, drawn as a drafting section:
  * solid line for inside, dashed for outside, hatched band for the gap between.
  */
-export function ThermalProfile({ temps, loading }: Props) {
+export function ThermalProfile({ temps, sensors, loading }: Props) {
+  const humidity = (label: string) =>
+    sensors?.find((s) => s.kind === 'humidity' && s.name === label)?.value ?? null
   const plotRef = useRef<HTMLDivElement>(null)
   const measured = useElementSize(plotRef)
   // Draw at true CSS pixel size so the section fills its band without letterboxing
@@ -132,12 +136,14 @@ export function ThermalProfile({ temps, loading }: Props) {
             {temps.indoorNow !== null && (
               <span style={{ color: 'var(--bp-bright)' }}> {temps.indoorNow}°</span>
             )}
+            {humidity('Interior RH') !== null && <span> {humidity('Interior RH')}%</span>}
           </span>
           <span className="truncate">
             <span style={{ color: 'var(--bp-red)' }}>╌╌</span> EXTERIOR
             {temps.outdoorNow !== null && (
               <span style={{ color: 'var(--bp-red)' }}> {temps.outdoorNow}°</span>
             )}
+            {humidity('Exterior RH') !== null && <span> {humidity('Exterior RH')}%</span>}
           </span>
         </span>
         {delta !== null && (
