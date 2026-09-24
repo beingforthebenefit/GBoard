@@ -1,5 +1,14 @@
+# Log rotation: this project's frontend log reached 416 MB. Docker's
+# json-file driver has no rotation by default.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   backend:
+    logging: *default-logging
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -18,6 +27,7 @@ services:
       - gboard
 
   thumbor:
+    logging: *default-logging
     image: minimalcompact/thumbor:6.7.5
     restart: unless-stopped
     environment:
@@ -41,6 +51,7 @@ services:
       - gboard
 
   frontend:
+    logging: *default-logging
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -58,6 +69,7 @@ services:
 
   # ── Test runners (docker compose run --rm --build backend-test npm test) ──
   backend-test:
+    logging: *default-logging
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -67,6 +79,7 @@ services:
       - NODE_ENV=test
 
   frontend-test:
+    logging: *default-logging
     build:
       context: ./frontend
       dockerfile: Dockerfile

@@ -444,7 +444,27 @@ export function dailyPoints(
     .sort((a, b) => a.date.localeCompare(b.date))
 }
 
-export function buildWeightTrend(series: HkSeries | null, timezone: string): WeightTrend {
+/**
+ * The window a series actually occupies. The API is asked for 90 days, but the record
+ * may only start part way in — drawing that as a 90-day frame leaves the left half
+ * empty under a label claiming ninety days of data. Shrink the window to the span the
+ * readings really cover, and let the plot label itself from it.
+ */
+export function spannedDays(points: DailyPoint[], today: string, max: number): number {
+  const first = points[0]?.date
+  const start = first ? Date.parse(`${first}T12:00:00Z`) : NaN
+  const end = Date.parse(`${today}T12:00:00Z`)
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return max
+  // Inclusive of both ends: a reading yesterday and one today span two days
+  const span = Math.round((end - start) / 86_400_000) + 1
+  return Math.max(1, Math.min(max, span))
+}
+
+export function buildWeightTrend(
+  series: HkSeries | null,
+  timezone: string,
+  today: string
+): WeightTrend {
   const held = seriesHeld(series)
   const points = dailyPoints(series, timezone)
 
@@ -452,7 +472,7 @@ export function buildWeightTrend(series: HkSeries | null, timezone: string): Wei
   const last = points[points.length - 1]?.value ?? null
 
   return {
-    days: WEIGHT_DAYS,
+    days: spannedDays(points, today, WEIGHT_DAYS),
     units: series?.unitsSeen?.[0] ?? 'lb',
     points,
     latest: last,
@@ -596,7 +616,7 @@ export function buildFitness(raw: RawBundle, nowMs: number): FitnessSummary {
         ? Math.round(stepsWeek.reduce((sum, p) => sum + p.value, 0) / stepsWeek.length)
         : null,
     bp: buildBpTrend(raw.bp, timezone),
-    weight: buildWeightTrend(raw.weight, timezone),
+    weight: buildWeightTrend(raw.weight, timezone, localDate),
     sleep: buildSleepTrend(raw.sleep, timezone),
     vitals: buildVitals(latest),
     heldMetrics,

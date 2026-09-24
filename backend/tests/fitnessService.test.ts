@@ -11,6 +11,7 @@ import {
   localDateOf,
   medicationStatus,
   scoreNight,
+  spannedDays,
   workoutPlan,
   _resetCache,
 } from '../src/services/fitnessService.js'
@@ -365,14 +366,37 @@ describe('trend builders', () => {
 
   it('refuses to plot a series whose units changed', () => {
     const mixed = { ...BUNDLE.weight, mixedUnits: true }
-    const weight = buildWeightTrend(mixed, TZ)
+    const weight = buildWeightTrend(mixed, TZ, TODAY)
     expect(weight.held).toBe(true)
     expect(weight.points).toEqual([])
     expect(weight.latest).toBeNull()
+    // Nothing to span, so the label keeps the window that was asked for
+    expect(weight.days).toBe(90)
+  })
+
+  it('keeps the full weight window when there is no series at all', () => {
+    expect(buildWeightTrend(null, TZ, TODAY).days).toBe(90)
+  })
+
+  it('trims the weight window to the span the record actually covers', () => {
+    // The API is asked for 90 days; these readings only go back 31
+    const weight = buildWeightTrend(BUNDLE.weight, TZ, TODAY)
+    expect(weight.days).toBe(31)
+  })
+
+  it('keeps the full window when the record reaches back past it', () => {
+    const long = {
+      ...BUNDLE.weight,
+      points: [
+        point(`${day(-200)}T07:00:00+00:00`, 'qty', 240, 'lb'),
+        point(`${TODAY}T07:00:00+00:00`, 'qty', 225, 'lb'),
+      ],
+    }
+    expect(buildWeightTrend(long, TZ, TODAY).days).toBe(90)
   })
 
   it('reports the change across the weight window', () => {
-    const weight = buildWeightTrend(BUNDLE.weight, TZ)
+    const weight = buildWeightTrend(BUNDLE.weight, TZ, TODAY)
     expect(weight.latest).toBe(225.6)
     expect(weight.change).toBe(-3.8)
     expect(weight.units).toBe('lb')
@@ -398,6 +422,40 @@ describe('trend builders', () => {
       { date: day(-1), value: 6000 },
       { date: TODAY, value: 3994 },
     ])
+  })
+})
+
+describe('spannedDays', () => {
+  it('counts both ends of the span', () => {
+    expect(spannedDays([{ date: TODAY, value: 1 }], TODAY, 90)).toBe(1)
+    expect(spannedDays([{ date: day(-1), value: 1 }], TODAY, 90)).toBe(2)
+  })
+
+  it('falls back to the full window with no points', () => {
+    expect(spannedDays([], TODAY, 90)).toBe(90)
+  })
+
+  it('never reports more than the window asked for', () => {
+    expect(spannedDays([{ date: day(-89), value: 1 }], TODAY, 90)).toBe(90)
+    expect(spannedDays([{ date: day(-90), value: 1 }], TODAY, 90)).toBe(90)
+    expect(spannedDays([{ date: day(-400), value: 1 }], TODAY, 90)).toBe(90)
+  })
+
+  it('measures from the first reading even when the last one is old', () => {
+    const points = [
+      { date: day(-20), value: 1 },
+      { date: day(-10), value: 1 },
+    ]
+    expect(spannedDays(points, TODAY, 90)).toBe(21)
+  })
+
+  it('never reports less than one day, even for a reading dated after today', () => {
+    expect(spannedDays([{ date: day(3), value: 1 }], TODAY, 90)).toBe(1)
+  })
+
+  it('falls back to the full window on an unparseable date', () => {
+    expect(spannedDays([{ date: 'not-a-date', value: 1 }], TODAY, 90)).toBe(90)
+    expect(spannedDays([{ date: day(-5), value: 1 }], '', 90)).toBe(90)
   })
 })
 
@@ -441,6 +499,7 @@ describe('buildFitness', () => {
     expect(f.workouts[0]).toMatchObject({ daysInWindow: 3, needToday: true, targetMinutes: 60 })
     expect(f.workouts[1]).toMatchObject({ targetDays: 3, targetMinutes: 0, needToday: true })
     expect(f.stepsAvg7).toBe(4997)
+    expect(f.weight.days).toBe(31)
     expect(f.ingestAgeHours).toBe(0.2)
     expect(f.heldMetrics).toEqual([])
   })

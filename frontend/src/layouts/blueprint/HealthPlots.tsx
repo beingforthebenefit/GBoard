@@ -239,7 +239,7 @@ export function BpPlot({ trend, today }: { trend: BpTrend; today: string }) {
 export function MassPlot({ trend, today }: { trend: WeightTrend; today: string }) {
   if (trend.held) {
     return (
-      <PlotShell title="BODY MASS · 90 D">
+      <PlotShell title={`BODY MASS · ${trend.days} D`}>
         <Missing>
           <span style={{ color: 'var(--bp-red)' }}>UNITS CHANGED — SERIES HELD</span>
         </Missing>
@@ -248,7 +248,7 @@ export function MassPlot({ trend, today }: { trend: WeightTrend; today: string }
   }
   if (trend.points.length < 2) {
     return (
-      <PlotShell title="BODY MASS · 90 D">
+      <PlotShell title={`BODY MASS · ${trend.days} D`}>
         <Missing>NO READINGS LOGGED THIS PERIOD</Missing>
       </PlotShell>
     )

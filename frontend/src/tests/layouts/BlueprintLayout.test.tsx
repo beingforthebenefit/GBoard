@@ -175,7 +175,7 @@ const fitnessData: FitnessSummary = {
     held: false,
   },
   weight: {
-    days: 90,
+    days: 61,
     units: 'lb',
     points: [
       { date: day(-60), value: 229.4 },
@@ -414,6 +414,34 @@ describe('HealthSchedule', () => {
     expect(getByLabelText(/ARTERIAL PRESSURE/)).toBeTruthy()
     expect(getByLabelText(/BODY MASS/)).toBeTruthy()
     expect(getByLabelText(/SLEEP/)).toBeTruthy()
+  })
+
+  it('labels the mass plot with the span the record covers, not the window asked for', () => {
+    const { getByText, queryByText } = render(<HealthSchedule data={fitnessData} loading={false} />)
+    expect(getByText(/BODY MASS · 61 D/)).toBeTruthy()
+    expect(queryByText(/BODY MASS · 90 D/)).toBeNull()
+  })
+
+  it('carries the span label onto the held and empty mass plots', () => {
+    const held = render(
+      <HealthSchedule
+        data={{ ...fitnessData, weight: { ...fitnessData.weight, held: true, days: 90 } }}
+        loading={false}
+      />
+    )
+    expect(held.getByText(/BODY MASS · 90 D/)).toBeTruthy()
+    held.unmount()
+
+    const sparse = render(
+      <HealthSchedule
+        data={{
+          ...fitnessData,
+          weight: { ...fitnessData.weight, days: 1, points: [{ date: day(0), value: 225 }] },
+        }}
+        loading={false}
+      />
+    )
+    expect(sparse.getByText(/BODY MASS · 1 D/)).toBeTruthy()
   })
 
   it('shows the latest pressure and the sleep score in the plot headers', () => {

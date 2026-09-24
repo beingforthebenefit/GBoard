@@ -245,7 +245,7 @@ export interface DailyPoint {
 }
 
 export interface WeightTrend {
-  days: number
+  days: number // window the plot covers: 90 d, trimmed to what the record actually spans
   units: string
   points: DailyPoint[] // oldest first
   latest: number | null
