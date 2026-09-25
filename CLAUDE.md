@@ -60,9 +60,18 @@ GBoard/
 │   │   │   └── blueprint/    # Architect's drawing sheet: cyanotype/vellum, Apple Health schedule + thermal section (day/night theming, portrait)
 │   │   ├── hooks/            # Data-fetching hooks with polling intervals
 │   │   ├── utils/            # Sobriety math, milestones, moon phase, photo memories, wind, thumbor
+│   │   ├── mobile/           # The phone/iPad view at /m/ — its own entry (main.tsx), not a layout
+│   │   │   ├── status.ts     # Pure derivations: attention items, glance rows, section summaries
+│   │   │   ├── explorerData.ts # Explorer series, moving averages, window stats (pure)
+│   │   │   ├── Explorer.tsx  # Full-screen ECharts explorer, lazy-loaded
+│   │   │   ├── useMobileData.ts # On-demand fetching (open / pull / refocus / 5 min), per-endpoint errors
+│   │   │   ├── sections/     # Health, Today, Home, Infra
+│   │   │   └── mobile.css    # Its own stylesheet and tokens (no Tailwind)
 │   │   └── types/index.ts    # Shared interfaces (duplicated from backend)
 │   ├── tests/
-│   └── nginx/default.conf    # SPA fallback + /api proxy to backend
+│   ├── m/index.html          # Second Vite entry: the mobile page (manifest, home-screen meta)
+│   ├── public/m/             # Mobile manifest + icons
+│   └── nginx/default.conf    # SPA fallback, /m/ page, /api proxy to backend
 ├── docs/screenshots/   # Theme screenshots for README
 ├── docker-compose.yml
 ├── .env                      # Runtime config (see .env.example)
@@ -72,7 +81,7 @@ GBoard/
 ## Tech Stack
 
 - **Backend**: Node 20, Express 4, TypeScript 5.5, CommonJS
-- **Frontend**: React 18, Vite 5, TypeScript 5.5, Tailwind 3, ESM
+- **Frontend**: React 18, Vite 5, TypeScript 5.5, Tailwind 3, ESM; the mobile view adds ECharts 5 and @fontsource fonts
 - **Testing**: Vitest 2 (backend: node env, frontend: jsdom + React Testing Library)
 - **Linting**: ESLint 8 + @typescript-eslint; Prettier (no semis, single quotes, trailing commas)
 - **Deployment**: Docker Compose (node:20-alpine + nginx:alpine), multi-stage builds
@@ -92,6 +101,7 @@ GBoard/
 | `GET /api/word` | Spanish (Mexican) word of the day — curated dataset, rotates daily | Static (date-seeded) |
 | `GET /api/homeassistant` | Curated HA device/sensor summary + 24 h indoor/outdoor temp history (read-only) | 20 s states, 5 min history, last-good fallback |
 | `GET /api/fitness` | Curated Apple Health day: medication, steps, calories, cycling/lifting targets, BP/weight/sleep trends, vitals | 5 min, last-good fallback |
+| `GET /api/fitness/history` | Every recorded day of BP, weight, sleep and steps, for the mobile chart explorer | 10 min, last-good fallback |
 | `GET /api/version` | `{ startedAt }` timestamp for deploy detection | None (polled 10s) |
 | `GET /admin` | Admin panel (layout, theme, settings) | - |
 | `GET /admin/theme` | Current theme + layout preferences | - |
@@ -125,6 +135,12 @@ GBoard/
   - **Sleep score** — Apple has no such number, so `scoreNight()` computes one: duration vs 8 h (60%), deep+REM share vs 35% (25%), efficiency vs 90% (15%), each capped at its target. `totalsleep` is the field that carries the night — `asleep` is 0 on Apple Watch exports
   - **Never `full=1` on the workout listing** — a workout export inlines its whole per-sample series and GPS route (37 workouts = 24.5 MB). The slim listing carries every scalar the panel needs
 - **Kinetic canvas themes (Flux, Mosaic, Aurora, Origami, Bamboo)** — `FluxField` (particle flow field), `MosaicField` (hex tessellation + data ripples), `AuroraField` (per-pixel metaball field computed on a small canvas and bilinear-upscaled — SVG/GPU filters are too slow on the Pi), `OrigamiField` (flat-shaded folded-paper diamond tessellation that corrugates in both axes and breathes open/closed), and `BambooField` (flat-shaded reed/wave field that sways on a traveling diagonal — the original folding-paper math, kept as its own theme) each drive a single imperative `requestAnimationFrame` loop reading live data from refs (no per-frame React renders); all FPS-capped with tunables at the top of the file for low-power hardware. Shared floating widgets (clock, sober chip, glass cards, now playing) live in `components/KineticOverlay.tsx`
+- **Mobile view (`/m/`)** — a read-only phone/iPad page, reached over Tailscale (no public route). It is a **second Vite entry** (`frontend/m/index.html` → `src/mobile/main.tsx`), not a layout, so the kiosk never downloads it; ECharts is lazy-loaded within it only when a chart opens. Things worth knowing:
+  - **Decisions are pure functions in `mobile/status.ts`** (what is OK, what needs attention, each glance row) and are tested without a DOM. Status is always a glyph *and* a colour; held or stale figures are a hatch, never a number. Section identity colours (health/today/home/infra) and status colours (good/warn/bad) never borrow from each other
+  - **It does not use the kiosk's polling hooks.** `useMobileData` fetches every endpoint on open, pull-to-refresh, refocus after 60 s, and every 5 min while visible; each endpoint fails on its own. It checks `/api/version` on each refresh and reloads after a deploy, because code-split chunks from the old build are gone
+  - **`/api/fitness/history`** returns the whole record (`days=3650` upstream); the explorer slices ranges client-side. A held series has `held: true` and no points
+  - **nginx**: `absolute_redirect off` (so `/m` → `/m/` survives `tailscale serve` terminating TLS on 443), and an explicit `application/manifest+json` for the manifest. The SPA fallback means a missing `/m/` answers 200 with the kiosk page — health checks must look for the `GBoard Pocket` title
+  - **Fonts are self-hosted** via `@fontsource` (Barlow, Source Serif 4), latin subsets for Barlow
 - **No state management library** — plain React hooks (useState/useEffect) with polling
 - **Security**: All external API calls proxy through backend; no secrets exposed to browser
 - **Auto-reload**: Frontend polls `/api/version` every 10s; page reloads when backend restarts

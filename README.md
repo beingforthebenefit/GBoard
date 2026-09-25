@@ -23,6 +23,7 @@ A self-hosted home dashboard — a Dakboard replacement. Runs in Docker, accessi
 - **Word of the Day** — A Mexican-Spanish word each day with its definition, conjugations (for irregular verbs), and an example sentence — shown on every theme
 - **Photo Background** — Rotating iCloud shared album photos with blurred fill backdrop, served through a self-hosted [Thumbor](https://www.thumbor.org/) instance for on-demand resizing, WebP conversion, and face-aware smart cropping
 - **Admin Panel** — Web-based settings management with layout/theme picker
+- **Mobile view** — A read-only phone and iPad page at `/m/`: what needs attention, a colour-coded glance board, collapsible sections, and a pinch-to-zoom chart explorer for health trends
 
 ## Themes
 
