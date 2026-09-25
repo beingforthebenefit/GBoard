@@ -7,13 +7,16 @@ import {
   buildWeightTrend,
   dailyPoints,
   dateWindow,
+  buildHistory,
   fetchFitness,
+  fetchFitnessHistory,
   localDateOf,
   medicationStatus,
   scoreNight,
   spannedDays,
   workoutPlan,
   _resetCache,
+  _resetHistoryCache,
 } from '../src/services/fitnessService.js'
 
 const TZ = 'America/Los_Angeles'
@@ -658,5 +661,127 @@ describe('fetchFitness', () => {
     const summary = await fetchFitness()
     expect(summary.calories.budget).toBe(2100)
     expect(summary.calories.remaining).toBe(474)
+  })
+})
+
+describe('buildHistory', () => {
+  it('returns every recorded day of each series, oldest first', () => {
+    const h = buildHistory(BUNDLE, TODAY, TZ, NOW)
+    expect(h.reachable).toBe(true)
+    expect(h.bp.points.map((p) => p.date)).toEqual([day(-8), TODAY])
+    expect(h.weight.points).toEqual([
+      { date: day(-30), value: 229.4 },
+      { date: TODAY, value: 225.6 },
+    ])
+    expect(h.weight.units).toBe('lb')
+    expect(h.sleep.nights).toHaveLength(1)
+    expect(h.sleep.nights[0].hours).toBe(7.14)
+  })
+
+  it('keeps more than a week of nights, unlike the kiosk trend', () => {
+    const nights = Array.from({ length: 12 }, (_, i) =>
+      point(`${day(-i - 1)}T07:00:00+00:00`, 'totalsleep', 7, 'hr')
+    )
+    const h = buildHistory(
+      { ...BUNDLE, sleep: { ...BUNDLE.sleep, points: nights } },
+      TODAY,
+      TZ,
+      NOW
+    )
+    expect(h.sleep.nights).toHaveLength(12)
+  })
+
+  it('returns a held series with no points, never numbers in the wrong unit', () => {
+    const h = buildHistory(
+      {
+        ...BUNDLE,
+        weight: { ...BUNDLE.weight, mixedUnits: true },
+        sleep: { ...BUNDLE.sleep, mixedUnits: true },
+      },
+      TODAY,
+      TZ,
+      NOW
+    )
+    expect(h.weight).toMatchObject({ held: true, points: [] })
+    expect(h.sleep).toMatchObject({ held: true, nights: [] })
+    expect(h.bp.held).toBe(false)
+  })
+})
+
+describe('fetchFitnessHistory', () => {
+  const originalFetch = global.fetch
+
+  beforeEach(() => {
+    _resetCache()
+    _resetHistoryCache()
+    process.env.HEALTHKIT_URL = 'http://192.168.50.51:8099'
+    process.env.HEALTHKIT_READ_KEY = 'read-key'
+  })
+
+  afterEach(() => {
+    global.fetch = originalFetch
+    delete process.env.HEALTHKIT_URL
+    delete process.env.HEALTHKIT_READ_KEY
+  })
+
+  function mockHk({ series = true } = {}) {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith('/api/summary')) return { ok: true, json: async () => SUMMARY }
+      if (url.includes('/records/')) return { ok: true, json: async () => ({ records: [] }) }
+      if (!series && url.includes('days=3650')) throw new Error('series down')
+      if (url.includes('blood_pressure')) return { ok: true, json: async () => BUNDLE.bp }
+      if (url.includes('weight_body_mass')) return { ok: true, json: async () => BUNDLE.weight }
+      if (url.includes('sleep_analysis')) return { ok: true, json: async () => BUNDLE.sleep }
+      if (url.includes('dietary_energy')) return { ok: true, json: async () => BUNDLE.diet }
+      return { ok: true, json: async () => BUNDLE.steps }
+    })
+    global.fetch = fetchMock as unknown as typeof fetch
+    return fetchMock
+  }
+
+  it('is unconfigured without env vars, and makes no call', async () => {
+    delete process.env.HEALTHKIT_URL
+    const fetchMock = mockHk()
+    const h = await fetchFitnessHistory()
+    expect(h.configured).toBe(false)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('asks healthkit for the whole record of each series', async () => {
+    const fetchMock = mockHk()
+    const h = await fetchFitnessHistory()
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]))
+    for (const m of ['blood_pressure', 'weight_body_mass', 'sleep_analysis', 'step_count']) {
+      expect(urls.some((u) => u.includes(`/api/metrics/${m}?days=3650`))).toBe(true)
+    }
+    expect(h.localDate).toBe(TODAY)
+    expect(h.timezone).toBe(TZ)
+  })
+
+  it('caches, so a second explorer open does not re-read healthkit', async () => {
+    const fetchMock = mockHk()
+    await fetchFitnessHistory()
+    const calls = fetchMock.mock.calls.length
+    await fetchFitnessHistory()
+    expect(fetchMock.mock.calls.length).toBe(calls)
+  })
+
+  it('serves the last good history, flagged unreachable, when every series fails', async () => {
+    mockHk()
+    await fetchFitnessHistory()
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 11 * 60 * 1000)
+    mockHk({ series: false })
+    const h = await fetchFitnessHistory()
+    clock.mockRestore()
+    expect(h.reachable).toBe(false)
+    expect(h.weight.points.length).toBeGreaterThan(0)
+  })
+
+  it('is empty and unreachable when every series fails with nothing to fall back on', async () => {
+    mockHk({ series: false })
+    const h = await fetchFitnessHistory()
+    expect(h.configured).toBe(true)
+    expect(h.reachable).toBe(false)
+    expect(h.weight.points).toEqual([])
   })
 })

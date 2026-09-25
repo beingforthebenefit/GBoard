@@ -1,0 +1,14 @@
+{
+  "name": "GBoard Pocket",
+  "short_name": "GBoard",
+  "start_url": "/m/",
+  "scope": "/m/",
+  "display": "standalone",
+  "background_color": "#0E2B3D",
+  "theme_color": "#0E2B3D",
+  "icons": [
+    { "src": "/m/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/m/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/m/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

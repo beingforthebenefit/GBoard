@@ -269,6 +269,25 @@ export interface SleepTrend {
   avgHours: number | null
 }
 
+/**
+ * Every recorded day of the four explorable series, for the mobile view's chart
+ * explorer. One call carries all of them: the whole record is a few tens of KB, and
+ * the phone slices ranges locally rather than asking again for each zoom level.
+ * A held series (units changed, unacknowledged) comes back with `held: true` and NO
+ * points, never with numbers in the wrong unit.
+ */
+export interface FitnessHistory {
+  configured: boolean
+  reachable: boolean
+  localDate: string
+  timezone: string
+  bp: { points: BpPoint[]; held: boolean }
+  weight: { units: string; points: DailyPoint[]; held: boolean }
+  sleep: { nights: SleepNight[]; held: boolean }
+  steps: { points: DailyPoint[]; held: boolean }
+  updatedAt: string
+}
+
 export interface FitnessVital {
   key: string
   label: string

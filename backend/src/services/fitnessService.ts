@@ -3,6 +3,7 @@ import {
   BpTrend,
   CalorieBudget,
   DailyPoint,
+  FitnessHistory,
   FitnessReading,
   FitnessSummary,
   FitnessVital,
@@ -499,7 +500,11 @@ export function scoreNight(n: { hours: number; deep: number; rem: number; awake:
   return Math.round(100 * (0.6 * duration + 0.25 * restorative + 0.15 * efficiency))
 }
 
-export function buildSleepTrend(series: HkSeries | null, timezone: string): SleepTrend {
+export function buildSleepTrend(
+  series: HkSeries | null,
+  timezone: string,
+  maxNights = SLEEP_NIGHTS
+): SleepTrend {
   const byDate = new Map<string, Record<string, number>>()
   for (const p of series?.points ?? []) {
     const date = localDateOf(p.ts, timezone)
@@ -509,7 +514,7 @@ export function buildSleepTrend(series: HkSeries | null, timezone: string): Slee
 
   const nights: SleepNight[] = [...byDate.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-SLEEP_NIGHTS)
+    .slice(-maxNights)
     .map(([date, f]) => {
       // `asleep` is 0 on Apple Watch exports; totalsleep is the field that carries the night
       const hours = f.totalsleep ?? f.asleep ?? 0
@@ -732,4 +737,104 @@ export async function fetchFitness(): Promise<FitnessSummary> {
     console.error('[GBoard API] healthkit fetch failed:', err)
     return emptyFitness(true)
   }
+}
+
+// ── History (the mobile chart explorer) ──
+
+// "Everything": healthkit filters by `ts >= now - days`, so a decade is the whole record
+const HISTORY_DAYS = 3650
+// History is for zooming around in, not for today's figures — those come from
+// fetchFitness(). Ten minutes spares healthkit a re-read on every explorer open.
+const HISTORY_TTL_MS = 10 * 60 * 1000
+
+let historyCache: { data: FitnessHistory; fetchedAt: number } | null = null
+let historyLastGood: FitnessHistory | null = null
+
+export function _resetHistoryCache() {
+  historyCache = null
+  historyLastGood = null
+}
+
+export function emptyHistory(
+  configured: boolean,
+  localDate: string,
+  timezone: string
+): FitnessHistory {
+  return {
+    configured,
+    reachable: false,
+    localDate,
+    timezone,
+    bp: { points: [], held: false },
+    weight: { units: 'lb', points: [], held: false },
+    sleep: { nights: [], held: false },
+    steps: { points: [], held: false },
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function buildHistory(
+  raw: {
+    bp: HkSeries | null
+    weight: HkSeries | null
+    sleep: HkSeries | null
+    steps: HkSeries | null
+  },
+  localDate: string,
+  timezone: string,
+  nowMs: number
+): FitnessHistory {
+  const sleepHeld = seriesHeld(raw.sleep)
+  return {
+    configured: true,
+    reachable: true,
+    localDate,
+    timezone,
+    bp: { points: buildBpTrend(raw.bp, timezone).points, held: seriesHeld(raw.bp) },
+    weight: {
+      units: raw.weight?.unitsSeen?.[0] ?? 'lb',
+      points: dailyPoints(raw.weight, timezone),
+      held: seriesHeld(raw.weight),
+    },
+    // buildSleepTrend has no hold of its own; a held sleep series must not plot
+    sleep: {
+      nights: sleepHeld ? [] : buildSleepTrend(raw.sleep, timezone, Infinity).nights,
+      held: sleepHeld,
+    },
+    steps: { points: dailyPoints(raw.steps, timezone, 'qty', 0), held: seriesHeld(raw.steps) },
+    updatedAt: new Date(nowMs).toISOString(),
+  }
+}
+
+export async function fetchFitnessHistory(): Promise<FitnessHistory> {
+  // The summary (cached) owns what "today" and the timezone are — one answer for both
+  const summary = await fetchFitness()
+  if (!summary.configured) return emptyHistory(false, summary.localDate, summary.timezone)
+
+  if (historyCache && Date.now() - historyCache.fetchedAt < HISTORY_TTL_MS) {
+    return historyCache.data
+  }
+
+  const [bp, weight, sleep, steps] = await Promise.all([
+    optional<HkSeries>(`/api/metrics/blood_pressure?days=${HISTORY_DAYS}`),
+    optional<HkSeries>(`/api/metrics/weight_body_mass?days=${HISTORY_DAYS}&field=qty`),
+    optional<HkSeries>(`/api/metrics/sleep_analysis?days=${HISTORY_DAYS}`),
+    optional<HkSeries>(`/api/metrics/step_count?days=${HISTORY_DAYS}&field=qty`),
+  ])
+
+  // All four failing is an outage, not four empty series
+  if (!bp && !weight && !sleep && !steps) {
+    if (historyLastGood) return { ...historyLastGood, reachable: false }
+    return emptyHistory(true, summary.localDate, summary.timezone)
+  }
+
+  const data = buildHistory(
+    { bp, weight, sleep, steps },
+    summary.localDate,
+    summary.timezone,
+    Date.now()
+  )
+  historyCache = { data, fetchedAt: Date.now() }
+  historyLastGood = data
+  return data
 }
