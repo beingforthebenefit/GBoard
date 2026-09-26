@@ -413,11 +413,33 @@ describe('trend builders', () => {
     expect(sleep.score).toBe(sleep.nights[0].score)
   })
 
-  it('keeps at most seven nights', () => {
+  it('keeps only the nights in the seven days ending today', () => {
     const points = Array.from({ length: 10 }, (_, i) =>
       point(`${day(-i)}T07:00:00+00:00`, 'totalsleep', 7, 'hr')
     )
-    expect(buildSleepTrend({ ...BUNDLE.sleep, points }, TZ).nights).toHaveLength(7)
+    const sleep = buildSleepTrend({ ...BUNDLE.sleep, points }, TZ, TODAY)
+    expect(sleep.nights.map((n) => n.date)).toEqual([6, 5, 4, 3, 2, 1, 0].map((i) => day(-i)))
+  })
+
+  it('keeps every night when no window is given', () => {
+    const points = Array.from({ length: 10 }, (_, i) =>
+      point(`${day(-i)}T07:00:00+00:00`, 'totalsleep', 7, 'hr')
+    )
+    expect(buildSleepTrend({ ...BUNDLE.sleep, points }, TZ).nights).toHaveLength(10)
+  })
+
+  it('treats an unrecorded night as unmeasured, not zero', () => {
+    // Recorded 8 h and 6 h, a night logged at 0 h, a night absent, and one outside the week
+    const points = [
+      point(`${day(-10)}T07:00:00+00:00`, 'totalsleep', 2, 'hr'),
+      point(`${day(-4)}T07:00:00+00:00`, 'totalsleep', 8, 'hr'),
+      point(`${day(-2)}T07:00:00+00:00`, 'totalsleep', 0, 'hr'),
+      point(`${day(-1)}T07:00:00+00:00`, 'totalsleep', 6, 'hr'),
+    ]
+    const sleep = buildSleepTrend({ ...BUNDLE.sleep, points }, TZ, TODAY)
+    expect(sleep.nights.map((n) => n.date)).toEqual([day(-4), day(-1)])
+    expect(sleep.avgHours).toBe(7)
+    expect(sleep.score).toBe(Math.round((sleep.nights[0].score + sleep.nights[1].score) / 2))
   })
 
   it('collapses a daily series to one value per local day', () => {

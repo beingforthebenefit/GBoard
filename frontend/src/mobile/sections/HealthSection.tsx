@@ -343,7 +343,7 @@ function Trends({ f, onExplore }: { f: FitnessSummary; onExplore: (id: ExploreId
       <TrendRow
         id="sleep-trend"
         explore="sleep"
-        label={`Sleep, last ${f.sleep.nights.length} nights`}
+        label={`Sleep, last 7 days · ${f.sleep.nights.length} recorded`}
         value={f.sleep.avgHours !== null ? f.sleep.avgHours.toFixed(1) : '—'}
         unit="h average"
         onExplore={onExplore}

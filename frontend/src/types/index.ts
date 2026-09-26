@@ -264,8 +264,8 @@ export interface SleepNight {
 }
 
 export interface SleepTrend {
-  nights: SleepNight[] // oldest first, at most 7
-  score: number | null // mean of the nightly scores
+  nights: SleepNight[] // recorded nights in the last 7 days, oldest first; unmeasured nights are absent
+  score: number | null // mean of the recorded nights' scores
   avgHours: number | null
 }
 

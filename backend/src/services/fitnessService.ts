@@ -500,11 +500,23 @@ export function scoreNight(n: { hours: number; deep: number; rem: number; awake:
   return Math.round(100 * (0.6 * duration + 0.25 * restorative + 0.15 * efficiency))
 }
 
+/**
+ * The nights recorded in the SLEEP_NIGHTS calendar days ending `today` — the same week
+ * the plot draws — or every recorded night when `today` is omitted (the history view).
+ * A night with no record is unmeasured, not a zero: it is left out of the nights and
+ * out of both averages, so a night without the watch can't drag the score down.
+ */
 export function buildSleepTrend(
   series: HkSeries | null,
   timezone: string,
-  maxNights = SLEEP_NIGHTS
+  today?: string
 ): SleepTrend {
+  const end = today ? Date.parse(`${today}T12:00:00Z`) : NaN
+  const start = Number.isFinite(end)
+    ? new Date(end - (SLEEP_NIGHTS - 1) * 86_400_000).toISOString().slice(0, 10)
+    : null
+  const inWindow = (date: string) => start === null || (date >= start && date <= (today ?? ''))
+
   const byDate = new Map<string, Record<string, number>>()
   for (const p of series?.points ?? []) {
     const date = localDateOf(p.ts, timezone)
@@ -514,7 +526,6 @@ export function buildSleepTrend(
 
   const nights: SleepNight[] = [...byDate.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-maxNights)
     .map(([date, f]) => {
       // `asleep` is 0 on Apple Watch exports; totalsleep is the field that carries the night
       const hours = f.totalsleep ?? f.asleep ?? 0
@@ -527,7 +538,7 @@ export function buildSleepTrend(
       }
       return { date, ...night, score: scoreNight(night) }
     })
-    .filter((n) => n.hours > 0)
+    .filter((n) => n.hours > 0 && inWindow(n.date))
 
   const mean = (nums: number[]) =>
     nums.length > 0 ? nums.reduce((s, n) => s + n, 0) / nums.length : null
@@ -622,7 +633,7 @@ export function buildFitness(raw: RawBundle, nowMs: number): FitnessSummary {
         : null,
     bp: buildBpTrend(raw.bp, timezone),
     weight: buildWeightTrend(raw.weight, timezone, localDate),
-    sleep: buildSleepTrend(raw.sleep, timezone),
+    sleep: buildSleepTrend(raw.sleep, timezone, localDate),
     vitals: buildVitals(latest),
     heldMetrics,
     updatedAt: new Date(nowMs).toISOString(),
@@ -798,7 +809,7 @@ export function buildHistory(
     },
     // buildSleepTrend has no hold of its own; a held sleep series must not plot
     sleep: {
-      nights: sleepHeld ? [] : buildSleepTrend(raw.sleep, timezone, Infinity).nights,
+      nights: sleepHeld ? [] : buildSleepTrend(raw.sleep, timezone).nights,
       held: sleepHeld,
     },
     steps: { points: dailyPoints(raw.steps, timezone, 'qty', 0), held: seriesHeld(raw.steps) },
